@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio AI - X-Ray Consultant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> tailwind.config = { darkMode: 'class', } </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .chat-bubble-ai { background-color: #f3f4f6; color: #1f2937; border-bottom-left-radius: 0; }
+        .dark .chat-bubble-ai { background-color: #374151; color: #e5e7eb; }
+        .chat-bubble-user { background-color: #3b82f6; color: #ffffff; border-bottom-right-radius: 0; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 h-screen flex overflow-hidden font-sans transition-colors duration-300 relative">
+
+    <aside class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col shadow-sm z-20 transition-colors duration-300">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20 transition-colors duration-300">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-blue-600 dark:bg-blue-500 flex items-center justify-center text-white shadow-sm">
+                    <i class="fa-solid fa-user-md text-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">{{ role }}</p>
+                    <p class="text-sm font-black text-gray-800 dark:text-white truncate">{{ full_name }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3 space-y-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+            <a href="/dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-semibold text-sm">
+                <i class="fa-solid fa-stethoscope w-5 text-center"></i> <span id="ui-nav-diag">Diagnóstico Rápido</span>
+            </a>
+            <a href="/training" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 transition-colors font-bold text-sm border border-blue-200 dark:border-blue-800/50">
+                <i class="fa-solid fa-flask w-5 text-center"></i> <span id="ui-nav-lab">Laboratorio de Entrenamiento</span>
+            </a>
+        </div>
+
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50">
+            <h2 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider" id="ui-history-title">Experimentos Guardados</h2>
+            <button onclick="loadSidebarModels()" class="text-gray-400 hover:text-blue-500 transition-colors focus:outline-none" title="Actualizar historial">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-4 space-y-2" id="experiments-list"></div>
+
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+            <a href="/logout" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-semibold flex items-center gap-2 transition-colors">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> <span id="ui-logout">Cerrar Sesión</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900 relative overflow-y-auto transition-colors duration-300">
+        
+        <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center shadow-sm z-10 sticky top-0 transition-colors duration-300">
+            <div class="flex items-center gap-3">
+                <div class="bg-purple-600 text-white w-10 h-10 rounded-lg flex items-center justify-center shadow-md">
+                    <i class="fa-solid fa-network-wired text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800 dark:text-white transition-colors" id="ui-title">Entrenamiento de Modelos</h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium" id="ui-subtitle">Asistente IA MLOps</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="toggleTheme()" class="text-gray-500 dark:text-gray-400 hover:text-blue-500 focus:outline-none w-8 h-8 flex items-center justify-center rounded-lg transition-colors">
+                    <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
+                </button>
+            </div>
+        </header>
+
+        <div id="config-panel" class="max-w-5xl mx-auto w-full p-4 sm:p-6 flex flex-col h-[calc(100vh-5rem)]">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col h-full overflow-hidden transition-colors">
+                
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-between items-center shrink-0">
+                    <h3 class="text-sm font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-robot text-purple-500"></i> Asistente de Configuración
+                    </h3>
+                    <button onclick="browseFolderAndInsert()" class="text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2 shadow-sm focus:outline-none">
+                        <i class="fa-solid fa-folder-open"></i> Explorar Carpeta
+                    </button>
+                </div>
+
+                <div id="chat-history" class="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 flex flex-col bg-gray-50/30 dark:bg-gray-900/20 scroll-smooth">
+                    <div class="flex flex-col gap-1 items-start max-w-[85%] sm:max-w-[75%]">
+                        <div class="chat-bubble-ai px-4 py-3 rounded-2xl text-sm shadow-sm leading-relaxed">
+                            ¡Hola! Soy tu asistente de MLOps. Para empezar un nuevo entrenamiento de modelos para detectar neumonía, necesito que me digas qué arquitecturas quieres usar y la ruta de la carpeta de tus imágenes. ¿Con qué empezamos?
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.2)] z-10">
+                    <form id="chat-form" onsubmit="handleChatSubmit(event)" class="flex gap-2 relative">
+                        <input type="text" id="chat-input" class="flex-1 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3 text-sm text-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all" placeholder="Escribe aquí tu respuesta, pide la ruta, o pregúntame lo que quieras..." autocomplete="off">
+                        <button type="submit" id="chat-send-btn" class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="session-results-panel" class="hidden max-w-6xl mx-auto w-full p-8 space-y-4">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800 dark:text-white flex items-center gap-3">
+                        <i class="fa-solid fa-layer-group text-purple-500"></i> <span id="session-title-name">Sesión</span>
+                    </h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Ranking Global y Análisis Estadístico</p>
+                </div>
+                <div class="flex flex-wrap gap-2 w-full lg:w-auto">
+                    <button onclick="document.getElementById('session-results-panel').classList.add('hidden'); document.getElementById('config-panel').classList.remove('hidden');" class="flex-1 lg:flex-none bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-xl font-bold transition-all text-sm shadow-sm border border-gray-200 dark:border-gray-600 focus:outline-none flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-arrow-left"></i> Volver al Asistente
+                    </button>
+                    <button onclick="renameSession(null, currentViewingSession)" class="flex-1 lg:flex-none bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 px-4 py-2.5 rounded-xl font-bold transition-all text-sm shadow-sm border border-blue-200 dark:border-blue-800/50 focus:outline-none flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-pencil"></i> Renombrar
+                    </button>
+                    <button onclick="cloneSessionConfig()" class="flex-1 lg:flex-none bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50 px-4 py-2.5 rounded-xl font-bold transition-all text-sm shadow-sm border border-purple-200 dark:border-purple-800/50 focus:outline-none flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-copy"></i> Reutilizar Configuración
+                    </button>
+                    <button onclick="launchExternalValidation()" class="flex-1 lg:flex-none bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all text-sm shadow-sm focus:outline-none flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-hospital-user"></i> Validación Externa
+                    </button>
+                    <button onclick="downloadPDFReport()" class="flex-1 lg:flex-none bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all text-sm shadow-sm focus:outline-none flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-pdf"></i> Generar Reporte PDF
+                    </button>
+                    <button onclick="recalculateComparison(currentViewingSession)" class="flex-1 lg:flex-none bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all text-sm shadow-sm focus:outline-none flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate"></i> Recalcular Wilcoxon
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div><p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><i class="fa-regular fa-folder-open mr-1"></i> Ruta Dataset</p><p id="session-cfg-path" class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate" title="...">...</p></div>
+                    <div><p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><i class="fa-solid fa-rotate-right mr-1"></i> Épocas</p><p id="session-cfg-epochs" class="text-sm font-semibold text-gray-800 dark:text-gray-200 font-mono">...</p></div>
+                    <div><p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><i class="fa-solid fa-layer-group mr-1"></i> Batch Size</p><p id="session-cfg-batch" class="text-sm font-semibold text-gray-800 dark:text-gray-200 font-mono">...</p></div>
+                    <div><p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><i class="fa-solid fa-gauge-high mr-1"></i> Learning Rate</p><p id="session-cfg-lr" class="text-sm font-semibold text-gray-800 dark:text-gray-200 font-mono">...</p></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
+                    <div class="p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                        <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-trophy text-yellow-500"></i> Ranking por AUC Medio (K-Fold)</h3>
+                    </div>
+                    <div class="overflow-x-auto p-2 flex-1 flex items-center">
+                        <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
+                            <thead class="text-xs uppercase border-b border-gray-200 dark:border-gray-700 text-gray-400">
+                                <tr><th class="px-4 py-3 font-black">Posición</th><th class="px-4 py-3 font-black">Modelo</th><th class="px-4 py-3">Media AUC</th><th class="px-4 py-3">Std Dev</th></tr>
+                            </thead>
+                            <tbody id="session-ranking-table" class="divide-y divide-gray-100 dark:divide-gray-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col p-6 items-center justify-center">
+                    <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-full mb-4"><i class="fa-solid fa-scale-balanced text-green-500 mr-2"></i> Matriz Wilcoxon</h3>
+                    <img id="session-heatmap-img" src="" alt="Matriz Wilcoxon" class="w-full max-w-sm object-contain rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hidden cursor-zoom-in hover:scale-105 transition-transform duration-300" onclick="openImageModal(this.src)">
+                    <p id="session-heatmap-error" class="text-sm text-gray-400 italic hidden">Mapa de calor no generado. Se necesitan al menos 2 modelos.</p>
+                </div>
+            </div>
+
+            <div id="external-validation-container" class="hidden mt-6 space-y-6">
+                <h3 class="text-lg font-black text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2"><i class="fa-solid fa-hospital-user text-purple-500 mr-2"></i> Fase 2: Validación Externa (Dataset Independiente)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <div class="p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50"><h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-chart-line text-blue-500"></i> Rendimiento Real</h3></div>
+                        <div class="overflow-x-auto p-2">
+                            <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300"><thead class="text-xs uppercase border-b border-gray-200 dark:border-gray-700 text-gray-400"><tr><th class="px-4 py-3 font-black">Modelo</th><th class="px-4 py-3">Accuracy</th><th class="px-4 py-3">F1-Score</th><th class="px-4 py-3 text-blue-500 font-bold">AUC</th></tr></thead><tbody id="external-ranking-table" class="divide-y divide-gray-100 dark:divide-gray-700"></tbody></table>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex flex-col items-center justify-center">
+                        <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-full mb-4 text-center"><i class="fa-solid fa-chart-area text-indigo-500 mr-2"></i> Curvas ROC</h3>
+                        <img id="external-roc-img" src="" alt="Curva ROC" class="w-full max-w-md object-contain rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm cursor-zoom-in hover:scale-105 transition-transform duration-300" onclick="openImageModal(this.src)">
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center">
+                    <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-full mb-4 text-center"><i class="fa-solid fa-scale-balanced text-purple-500 mr-2"></i> Matriz DeLong (Comparación de Curvas ROC)</h3>
+                    <img id="external-delong-img" src="" alt="Matriz DeLong" class="w-full max-w-md object-contain rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hidden cursor-zoom-in hover:scale-105 transition-transform duration-300" onclick="openImageModal(this.src)">
+                    <p id="external-delong-error" class="text-sm text-gray-400 italic hidden">Mapa de calor no generado. Se necesitan al menos 2 modelos.</p>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">Explorar Modelos (XAI & K-Fold)</h3>
+                <div id="session-models-grid" class="flex flex-wrap gap-3"></div>
+            </div>
+        </div>
+
+        <div id="results-panel" class="hidden max-w-6xl mx-auto w-full p-8 space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800 dark:text-white flex items-center gap-3">
+                        <i class="fa-solid fa-microchip text-blue-500"></i> <span id="res-model-name">Modelo</span>
+                    </h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Resultados de Cross Validation (5-Fold)</p>
+                </div>
+                <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                    <button onclick="viewSessionResults(currentViewingSession);" class="flex-1 md:flex-none bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-5 py-2.5 rounded-xl font-bold transition-all text-sm shadow-sm border border-gray-200 dark:border-gray-600 focus:outline-none">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Volver a la Sesión
+                    </button>
+                    <button id="btn-generate-xai" onclick="generateXAI()" class="flex-1 md:flex-none bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center justify-center gap-2 shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Generar XAI y Métricas
+                    </button>
+                </div>
+            </div>
+
+            <div id="res-math-panel" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="col-span-1 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-center">
+                    <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase mb-5 tracking-wider flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-blue-500"></i> Calibración Médica</h3>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold mb-1">Brier Score (Ideal: 0.0)</p><p class="text-3xl font-black text-blue-600 dark:text-blue-400 font-mono" id="ui-brier">-</p></div>
+                        <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold mb-1">Error ECE (Ideal: 0.0)</p><p class="text-3xl font-black text-purple-600 dark:text-purple-400 font-mono" id="ui-ece">-</p></div>
+                    </div>
+                </div>
+                <div class="col-span-1 md:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
+                    <div class="p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50"><h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-calculator text-purple-500"></i> Evaluación Matemática XAI</h3></div>
+                    <div class="overflow-x-auto p-2 flex-1 flex items-center">
+                        <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300"><thead class="text-xs uppercase border-b border-gray-200 dark:border-gray-700 text-gray-400"><tr><th class="px-4 py-3 font-black">Método</th><th class="px-4 py-3">Deletion ↓</th><th class="px-4 py-3">Insertion ↑</th><th class="px-4 py-3">Sparsity ↑</th><th class="px-4 py-3">Entropy ↓</th><th class="px-4 py-3">Stability ↑</th></tr></thead><tbody id="res-xai-table" class="divide-y divide-gray-100 dark:divide-gray-700"></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300"><thead class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700"><tr><th class="px-6 py-4">Fold</th><th class="px-6 py-4">Accuracy</th><th class="px-6 py-4">Precision</th><th class="px-6 py-4">Recall</th><th class="px-6 py-4">F1-Score</th><th class="px-6 py-4 font-black text-blue-500">AUC</th></tr></thead><tbody id="res-table-body" class="divide-y divide-gray-100 dark:divide-gray-700"></tbody></table>
+                </div>
+            </div>
+
+            <div id="res-images" class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-10"></div>
+        </div>
+
+        <div id="training-console" class="hidden mx-8 mb-8 bg-gray-900 rounded-2xl border border-gray-700 p-6 font-mono text-sm text-green-400 shadow-2xl transition-all z-30 sticky bottom-8">
+            <div class="flex items-center gap-2 mb-4 text-gray-300 border-b border-gray-700 pb-3">
+                <i class="fa-solid fa-terminal"></i> <span class="font-bold tracking-widest text-xs uppercase">Terminal del Servidor ML</span>
+                <i id="loading-spinner" class="fa-solid fa-circle-notch fa-spin ml-auto text-blue-500 hidden"></i>
+                <button onclick="document.getElementById('training-console').classList.add('hidden')" class="ml-4 text-gray-500 hover:text-white transition-colors focus:outline-none"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="console-logs" class="space-y-1 opacity-90 h-56 overflow-y-auto whitespace-pre-wrap scroll-smooth"></div>
+        </div>
+
+    </main>
+
+    <div id="image-modal" class="hidden fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-10 cursor-zoom-out transition-opacity" onclick="closeImageModal()">
+        <button onclick="closeImageModal()" class="absolute top-6 right-6 text-white hover:text-gray-300 focus:outline-none z-[110]"><i class="fa-solid fa-xmark text-4xl"></i></button>
+        <img id="modal-image" src="" class="max-h-full max-w-full object-contain rounded-lg shadow-2xl cursor-default" onclick="event.stopPropagation()" alt="Vista ampliada">
+    </div>
+
+    <script>
+        const dict = { es: {}, en: {} }; 
+        let logInterval = null;
+        let currentViewingSession = ""; 
+        let currentViewingModel = "";
+        let currentSessionConfig = null; 
+        
+        const chatSessionId = "CHAT_" + Math.random().toString(36).substring(7);
+
+        function openImageModal(src) { document.getElementById('modal-image').src = src; document.getElementById('image-modal').classList.remove('hidden'); }
+        function closeImageModal() { document.getElementById('image-modal').classList.add('hidden'); document.getElementById('modal-image').src = ''; }
+        window.addEventListener('keydown', function(event) { if (event.key === 'Escape') closeImageModal(); });
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) { html.classList.remove('dark'); localStorage.setItem('theme', 'light'); document.getElementById('theme-icon').className='fa-solid fa-moon text-lg'; }
+            else { html.classList.add('dark'); localStorage.setItem('theme', 'dark'); document.getElementById('theme-icon').className='fa-solid fa-sun text-lg'; }
+        }
+        function changeLanguage() {}
+
+        async function loadSidebarModels() {
+            const list = document.getElementById('experiments-list');
+            try {
+                const res = await fetch('/api/train/models');
+                const data = await res.json();
+                
+                if (data.sessions && data.sessions.length > 0) {
+                    list.innerHTML = '';
+                    data.sessions.forEach(session => {
+                        let title = session.session_id; 
+                        let subtitle = "Sesión Guardada";
+                        if (title.startsWith('RUN_') && title.length === 19) {
+                            const rawDate = title.replace('RUN_', '');
+                            subtitle = `${rawDate.substring(6,8)}/${rawDate.substring(4,6)} ${rawDate.substring(9,11)}:${rawDate.substring(11,13)}`;
+                        }
+
+                        let sessionHTML = `
+                        <div class="mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm relative group/session cursor-pointer" onclick="viewSessionResults('${session.session_id}')">
+                            <div class="flex items-center w-full">
+                                <div class="flex-1 text-left flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors rounded-tl-xl overflow-hidden">
+                                    <div class="flex items-center gap-3 overflow-hidden">
+                                        <div class="min-w-[32px] w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400"><i class="fa-solid fa-layer-group text-sm"></i></div>
+                                        <div class="overflow-hidden pr-2">
+                                            <span class="font-bold text-xs text-gray-800 dark:text-gray-200 block truncate" title="${title}">${title}</span>
+                                            <span class="text-[10px] text-gray-500 dark:text-gray-400 font-mono block truncate">${subtitle}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onclick="toggleSession(event, '${session.session_id}')" class="px-4 py-4 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors rounded-tr-xl border-l border-transparent dark:border-gray-700 focus:outline-none">
+                                    <i id="session-icon-${session.session_id}" class="fa-solid fa-chevron-down text-gray-400 text-xs transition-transform duration-200 shrink-0"></i>
+                                </button>
+                            </div>
+                            <div class="absolute right-12 top-3.5 opacity-0 group-hover/session:opacity-100 transition-opacity flex items-center gap-1 bg-white dark:bg-gray-800 shadow-sm rounded-md p-1 border border-gray-200 dark:border-gray-600 z-10" onclick="event.stopPropagation()">
+                                <button onclick="renameSession(event, '${session.session_id}')" class="w-6 h-6 flex items-center justify-center rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors" title="Renombrar sesión"><i class="fa-solid fa-pencil text-[10px]"></i></button>
+                                <button onclick="deleteSession(event, '${session.session_id}')" class="w-6 h-6 flex items-center justify-center rounded bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors" title="Eliminar sesión"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                            </div>
+                            <div id="session-content-${session.session_id}" class="hidden flex-col gap-1 p-2 bg-gray-50/50 dark:bg-gray-900/30 border-t border-gray-100 dark:border-gray-700" onclick="event.stopPropagation()">`;
+                        
+                        session.models.forEach(model => {
+                            sessionHTML += `<button onclick="viewResults('${session.session_id}', '${model}')" class="w-full text-left px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center gap-2 focus:outline-none"><i class="fa-solid fa-microchip text-xs opacity-50"></i> ${model}</button>`;
+                        });
+                        sessionHTML += `</div></div>`; list.innerHTML += sessionHTML;
+                    });
+                } else {
+                    list.innerHTML = `<div class="text-center mt-10"><i class="fa-solid fa-box-open text-3xl text-gray-300 dark:text-gray-600 mb-3"></i><p class="text-sm text-gray-400 dark:text-gray-500 font-medium">No hay sesiones guardadas</p></div>`;
+                }
+            } catch (e) {}
+        }
+
+        function appendChatMessage(sender, text) {
+            const chatHistory = document.getElementById('chat-history');
+            const bubbleDiv = document.createElement('div');
+            
+            if (sender === 'user') {
+                bubbleDiv.className = "flex flex-col gap-1 items-end ml-auto max-w-[85%] sm:max-w-[75%]";
+                bubbleDiv.innerHTML = `<div class="chat-bubble-user px-4 py-3 rounded-2xl text-sm shadow-sm leading-relaxed">${text.replace(/\n/g, '<br>')}</div>`;
+            } else {
+                bubbleDiv.className = "flex flex-col gap-1 items-start max-w-[85%] sm:max-w-[75%]";
+                bubbleDiv.innerHTML = `<div class="chat-bubble-ai px-4 py-3 rounded-2xl text-sm shadow-sm leading-relaxed">${text.replace(/\n/g, '<br>')}</div>`;
+            }
+            
+            chatHistory.appendChild(bubbleDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        async function handleChatSubmit(event) {
+            event.preventDefault();
+            const inputField = document.getElementById('chat-input');
+            const message = inputField.value.trim();
+            if (!message) return;
+
+            appendChatMessage('user', message);
+            inputField.value = '';
+            inputField.disabled = true;
+
+            const chatHistory = document.getElementById('chat-history');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'chat-loading';
+            loadingDiv.className = "flex flex-col gap-1 items-start max-w-[80%]";
+            loadingDiv.innerHTML = `<div class="chat-bubble-ai px-4 py-3 rounded-2xl text-sm shadow-sm flex items-center gap-2"><i class="fa-solid fa-circle-notch fa-spin"></i> Pensando...</div>`;
+            chatHistory.appendChild(loadingDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            const formData = new FormData();
+            formData.append('session_id', chatSessionId);
+            formData.append('message', message);
+
+            try {
+                const response = await fetch('/api/chat', { method: 'POST', body: formData });
+                const data = await response.json();
+                
+                document.getElementById('chat-loading').remove();
+
+                if (data.response.includes('"ready": true') || data.response.includes("'ready': true")) {
+                    try {
+                        const jsonMatch = data.response.match(/\{[\s\S]*\}/);
+                        if (jsonMatch) {
+                            const config = JSON.parse(jsonMatch[0]);
+                            appendChatMessage('ai', `¡Todo listo! He configurado las máquinas con esos parámetros. Iniciando el entrenamiento de: <b>${config.models}</b>.`);
+                            startTrainingFromChat(config);
+                        }
+                    } catch (e) {
+                        appendChatMessage('ai', "¡Ups! Entendí los parámetros pero hubo un fallo interno leyendo los datos. ¿Puedes repetírmelos?");
+                    }
+                } else {
+                    appendChatMessage('ai', data.response);
+                }
+            } catch (error) {
+                document.getElementById('chat-loading').remove();
+                appendChatMessage('ai', "Error de conexión con el servidor. Revisa tu consola.");
+            }
+            
+            inputField.disabled = false;
+            inputField.focus();
+        }
+
+        async function browseFolderAndInsert() {
+            try {
+                const response = await fetch('/api/train/browse');
+                const data = await response.json();
+                if(data.path) { 
+                    const inputField = document.getElementById('chat-input');
+                    inputField.value = `La ruta de mi dataset es: ${data.path}`;
+                    inputField.focus();
+                }
+            } catch (error) { alert("No se pudo abrir el explorador de Windows."); }
+        }
+
+        async function startTrainingFromChat(config) {
+            document.getElementById('loading-spinner').classList.remove('hidden');
+            const formData = new FormData(); 
+            formData.append('dataset_path', config.dataset_path); 
+            formData.append('model_names', config.models); 
+            formData.append('epochs', config.epochs); 
+            formData.append('batch_size', config.batch_size); 
+            formData.append('learning_rate', config.learning_rate);
+
+            try {
+                const response = await fetch('/api/train/start', { method: 'POST', body: formData }); 
+                const result = await response.json();
+                if (response.ok) {
+                    currentViewingSession = result.message.split('sesión ')[1].replace('.',''); 
+                    document.getElementById('training-console').classList.remove('hidden'); 
+                    document.getElementById('console-logs').innerHTML = `<p class="text-blue-400">> ${result.message}</p>`;
+                    if(logInterval) clearInterval(logInterval); 
+                    logInterval = setInterval(fetchLogs, 2000);
+                } else { 
+                    alert("❌ Error: " + result.message); 
+                    document.getElementById('loading-spinner').classList.add('hidden'); 
+                }
+            } catch (error) { 
+                document.getElementById('loading-spinner').classList.add('hidden'); 
+            }
+        }
+
+        function toggleSession(event, sessionId) {
+            event.stopPropagation();
+            const content = document.getElementById(`session-content-${sessionId}`);
+            const icon = document.getElementById(`session-icon-${sessionId}`);
+            if (content.classList.contains('hidden')) { content.classList.remove('hidden'); icon.classList.replace('fa-chevron-down', 'fa-chevron-up'); } 
+            else { content.classList.add('hidden'); icon.classList.replace('fa-chevron-up', 'fa-chevron-down'); }
+        }
+
+        async function renameSession(event, oldId) {
+            if(event) event.stopPropagation();
+            const newName = prompt("Nuevo nombre para esta sesión:", oldId);
+            if (!newName || newName === oldId) return;
+            const formData = new FormData(); formData.append('old_name', oldId); formData.append('new_name', newName);
+            try {
+                const res = await fetch('/api/train/session/rename', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (res.ok) { if (currentViewingSession === oldId) { currentViewingSession = data.new_name; if(document.getElementById('session-title-name')) document.getElementById('session-title-name').innerText = data.new_name; } loadSidebarModels(); } 
+                else { alert("❌ Error: " + data.message); }
+            } catch(e) {}
+        }
+
+        async function deleteSession(event, sessionId) {
+            if(event) event.stopPropagation();
+            if(!confirm(`⚠️ ¿Eliminar DEFINITIVAMENTE la sesión '${sessionId}'?`)) return;
+            try {
+                const res = await fetch(`/api/train/session/${sessionId}`, { method: 'DELETE' });
+                if (res.ok) { if (currentViewingSession === sessionId) { document.getElementById('session-results-panel').classList.add('hidden'); document.getElementById('results-panel').classList.add('hidden'); document.getElementById('config-panel').classList.remove('hidden'); } loadSidebarModels(); } 
+                else { const data = await res.json(); alert("❌ Error: " + data.message); }
+            } catch(e) {}
+        }
+
+        async function recalculateComparison(sessionId) {
+            document.getElementById('session-results-panel').classList.add('hidden'); document.getElementById('config-panel').classList.remove('hidden'); document.getElementById('training-console').classList.remove('hidden'); document.getElementById('loading-spinner').classList.remove('hidden');
+            const formData = new FormData(); formData.append('session_id', sessionId);
+            try { await fetch('/api/train/session/compare', { method: 'POST', body: formData }); currentViewingSession = sessionId; if(logInterval) clearInterval(logInterval); logInterval = setInterval(fetchLogs, 2000); } catch(e) {}
+        }
+
+        function cloneSessionConfig() {
+            if (!currentSessionConfig || Object.keys(currentSessionConfig).length === 0) { 
+                alert("No hay configuración guardada para esta sesión."); 
+                return; 
+            }
+            
+            document.getElementById('session-results-panel').classList.add('hidden'); 
+            document.getElementById('results-panel').classList.add('hidden'); 
+            document.getElementById('config-panel').classList.remove('hidden');
+            
+            const modelsStr = Array.isArray(currentSessionConfig.models) 
+                ? currentSessionConfig.models.join(", ") 
+                : currentSessionConfig.models;
+                
+            const autoMessage = `Hola, quiero reutilizar los parámetros de un experimento anterior:\n- Ruta: ${currentSessionConfig.dataset_path}\n- Modelos: ${modelsStr}\n- Épocas: ${currentSessionConfig.epochs || 20}\n- Batch Size: ${currentSessionConfig.batch_size || 32}\n- Learning Rate: ${currentSessionConfig.learning_rate || 0.001}\n\n¿Me los listas y me preguntas si quiero cambiar algo antes de empezar?`;
+            
+            const inputField = document.getElementById('chat-input');
+            inputField.value = autoMessage;
+            
+            const fakeEvent = { preventDefault: () => {} };
+            handleChatSubmit(fakeEvent);
+        }
+
+        async function launchExternalValidation() {
+            try {
+                const response = await fetch('/api/train/browse');
+                const data = await response.json();
+                if(data.path) {
+                    document.getElementById('session-results-panel').classList.add('hidden'); document.getElementById('training-console').classList.remove('hidden'); document.getElementById('loading-spinner').classList.remove('hidden');
+                    const formData = new FormData(); formData.append('session_id', currentViewingSession); formData.append('dataset_path', data.path);
+                    await fetch('/api/train/session/external_validation', { method: 'POST', body: formData });
+                    if(logInterval) clearInterval(logInterval); logInterval = setInterval(fetchLogs, 2000);
+                }
+            } catch (error) { alert("Error abriendo el explorador."); }
+        }
+
+        async function viewSessionResults(sessionId) {
+            currentViewingSession = sessionId;
+            document.getElementById('config-panel').classList.add('hidden'); document.getElementById('results-panel').classList.add('hidden'); document.getElementById('training-console').classList.add('hidden'); document.getElementById('session-results-panel').classList.remove('hidden'); document.getElementById('session-title-name').innerText = sessionId;
+            try {
+                const res = await fetch(`/api/train/session/${sessionId}/ranking`);
+                const data = await res.json();
+                const tbody = document.getElementById('session-ranking-table'); const img = document.getElementById('session-heatmap-img'); const err = document.getElementById('session-heatmap-error'); const grid = document.getElementById('session-models-grid');
+                tbody.innerHTML = ''; grid.innerHTML = '';
+                if (data.config) {
+                    currentSessionConfig = data.config;
+                    document.getElementById('session-cfg-path').innerText = data.config.dataset_path ? data.config.dataset_path.split('\\').pop().split('/').pop() : 'No guardada'; document.getElementById('session-cfg-path').title = data.config.dataset_path || ''; document.getElementById('session-cfg-epochs').innerText = data.config.epochs || '-'; document.getElementById('session-cfg-batch').innerText = data.config.batch_size || '-'; document.getElementById('session-cfg-lr').innerText = data.config.learning_rate || '-';
+                } else {
+                    currentSessionConfig = null; document.getElementById('session-cfg-path').innerText = '-'; document.getElementById('session-cfg-epochs').innerText = '-'; document.getElementById('session-cfg-batch').innerText = '-'; document.getElementById('session-cfg-lr').innerText = '-';
+                }
+                if(data.status === "success") {
+                    data.ranking.forEach((r, i) => {
+                        let rankIcon = i === 0 ? '🏆' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : `${i+1}º`));
+                        let rowClass = i === 0 ? 'bg-yellow-50/50 dark:bg-yellow-900/10 font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors';
+                        tbody.innerHTML += `<tr class="${rowClass} border-b dark:border-gray-700"><td class="px-4 py-4 text-center text-lg">${rankIcon}</td><td class="px-4 py-4 text-gray-800 dark:text-gray-200 font-semibold flex items-center gap-2"><i class="fa-solid fa-microchip opacity-50"></i> ${r.Model}</td><td class="px-4 py-4 font-mono text-blue-600 dark:text-blue-400 font-bold">${parseFloat(r.Mean).toFixed(4)}</td><td class="px-4 py-4 font-mono text-gray-500">±${parseFloat(r.Std).toFixed(4)}</td></tr>`;
+                        grid.innerHTML += `<button onclick="viewResults('${sessionId}', '${r.Model}')" class="px-4 py-3 bg-gray-50 hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-200 transition-colors flex items-center gap-2 shadow-sm focus:outline-none"><i class="fa-solid fa-microchip text-blue-500"></i> ${r.Model}</button>`;
+                    });
+                    if(data.ranking.length >= 2) { img.src = `${data.heatmap}?t=${new Date().getTime()}`; img.classList.remove('hidden'); err.classList.add('hidden'); } else { img.classList.add('hidden'); err.classList.remove('hidden'); }
+                } else { tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">Resultados no encontrados.</td></tr>`; img.classList.add('hidden'); err.classList.add('hidden'); }
+                try {
+                    const resExt = await fetch(`/api/train/session/${sessionId}/external_results`);
+                    const dataExt = await resExt.json();
+                    const extContainer = document.getElementById('external-validation-container');
+                    const extTbody = document.getElementById('external-ranking-table');
+                    const extImg = document.getElementById('external-roc-img');
+                    const extDelongImg = document.getElementById('external-delong-img');
+                    const extDelongErr = document.getElementById('external-delong-error');
+                    if(dataExt.status === "success") {
+                        extContainer.classList.remove('hidden');
+                        extTbody.innerHTML = '';
+                        dataExt.metrics.forEach(r => {
+                            extTbody.innerHTML += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50"><td class="px-4 py-3 font-bold">${r.Model}</td><td class="px-4 py-3 font-mono">${parseFloat(r.Accuracy).toFixed(4)}</td><td class="px-4 py-3 font-mono">${parseFloat(r["F1-score"]).toFixed(4)}</td><td class="px-4 py-3 font-mono text-blue-600 dark:text-blue-400 font-bold">${parseFloat(r.AUC).toFixed(4)}</td></tr>`;
+                        });
+                        extImg.src = `${dataExt.roc}?t=${new Date().getTime()}`;
+                        if (dataExt.metrics.length >= 2 && dataExt.delong) { extDelongImg.src = `${dataExt.delong}?t=${new Date().getTime()}`; extDelongImg.classList.remove('hidden'); extDelongErr.classList.add('hidden'); } else { extDelongImg.classList.add('hidden'); extDelongErr.classList.remove('hidden'); }
+                    } else { extContainer.classList.add('hidden'); }
+                } catch(e) { document.getElementById('external-validation-container').classList.add('hidden'); }
+            } catch(e) {}
+        }
+
+        async function viewResults(sessionId, modelName) {
+            currentViewingSession = sessionId; currentViewingModel = modelName;
+            document.getElementById('config-panel').classList.add('hidden'); document.getElementById('session-results-panel').classList.add('hidden'); document.getElementById('training-console').classList.add('hidden'); document.getElementById('results-panel').classList.remove('hidden'); document.getElementById('res-model-name').innerText = modelName;
+            try {
+                const res = await fetch(`/api/train/results/${sessionId}/${modelName}`);
+                const data = await res.json();
+                if(data.status === "success") {
+                    const tbody = document.getElementById('res-table-body'); tbody.innerHTML = '';
+                    data.data.forEach(row => {
+                        const isMean = isNaN(row.fold) || row.fold === 'mean' || row.fold === 'std' || row.fold === 'Media' || row.fold === 'Std';
+                        const bgClass = isMean ? 'bg-blue-50/50 dark:bg-blue-900/10 font-black text-gray-900 dark:text-white border-t-2 border-blue-200 dark:border-blue-800/50' : 'bg-white dark:bg-gray-800';
+                        let foldName = row.fold || "Eval"; 
+                        tbody.innerHTML += `<tr class="transition-colors ${bgClass}"><td class="px-6 py-4">${foldName}</td><td class="px-6 py-4">${parseFloat(row.accuracy||0).toFixed(4)}</td><td class="px-6 py-4">${parseFloat(row.precision||0).toFixed(4)}</td><td class="px-6 py-4">${parseFloat(row.recall||0).toFixed(4)}</td><td class="px-6 py-4">${parseFloat(row.f1||0).toFixed(4)}</td><td class="px-6 py-4 ${isMean ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}">${parseFloat(row.auc||0).toFixed(4)}</td></tr>`;
+                    });
+                    const imgContainer = document.getElementById('res-images'); imgContainer.innerHTML = '';
+                    const mathPanel = document.getElementById('res-math-panel');
+                    if(data.images && data.images.length > 0) {
+                        data.images.forEach(img => { 
+                            const timestampedSrc = `${img}?t=${new Date().getTime()}`;
+                            imgContainer.innerHTML += `<div class="bg-white dark:bg-gray-800 p-2 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"><img src="${timestampedSrc}" class="w-full rounded-xl object-contain bg-black cursor-zoom-in hover:scale-[1.02] transition-transform duration-300" onclick="openImageModal(this.src)"></div>`; 
+                        });
+                        mathPanel.classList.remove('hidden');
+                        document.getElementById('ui-brier').innerText = data.calib.brier || "-"; document.getElementById('ui-ece').innerText = data.calib.ece || "-";
+                        const xaiBody = document.getElementById('res-xai-table'); xaiBody.innerHTML = '';
+                        if(data.xai_metrics && data.xai_metrics.length > 0){
+                            data.xai_metrics.forEach(x => {
+                                const del = String(x.deletion_auc).split('±')[0]; const ins = String(x.insertion_auc).split('±')[0]; const spa = String(x.sparsity).split('±')[0]; const ent = String(x.entropy).split('±')[0]; const sta = String(x.stability).split('±')[0];
+                                xaiBody.innerHTML += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"><td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-800/80">${x.Method}</td><td class="px-4 py-3 font-mono">${del}</td><td class="px-4 py-3 font-mono">${ins}</td><td class="px-4 py-3 font-mono">${spa}</td><td class="px-4 py-3 font-mono">${ent}</td><td class="px-4 py-3 font-mono text-purple-600 dark:text-purple-400 font-bold">${sta}</td></tr>`;
+                            });
+                        }
+                    } else { mathPanel.classList.add('hidden'); imgContainer.innerHTML = `<div class="col-span-1 md:col-span-2 p-10 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl text-gray-500"><i class="fa-solid fa-wand-magic-sparkles text-4xl mb-4 text-purple-400 opacity-50"></i><p>Aún no hay mapas XAI. Dale a 'Generar XAI y Métricas'.</p></div>`; }
+                }
+            } catch(e) {}
+        }
+
+        // ==========================================
+        // CORRECCIÓN MAGISTRAL: GENERACIÓN SÍNCRONA
+        // ==========================================
+        async function generateXAI() {
+            // 1. Ocultar paneles y mostrar carga
+            document.getElementById('results-panel').classList.add('hidden'); 
+            document.getElementById('config-panel').classList.remove('hidden'); 
+            document.getElementById('training-console').classList.remove('hidden'); 
+            document.getElementById('loading-spinner').classList.remove('hidden');
+            
+            const formData = new FormData(); 
+            formData.append('session_id', currentViewingSession); 
+            formData.append('model_name', currentViewingModel);
+            
+            // 2. Iniciar el lector de logs para que veas qué está haciendo por detrás
+            if(logInterval) clearInterval(logInterval); 
+            logInterval = setInterval(fetchLogs, 2000);
+            
+            try {
+                // 3. Esperar a que el servidor termine de calcularlo TODO (tarda unos 30 segs)
+                const res = await fetch('/api/train/run_eval', { method: 'POST', body: formData });
+                const result = await res.json();
+                
+                // 4. Parar la ruleta y los logs
+                clearInterval(logInterval); 
+                document.getElementById('loading-spinner').classList.add('hidden');
+                
+                if (res.ok && result.status === "success") {
+                    // 5. ¡VOLVER A LA PANTALLA CON LOS RESULTADOS FRESCOS!
+                    viewResults(currentViewingSession, currentViewingModel);
+                } else {
+                    alert("❌ " + result.message);
+                }
+            } catch(e) {
+                clearInterval(logInterval); 
+                document.getElementById('loading-spinner').classList.add('hidden');
+            }
+        }
+
+        async function fetchLogs() {
+            try {
+                const response = await fetch('/api/train/logs'); const data = await response.json(); 
+                const consoleDiv = document.getElementById('console-logs');
+                consoleDiv.innerHTML = data.logs; consoleDiv.scrollTop = consoleDiv.scrollHeight;
+                
+                // Leemos los strings de cierre de los otros procesos (Entrenamiento global, etc)
+                if (data.logs.includes("[SESIÓN COMPLETADA Y COMPARADA]") || data.logs.includes("[COMPARACIÓN COMPLETADA]") || data.logs.includes("[VALIDACIÓN EXTERNA COMPLETADA]") || data.logs.includes("PROCESO XAI COMPLETADO") || data.logs.includes("ERROR CRÍTICO") || data.logs.includes("[PROCESO XAI MANUAL COMPLETADO]")) {
+                    clearInterval(logInterval); 
+                    document.getElementById('loading-spinner').classList.add('hidden'); 
+                    loadSidebarModels(); 
+                    
+                    if(data.logs.includes("[SESIÓN COMPLETADA Y COMPARADA]") || data.logs.includes("[COMPARACIÓN COMPLETADA]") || data.logs.includes("[VALIDACIÓN EXTERNA COMPLETADA]")) { 
+                        viewSessionResults(currentViewingSession); 
+                    }
+                    
+                    // Doble seguro de redirección por si acaso
+                    if(data.logs.includes("[PROCESO XAI MANUAL COMPLETADO]") || data.logs.includes("PROCESO XAI COMPLETADO")) { 
+                        viewResults(currentViewingSession, currentViewingModel); 
+                    }
+                }
+            } catch(e) {}
+        }
+
+        async function downloadPDFReport() {
+            if (!currentViewingSession) return;
+            const btn = event.currentTarget;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Generando...`;
+            btn.disabled = true;
+            try { window.location.href = `/api/train/session/${currentViewingSession}/report`; } catch (e) { alert("Error al generar el PDF"); } 
+            finally { setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 3000); }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const sT = localStorage.getItem('theme'); if (sT === 'dark' || (!sT && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); document.getElementById('theme-icon').className='fa-solid fa-sun text-lg'; }
+            changeLanguage(); loadSidebarModels();
+        });
+    </script>
+</body>
+</html>

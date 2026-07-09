@@ -1,0 +1,60 @@
+# ─── Imágenes de rayos X (datasets) ───
+pneumoniacnn-main/ExternalDataset/
+pneumoniacnn-main/Images/
+
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ─── Entorno ───
+.env
+.venv/
+venv/
+env/
+
+# ─── IDE ───
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ─── Pesos de modelos entrenados ───
+*.keras
+*.h5
+*.weights.h5
+*.zip
+*.z??
+*.z0?
+
+# ─── Resultados de experimentos (benchmarking) ───
+pneumoniacnn-main/results/**/*.csv
+pneumoniacnn-main/results/**/*.png
+
+# ─── Uploads de usuarios (radiografías) ───
+static/uploads/*
+!static/uploads/.gitkeep
+
+# ─── Mapas XAI generados (se regeneran al predecir) ───
+static/results/*
+!static/results/.gitkeep
+
+# ─── Reportes PDF generados ───
+static/reports/*
+!static/reports/.gitkeep
+
+# ─── Artefactos de sesiones MLOps ───
+training_results/
+
+# ─── Logs ───
+training_log.txt
+*.log
+
+# ─── Sistema ───
+.DS_Store
+Thumbs.db

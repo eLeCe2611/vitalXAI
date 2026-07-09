@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-Ray AI Consultant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> tailwind.config = { darkMode: 'class', } </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        #chat-box::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chat-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #chat-box::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .dark #chat-box::-webkit-scrollbar-thumb {
+            background: #4b5563;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 h-screen flex overflow-hidden font-sans transition-colors duration-300">
+
+    <aside
+        class="w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col shadow-sm z-20 transition-colors duration-300">
+
+        <div
+            class="p-4 border-b border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20 transition-colors duration-300">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 rounded-full bg-blue-600 dark:bg-blue-500 flex items-center justify-center text-white shadow-sm flex-shrink-0">
+                    <i class="fa-solid fa-user-md text-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">{{ role
+                        }}</p>
+                    <p class="text-sm font-black text-gray-800 dark:text-white truncate transition-colors duration-300">
+                        {{ full_name }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3 space-y-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+            <a href="/dashboard"
+                class="flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 transition-colors font-bold text-sm border border-blue-200 dark:border-blue-800/50">
+                <i class="fa-solid fa-stethoscope w-5 text-center"></i> <span id="ui-nav-diag">Diagnóstico Rápido</span>
+            </a>
+            <a href="/training"
+                class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-semibold text-sm">
+                <i class="fa-solid fa-flask w-5 text-center"></i> <span id="ui-nav-lab">Laboratorio de
+                    Entrenamiento</span>
+            </a>
+        </div>
+
+        <div
+            class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 transition-colors duration-300">
+            <h2 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                id="ui-history-title">Historial</h2>
+            <i class="fa-solid fa-clock-rotate-left text-gray-400 dark:text-gray-500"></i>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-3" id="history-list">
+            <p class="text-sm text-gray-400 dark:text-gray-500 italic" id="ui-no-history">No hay consultas recientes.
+            </p>
+        </div>
+
+        <div
+            class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-300">
+            <a href="/logout"
+                class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-semibold flex items-center gap-2 transition-colors">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> <span id="ui-logout">Cerrar Sesión</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-300 relative">
+        <header
+            class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center shadow-sm z-10 transition-colors duration-300">
+            <div class="flex items-center gap-3">
+                <div
+                    class="bg-blue-600 dark:bg-blue-500 text-white w-10 h-10 rounded-lg flex items-center justify-center shadow-md">
+                    <i class="fa-solid fa-user-doctor text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800 dark:text-white transition-colors duration-300">X-Ray AI
+                        Consultant</h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium" id="ui-subtitle">Asistente de
+                        Detección de Neumonía</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+
+                <button onclick="toggleTheme()"
+                    class="text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 focus:outline-none w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+                    title="Cambiar tema">
+                    <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
+                </button>
+                <div
+                    class="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                    <i class="fa-solid fa-globe text-blue-500 dark:text-blue-400"></i>
+                    <label for="lang-selector" class="sr-only">Idioma:</label>
+                    <select id="lang-selector" onchange="changeLanguage()"
+                        class="bg-transparent border-none text-sm font-bold text-gray-600 dark:text-gray-200 focus:outline-none cursor-pointer pr-2 appearance-none">
+                        <option value="es" class="dark:bg-gray-800">Español</option>
+                        <option value="en" class="dark:bg-gray-800">English</option>
+                        <option value="zh" class="dark:bg-gray-800">中文 (Mandarin)</option>
+                        <option value="hi" class="dark:bg-gray-800">हिन्दी (Hindi)</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <div id="chat-box" class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
+            <div class="flex items-start gap-4">
+                <div
+                    class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0 border border-blue-200 dark:border-blue-800 shadow-sm transition-colors duration-300">
+                    <i class="fa-solid fa-robot text-blue-600 dark:text-blue-400"></i>
+                </div>
+                <div
+                    class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl rounded-tl-none p-4 shadow-sm max-w-2xl transition-colors duration-300">
+                    <p class="text-gray-700 dark:text-gray-300 leading-relaxed" id="ui-welcome">Hola, doctor. Seleccione
+                        un modelo de inteligencia artificial y suba una radiografía de tórax para comenzar el análisis.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div
+            class="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] transition-colors duration-300 z-10">
+            <div class="max-w-5xl mx-auto flex items-end gap-3">
+                <div class="flex flex-col w-48 flex-shrink-0">
+                    <label for="model-selector"
+                        class="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider pl-1"
+                        id="ui-model-label">Modelo de IA:</label>
+                    <select id="model-selector"
+                        class="border-2 border-gray-200 dark:border-gray-600 rounded-xl text-sm p-2 focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:text-white bg-gray-50 h-14 cursor-pointer font-semibold transition-colors">
+                        <optgroup label="CNN Clásicas" class="dark:bg-gray-800">
+                            <option value="DenseNet121">DenseNet121</option>
+                            <option value="ResNet50">ResNet50</option>
+                            <option value="MobileNetV2">MobileNetV2</option>
+                            <option value="EfficientNetB0">EfficientNetB0</option>
+                            <option value="ConvNeXtTiny">ConvNeXtTiny</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="flex-1 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all relative flex flex-col items-center justify-center p-3 h-14"
+                    id="drop-zone">
+                    <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        accept="image/jpeg, image/png">
+                    <div class="flex items-center gap-2 pointer-events-none">
+                        <i class="fa-solid fa-cloud-arrow-up text-xl text-gray-400 dark:text-gray-500"></i>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 font-medium" id="ui-drop-text">Arrastre
+                            radiografía o haga clic</p>
+                        <p id="file-name-display"
+                            class="text-sm text-blue-600 dark:text-blue-400 font-bold hidden truncate max-w-xs"></p>
+                    </div>
+                </div>
+                <button onclick="sendImage()" id="send-btn"
+                    class="bg-blue-600 dark:bg-blue-500 text-white w-14 h-14 rounded-xl flex items-center justify-center hover:bg-blue-700 dark:hover:bg-blue-600 transition shadow-md disabled:bg-gray-300 dark:disabled:bg-gray-600 flex-shrink-0"
+                    disabled>
+                    <i class="fa-solid fa-paper-plane text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="image-modal"
+            class="fixed inset-0 z-50 hidden bg-black/90 flex items-center justify-center backdrop-blur-sm transition-opacity"
+            onclick="closeImageModal()">
+            <button class="absolute top-6 right-8 text-white hover:text-red-500 focus:outline-none transition-colors"
+                onclick="closeImageModal()">
+                <i class="fa-solid fa-xmark text-4xl"></i>
+            </button>
+            <img id="modal-image-content" src=""
+                class="max-w-[90%] max-h-[90vh] object-contain rounded-lg shadow-2xl border border-gray-700"
+                onclick="event.stopPropagation()">
+        </div>
+    </main>
+
+    <script>
+        const dict = {
+            es: { navDiag: "Diagnóstico Rápido", navLab: "Laboratorio MLOps", historyTitle: "Historial", noHistory: "No hay consultas recientes.", logout: "Cerrar Sesión", subtitle: "Asistente de Detección de Neumonía", modelLabel: "Modelo de IA:", welcome: "Hola, doctor. Seleccione un modelo y suba una radiografía.", dropText: "Arrastre radiografía o haga clic", analyzing: "Analizando...", diagnosis: "Diagnóstico", confidence: "Confianza", heatmap: "Mapa de Calor XAI", downloadPdf: "Descargar PDF", recovered: "Recuperado del Historial", infModel: "Modelo de Inferencia" },
+            en: { navDiag: "Quick Diagnosis", navLab: "MLOps Laboratory", historyTitle: "History", noHistory: "No recent consultations.", logout: "Logout", subtitle: "Pneumonia Detection Assistant", modelLabel: "AI Model:", welcome: "Hello, doctor. Select an AI model and upload an X-ray.", dropText: "Drag an X-ray or click", analyzing: "Analyzing...", diagnosis: "Diagnosis", confidence: "Confidence", heatmap: "XAI Heatmap", downloadPdf: "Download PDF", recovered: "Recovered from History", infModel: "Inference Model" },
+            zh: { navDiag: "快速诊断", navLab: "MLOps 实验室", historyTitle: "历史", noHistory: "无", logout: "登出", subtitle: "肺炎检测助手", modelLabel: "AI 模型:", welcome: "医生您好。请选择模型并上传X光片。", dropText: "拖拽或点击", analyzing: "分析中...", diagnosis: "诊断", confidence: "置信度", heatmap: "XAI 热力图", downloadPdf: "下载 PDF", recovered: "已恢复", infModel: "模型" },
+            hi: { navDiag: "त्वरित निदान", navLab: "एमएलओप्स लैब", historyTitle: "इतिहास", noHistory: "कोई नहीं", logout: "लॉग आउट", subtitle: "निमोनिया जांच", modelLabel: "एआई मॉडल:", welcome: "मॉडल चुनें और एक्स-रे अपलोड करें।", dropText: "क्लिक करें", analyzing: "विश्लेषण...", diagnosis: "निदान", confidence: "आत्मविश्वास", heatmap: "हीटमैप", downloadPdf: "पीडीएफ डाउनलोड", recovered: "इतिहास से", infModel: "मॉडल" }
+        };
+
+        let currentLang = 'es';
+        let selectedFile = null;
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark'); icon.className = 'fa-solid fa-moon text-lg'; localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark'); icon.className = 'fa-solid fa-sun text-lg'; localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        function changeLanguage() {
+            currentLang = document.getElementById('lang-selector').value;
+            localStorage.setItem('appLang', currentLang);
+            const t = dict[currentLang];
+
+            const ids = ['ui-nav-diag', 'ui-nav-lab', 'ui-history-title', 'ui-no-history', 'ui-logout', 'ui-subtitle', 'ui-model-label', 'ui-welcome'];
+            const keys = ['navDiag', 'navLab', 'historyTitle', 'noHistory', 'logout', 'subtitle', 'modelLabel', 'welcome'];
+            ids.forEach((id, i) => { if (document.getElementById(id)) document.getElementById(id).innerText = t[keys[i]]; });
+            if (!selectedFile && document.getElementById('ui-drop-text')) document.getElementById('ui-drop-text').innerText = t.dropText;
+
+            document.querySelectorAll('.ui-recovered-txt').forEach(el => el.innerText = t.recovered);
+            document.querySelectorAll('.ui-diagnosis-txt').forEach(el => el.innerText = t.diagnosis);
+            document.querySelectorAll('.ui-confidence-txt').forEach(el => el.innerText = t.confidence);
+            document.querySelectorAll('.ui-infmodel-txt').forEach(el => el.innerText = t.infModel);
+            document.querySelectorAll('.ui-heatmap-txt').forEach(el => el.innerText = t.heatmap);
+            document.querySelectorAll('.ui-download-txt').forEach(el => el.innerText = t.downloadPdf);
+
+            loadHistory();
+        }
+
+        const fileInput = document.getElementById('file-input');
+        fileInput.addEventListener('change', function (e) {
+            if (e.target.files.length > 0) {
+                selectedFile = e.target.files[0];
+                document.getElementById('ui-drop-text').classList.add('hidden');
+                document.getElementById('file-name-display').innerText = selectedFile.name;
+                document.getElementById('file-name-display').classList.remove('hidden');
+                document.getElementById('send-btn').disabled = false;
+                document.getElementById('drop-zone').classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+            }
+        });
+
+        function addMessage(type, content) {
+            const chatBox = document.getElementById('chat-box');
+            const msgDiv = document.createElement('div');
+            if (type === 'user') {
+                msgDiv.className = 'flex items-start gap-4 justify-end';
+                msgDiv.innerHTML = `<div class="bg-blue-600 dark:bg-blue-500 border border-blue-700 dark:border-blue-600 rounded-2xl rounded-tr-none p-2 shadow-sm max-w-sm">${content}</div><div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-user-md text-gray-500 dark:text-gray-400"></i></div>`;
+            } else {
+                msgDiv.className = 'flex items-start gap-4';
+                msgDiv.innerHTML = `<div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-robot text-blue-600 dark:text-blue-400"></i></div><div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl rounded-tl-none p-5 shadow-sm max-w-3xl w-full text-gray-700 dark:text-gray-200">${content}</div>`;
+            }
+            chatBox.appendChild(msgDiv); chatBox.scrollTop = chatBox.scrollHeight; return msgDiv;
+        }
+
+        async function sendImage() {
+            if (!selectedFile) return;
+            const modelName = document.getElementById('model-selector').value;
+            const t = dict[currentLang];
+            const imageUrl = URL.createObjectURL(selectedFile);
+
+            addMessage('user', `<img src="${imageUrl}" class="rounded-lg w-48 h-auto shadow-sm cursor-pointer border border-blue-300 dark:border-blue-700" onclick="openImageModal(this.src)">`);
+            const loadingMsg = addMessage('ai', `<div class="flex items-center gap-3"><i class="fa-solid fa-circle-notch fa-spin text-blue-600"></i> <span>${t.analyzing}</span></div>`);
+
+            const formData = new FormData();
+            formData.append('file', selectedFile); formData.append('model_name', modelName);
+
+            selectedFile = null; fileInput.value = "";
+            document.getElementById('ui-drop-text').classList.remove('hidden');
+            document.getElementById('file-name-display').classList.add('hidden');
+            document.getElementById('send-btn').disabled = true;
+
+            try {
+                const response = await fetch('/predict', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (response.ok) {
+                    const isPneu = result.label === "Neumonía";
+                    const col = isPneu ? "text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/20" : "text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/20";
+
+                    let labelStr = result.label;
+                    if (currentLang === 'en') labelStr = isPneu ? "Pneumonia" : "Normal";
+
+                    loadingMsg.querySelector('.bg-white, .dark\\:bg-gray-800').innerHTML = `
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+                            <div class="md:col-span-2">
+                                <h3 class="text-xs font-bold text-gray-500 mb-2"><span class="ui-diagnosis-txt">${t.diagnosis}</span></h3>
+                                <div class="flex items-center gap-4 p-4 rounded-xl border ${col}"><i class="fa-solid ${isPneu ? 'fa-virus-covid' : 'fa-shield-heart'} text-3xl"></i><div><p class="font-black text-xl">${labelStr}</p><p class="text-sm"><span class="ui-confidence-txt">${t.confidence}</span>: ${result.confidence}%</p></div></div>
+                            </div>
+                            <div class="md:col-span-3">
+                                <h3 class="text-xs font-bold text-gray-500 mb-2"><span class="ui-heatmap-txt">${t.heatmap}</span></h3>
+                                <img src="${result.xai_image}" class="rounded-xl w-full cursor-pointer" onclick="openImageModal(this.src)">
+                            </div>
+                        </div>
+                    `;
+                    loadHistory();
+                }
+            } catch (error) { loadingMsg.querySelector('.bg-white, .dark\\:bg-gray-800').innerHTML = `<p class="text-red-500">Error</p>`; }
+        }
+
+        async function loadHistory() {
+            try {
+                const response = await fetch('/api/history?t=' + new Date().getTime());
+                const result = await response.json();
+                const historyList = document.getElementById('history-list');
+                if (result.status === "success" && result.data.length > 0) {
+                    historyList.innerHTML = '';
+                    const grouped = {};
+                    result.data.forEach(i => { if (!grouped[i.model_name]) grouped[i.model_name] = []; grouped[i.model_name].push(i); });
+
+                    for (const [model, items] of Object.entries(grouped)) {
+                        let html = `<div class="mb-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden"><button onclick="this.nextElementSibling.classList.toggle('hidden')" class="w-full flex justify-between p-3 bg-gray-50 dark:bg-gray-800/80"><span class="text-xs font-bold text-gray-700 dark:text-gray-300">${model} (${items.length})</span></button><div class="hidden flex-col gap-2 p-2">`;
+
+                        items.forEach(item => {
+                            let lbl = item.prediction_label;
+                            if (currentLang === 'en') lbl = lbl === "Neumonía" ? "Pneumonia" : "Normal";
+                            const p = item.original_image_path.replace(/\\/g, '/');
+                            const x = item.xai_image_path.replace(/\\/g, '/');
+                            html += `<div class="bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="reviewConsultation('${p}','${x}','${item.prediction_label}',${item.confidence_score},'${model}','')"><div class="flex gap-3"><img src="/${p}" class="w-10 h-10 object-cover rounded"><div class="flex-1"><p class="text-[10px] text-gray-500">${item.timestamp}</p><p class="text-[11px] font-black ${item.prediction_label === "Neumonía" ? 'text-red-500' : 'text-green-500'}">${lbl}</p></div></div></div>`;
+                        });
+                        historyList.innerHTML += html + `</div></div>`;
+                    }
+                }
+            } catch (e) { }
+        }
+
+        function reviewConsultation(o, x, l, c, m, p) {
+            const t = dict[currentLang];
+            let lbl = l; if (currentLang === 'en') lbl = l === "Neumonía" ? "Pneumonia" : "Normal";
+            addMessage('user', `<img src="/${o}" class="rounded-lg w-48 shadow-sm cursor-pointer" onclick="openImageModal(this.src)">`);
+            addMessage('ai', `<div class="grid grid-cols-1 md:grid-cols-5 gap-6"><div class="md:col-span-2"><h3 class="text-xs font-bold text-gray-500 mb-2"><span class="ui-diagnosis-txt">${t.diagnosis}</span></h3><p class="font-black text-xl ${l === 'Neumonía' ? 'text-red-500' : 'text-green-500'}">${lbl} (${c}%)</p><p class="text-sm text-gray-400 mt-2">${m}</p></div><div class="md:col-span-3"><img src="/${x}" class="rounded-xl w-full cursor-pointer" onclick="openImageModal(this.src)"></div></div>`);
+        }
+
+        function openImageModal(src) { document.getElementById('modal-image-content').src = src; document.getElementById('image-modal').classList.remove('hidden'); }
+        function closeImageModal() { document.getElementById('image-modal').classList.add('hidden'); }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const sT = localStorage.getItem('theme'); if (sT === 'dark' || (!sT && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); document.getElementById('theme-icon').className = 'fa-solid fa-sun text-lg'; }
+            const sL = localStorage.getItem('appLang'); if (sL) { document.getElementById('lang-selector').value = sL; currentLang = sL; }
+            changeLanguage();
+        });
+    </script>
+</body>
+
+</html>
