@@ -18,4 +18,7 @@ When the task is complete and the user approves closeout, move the task to `## D
 
 ## To do
 
+- TASK-002: Refactorización del proyecto (seguridad, código, estructura)
+
 ## Done
+- TASK-001: Infraestructura de tests y cobertura completa (unitarios e integración)

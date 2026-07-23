@@ -1,72 +1,67 @@
 # Testing Guide
 
-Customize before product implementation. If a command is unavailable, write `not available` and explain the fallback.
-
-This file defines project-specific testing logistics. Use `agents/skills/test-driven-development/SKILL.md` as the authority for the TDD workflow itself.
-
 ## Commands
 
 ### Fast (TDD cycle / pre-commit)
 | Purpose | Command |
 |---|---|
-| Targeted unit | |
-| Full unit | |
-| Lint | |
-| Typecheck | |
+| Targeted unit | `python -m pytest tests/unit/test_<module>.py -v` |
+| Full unit | `python -m pytest tests/unit/ -v` |
+| Lint | `ruff check .` |
+| Typecheck | `not available` (project has no type stubs) |
 
 ### Slow (pre-merge / CI)
 | Purpose | Command |
 |---|---|
-| Integration | |
-| E2E | |
-| Build | |
-| Full validation | |
-| Coverage report | |
-| DESIGN.md lint | `npx @google/design.md lint agents/docs/design.md` (requires Node.js; optional — skip if unavailable) |
+| Integration | `python -m pytest tests/integration/ -v` |
+| E2E | `not available` |
+| Build | `not available` |
+| Full validation | `python -m pytest tests/ -v && ruff check .` |
+| Coverage report | `python -m pytest tests/unit/ --cov=services --cov=routers --cov=database.py --cov-report=term-missing` |
+| DESIGN.md lint | `not available` (no design.md yet) |
 
 ## Test Levels
 | Level | Purpose | Isolation | When to run |
 |---|---|---|---|
-| Unit | Business logic, pure functions, isolated components | No network, no DB, no IO | Every TDD cycle |
-| Integration | Interaction between layers (repository + service, API + DB) | Mock at external boundaries, real DB or testcontainers for project DB | Pre-commit / CI |
+| Unit | Business logic, pure functions, isolated components | No network, no DB, no IO (all mocked) | Every TDD cycle |
+| Integration | Interaction between layers (API + DB) | SQLite in memory for DB, mocks for external APIs | Pre-commit / CI |
 | E2E | Full flow (UI → API → DB → response) | Real or staging environment | CI / pre-release |
 
 ## Coverage
 | Item | Configuration |
 |---|---|
-| Tool | |
-| Threshold | |
-| Command | |
-| Excluded paths | |
-| Fail on below threshold | yes / no |
+| Tool | pytest-cov |
+| Threshold | 70% (74% actual) |
+| Command | `python -m pytest tests/unit/ --cov=services --cov=routers --cov=database.py --cov-report=term-missing` |
+| Excluded paths | `*/__pycache__/*`, `*/tests/*` |
+| Fail on below threshold | yes |
 
 ## Environment
-- Required services:
-- Required environment variables:
-- Reset/cleanup:
+- Required services: None (all external dependencies are mocked)
+- Required environment variables: None
+- Reset/cleanup: Test files under `tests/` are self-contained
 
 ## Fixtures
 | Type | Location | When used |
 |---|---|---|
-| Unit (factories, builders, mocks) | | Unit tests |
-| Integration (seed data, DB snapshots) | | Integration tests |
-| E2E (test users, sandbox data) | | E2E tests |
-| Shared utilities | | All levels |
+| Unit (mock DB, mock TF model, mock client) | `tests/conftest.py` | All unit tests |
+| Integration (SQLite seed data) | `tests/integration/` | Integration tests |
+| Shared utilities | `tests/conftest.py` | All levels |
 
 ## External Services Strategy
 | Level | Strategy |
 |---|---|
 | Unit | Always mock or stub |
-| Integration | Project DB: real. Third-party APIs: mock or testcontainer |
+| Integration | Project DB: SQLite in memory. Third-party APIs: mock |
 | E2E | Staging or sandbox environment |
 
 ## Test Locations
-- Unit:
-- Integration:
-- E2E:
+- Unit: `tests/unit/`
+- Integration: `tests/integration/`
+- E2E: `not available`
 
 ## TDD Coordination
-- Read and apply the TDD skill once before implementation code when the task changes behavior or refactors behavior-preserving code.
+- The approved plan and TDD skill govern behavior changes. For pre-existing code (this project), write regression tests that capture expected behavior without modifying production code.
 - Use the commands and locations in this guide while following the skill's red/green/refactor cycle.
 - Record any approved TDD exception in the task plan and checklist before implementing under that exception.
 
