@@ -1,9 +1,11 @@
+import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-# AÑADIMOS 'trainer' a la lista de imports
-from routers import auth, history, inference, trainer 
-import uvicorn
+
 from database import init_db
+
+# AÑADIMOS 'trainer' a la lista de imports
+from routers import auth, history, inference, trainer
 
 app = FastAPI(title="X-Ray AI Consultant")
 
@@ -14,7 +16,7 @@ app.mount("/training_results", StaticFiles(directory="training_results"), name="
 app.include_router(auth.router)
 app.include_router(history.router)
 app.include_router(inference.router)
-app.include_router(trainer.router) 
+app.include_router(trainer.router)
 
 @app.on_event("startup")
 async def startup_event():

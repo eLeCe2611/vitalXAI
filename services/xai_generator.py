@@ -1,12 +1,12 @@
-import os
+import matplotlib
 import numpy as np
 import tensorflow as tf
-import matplotlib
+
 matplotlib.use('Agg')  # IMPORTANTE: Evita que Matplotlib intente abrir ventanas en el servidor
 import matplotlib.pyplot as plt
 
 # Importamos la función que tiene los modelos en caché
-from services.ml_engine import get_model 
+from services.ml_engine import get_model
 
 MODELS_TRANSFORMERS = ["deit", "swin_base", "vit_384"]
 
@@ -63,20 +63,20 @@ def get_cam_or_attention(model, img, is_transformer, img_size):
             if isinstance(layer, tf.keras.layers.Conv2D):
                 target = layer.name
                 break
-        if target is None: 
+        if target is None:
             return np.zeros((img_size[0], img_size[1]))
-        
+
         grad_model = tf.keras.Model(model.inputs, [model.get_layer(target).output, model.output])
         with tf.GradientTape() as tape:
             img_tensor = tf.convert_to_tensor(img[None])
             conv, pred = grad_model(img_tensor)
-            
+
             # --- FIX DEL BUG ---
             # Si TF envuelve los resultados en listas, los extraemos
             if isinstance(conv, list): conv = conv[0]
             if isinstance(pred, list): pred = pred[0]
             # -------------------
-            
+
             loss = pred[:, 0]
         grads = tape.gradient(loss, conv)[0]
         weights = tf.reduce_mean(grads, axis=(0,1))
@@ -84,14 +84,14 @@ def get_cam_or_attention(model, img, is_transformer, img_size):
         cam = np.maximum(cam, 0)
         cam = cam / (cam.max() + 1e-9)
         return tf.image.resize(cam[..., None], img_size).numpy().squeeze()
-    
+
     else:
         img_tf = tf.convert_to_tensor(img[None])
         try:
             outputs = model(pixel_values=img_tf, output_attentions=True)
-            attn_layer = outputs.attentions[-1] 
-            attn_heads = tf.reduce_mean(attn_layer, axis=1)[0] 
-            cls_attn = attn_heads[0, 1:] 
+            attn_layer = outputs.attentions[-1]
+            attn_heads = tf.reduce_mean(attn_layer, axis=1)[0]
+            cls_attn = attn_heads[0, 1:]
             grid_size = int(np.sqrt(cls_attn.shape[0]))
             attn_grid = tf.reshape(cls_attn, (grid_size, grid_size))
             attn_map = tf.image.resize(attn_grid[..., None], img_size).numpy().squeeze()
@@ -112,15 +112,15 @@ def generate_xai_heatmap(model_name: str, original_image_path: str, xai_save_pat
     is_transformer = model_name in MODELS_TRANSFORMERS
     img_size = get_img_size(model_name)
     xai_method_name = "Attention Map" if is_transformer else "Grad-CAM"
-    
+
     # Preprocesar
     img = load_img_tf(original_image_path, img_size)
-    
+
     # Calcular mapas
     sal = saliency(model, img, is_transformer)
     sm = smoothgrad(model, img, is_transformer)
     cam = get_cam_or_attention(model, img, is_transformer, img_size)
-    
+
     # Dibujar figura 1x4
     plt.figure(figsize=(15, 5))
 
@@ -148,5 +148,5 @@ def generate_xai_heatmap(model_name: str, original_image_path: str, xai_save_pat
     plt.tight_layout()
     plt.savefig(xai_save_path, bbox_inches='tight', dpi=150) # DPI a 150 para no saturar web
     plt.close()
-    
+
     return xai_save_path

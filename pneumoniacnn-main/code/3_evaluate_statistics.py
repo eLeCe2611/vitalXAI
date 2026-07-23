@@ -1,17 +1,18 @@
 """
 evaluate_statistics.py (VERSIÓN MLOPS)
 ======================================
-Genera tabla comparativa y Test de Wilcoxon dinámicamente 
+Genera tabla comparativa y Test de Wilcoxon dinámicamente
 para los modelos dentro de una sesión específica de la web.
 """
 
 import os
 import sys
-import pandas as pd
-import numpy as np
-from scipy.stats import wilcoxon
-import seaborn as sns
+
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from scipy.stats import wilcoxon
 
 # ======================================================
 # CONFIGURACIÓN DINÁMICA WEB
@@ -51,7 +52,7 @@ def load_fold_results(models):
 
 def main():
     models = get_models_in_session()
-    
+
     # CORRECCIÓN: Ahora pide mínimo 1 modelo para funcionar en lugar de 2
     if len(models) < 1:
         print("[AVISO] No hay modelos terminados en esta sesión para evaluar.")
@@ -63,7 +64,7 @@ def main():
     summary = []
     for model, values in results.items():
         summary.append({"Model": model, "Mean": np.mean(values), "Std": np.std(values)})
-    
+
     df_summary = pd.DataFrame(summary).sort_values(by="Mean", ascending=False)
     df_summary.to_csv(os.path.join(SESSION_DIR, "session_ranking.csv"), index=False)
 
@@ -71,7 +72,7 @@ def main():
     if len(models) >= 2:
         n = len(models)
         p_matrix = pd.DataFrame(np.ones((n, n)), index=models, columns=models)
-        
+
         for i in range(n):
             for j in range(i+1, n):
                 data_a, data_b = results[models[i]], results[models[j]]
@@ -89,7 +90,7 @@ def main():
 
         # Mapa de Calor (Heatmap)
         plt.figure(figsize=(8, 6))
-        ax = sns.heatmap(p_matrix, annot=True, cmap="coolwarm", vmin=0, vmax=0.1, 
+        ax = sns.heatmap(p_matrix, annot=True, cmap="coolwarm", vmin=0, vmax=0.1,
                          cbar_kws={'label': 'p-value'}, annot_kws={"size": 10})
         plt.title(f"Test de Wilcoxon ({TARGET_METRIC.upper()})\n< {P_VALUE_THRESHOLD} es Estadísticamente Significativo")
         plt.tight_layout()

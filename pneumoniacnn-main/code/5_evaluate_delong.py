@@ -6,11 +6,12 @@ Aplica el Test Estadístico de DeLong a la Validación Externa.
 
 import os
 import sys
-import pandas as pd
+
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import scipy.stats
 import seaborn as sns
-import matplotlib.pyplot as plt
 
 # ======================================================
 # CONFIGURACIÓN DINÁMICA WEB
@@ -60,7 +61,7 @@ def delong_roc_test(y_true, preds_a, preds_b):
     diff = auc_a - auc_b
     cov = compute_delong_cov(y_true, preds_a, preds_b)
     var = cov[0, 0] + cov[1, 1] - 2 * cov[0, 1]
-    if var == 0: return 1.0 
+    if var == 0: return 1.0
     z = diff / np.sqrt(var)
     return 2 * scipy.stats.norm.sf(abs(z))
 
@@ -71,24 +72,24 @@ def main():
 
     df = pd.read_csv(INPUT_FILE)
     y_true = df["y_true"].values
-    
+
     model_cols = [c for c in df.columns if c.startswith("prob_")]
     models = [c.replace("prob_", "") for c in model_cols]
-    
+
     if len(models) < 2:
         print("[AVISO] Solo hay 1 modelo evaluado. Se omite el test de DeLong (se necesitan 2 o más).")
         sys.exit(0)
 
     n = len(models)
     p_matrix = pd.DataFrame(np.ones((n, n)), index=models, columns=models)
-    
+
     for i in range(n):
         for j in range(i + 1, n):
             p_val = delong_roc_test(y_true, df[f"prob_{models[i]}"].values, df[f"prob_{models[j]}"].values)
             p_matrix.loc[models[i], models[j]] = p_matrix.loc[models[j], models[i]] = p_val
 
     p_matrix.to_csv(os.path.join(SESSION_DIR, "delong_pvalues_matrix.csv"))
-    
+
     plt.figure(figsize=(8, 6))
     sns.heatmap(p_matrix, annot=True, cmap="coolwarm", vmin=0, vmax=0.1, cbar_kws={'label': 'p-value'}, annot_kws={"size": 10}, fmt=".3f")
     plt.title(f"Test de DeLong p-values (Validación Externa)\n< {P_VALUE_THRESHOLD} es Estadísticamente Significativo")

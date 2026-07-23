@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse
+
 from database import get_db_connection
 
 router = APIRouter()
@@ -13,12 +14,12 @@ async def get_history(request: Request):
 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        
+
         query = """
-        SELECT id, user_id, timestamp, model_name, original_image_path, 
-               xai_image_path, prediction_label, confidence_score, patient_name, pdf_path 
-        FROM consultations 
-        WHERE user_id = %s 
+        SELECT id, user_id, timestamp, model_name, original_image_path,
+               xai_image_path, prediction_label, confidence_score, patient_name, pdf_path
+        FROM consultations
+        WHERE user_id = %s
         ORDER BY timestamp DESC
         """
         cursor.execute(query, (user_id,))

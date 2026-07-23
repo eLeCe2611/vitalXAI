@@ -2,25 +2,21 @@
 trainer.py (VERSIÓN DEFINITIVA MLOPS - HÍBRIDA CNN/TRANSFORMERS + PDF + XAI)
 """
 import os
+
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
 
-import sys
-import random
-import numpy as np
-import pandas as pd
-import tensorflow as tf
-from fastapi import APIRouter, Form, BackgroundTasks
-from fastapi.responses import JSONResponse, FileResponse
-import subprocess
+import csv
 import datetime
+import json
+import shutil
+import subprocess
 import tkinter as tk
 from tkinter import filedialog
-from typing import List
-import csv
-import shutil
-import json
+
+from fastapi import APIRouter, BackgroundTasks, Form
+from fastapi.responses import FileResponse, JSONResponse
 from fpdf import FPDF
 
 # === INTEGRACIÓN GROQ AI (Llama 3) ===
@@ -47,7 +43,7 @@ COMPORTAMIENTO:
 - Sé muy natural, empático y directo. No uses formatos complejos.
 
 REGLA CRÍTICA Y ABSOLUTA DE SISTEMA:
-Cuando tengas los 5 datos claros y CONFIRMADOS DEFINITIVAMENTE por el usuario, DEBES responder ÚNICAMENTE con un bloque JSON exacto. 
+Cuando tengas los 5 datos claros y CONFIRMADOS DEFINITIVAMENTE por el usuario, DEBES responder ÚNICAMENTE con un bloque JSON exacto.
 Ese JSON será leído por el sistema para arrancar las máquinas. No escribas texto antes ni después del JSON.
 
 Formato exacto de tu última respuesta:
@@ -72,27 +68,27 @@ async def chat_endpoint(session_id: str = Form(...), message: str = Form(...)):
     try:
         if session_id not in chat_sessions:
             chat_sessions[session_id] = [{"role": "system", "content": SYSTEM_PROMPT}]
-        
+
         chat_sessions[session_id].append({"role": "user", "content": message})
-        
+
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=chat_sessions[session_id],
             temperature=0.7,
             max_tokens=1024
         )
-        
+
         bot_reply = response.choices[0].message.content
         chat_sessions[session_id].append({"role": "assistant", "content": bot_reply})
-        
+
         return JSONResponse(content={"response": bot_reply})
-        
+
     except Exception as e:
         return JSONResponse(status_code=500, content={"response": f"Error en la IA: Verifica tu API Key de Groq. Detalle: {str(e)}"})
-    
+
 
 # === MOTOR CENTRAL MLOPS (FLUJO IRROMPIBLE) ===
-def run_training_queue(session_id: str, models: List[str], dataset_path: str, epochs: int, batch_size: int, learning_rate: float):
+def run_training_queue(session_id: str, models: list[str], dataset_path: str, epochs: int, batch_size: int, learning_rate: float):
     # Usamos rutas absolutas para garantizar que siempre encuentre los scripts
     base_path = os.getcwd()
     script_train_cnn = os.path.join(base_path, "pneumoniacnn-main", "code", "1_train_kfold.py")
@@ -122,7 +118,7 @@ def run_training_queue(session_id: str, models: List[str], dataset_path: str, ep
         with open(LOG_FILE, "a", encoding="utf-8", errors="replace") as log:
             tipo_arquitectura = "TRANSFORMER" if is_trans else "CNN"
             log.write(f"\n>>> INICIANDO ENTRENAMIENTO [{tipo_arquitectura}]: {model_name}\n")
-            
+
             p = subprocess.Popen(["python", script_to_run], stdout=log, stderr=subprocess.STDOUT, env=env_vars, text=True, encoding="utf-8", errors="replace")
             p.wait()
 
@@ -130,22 +126,22 @@ def run_training_queue(session_id: str, models: List[str], dataset_path: str, ep
             log.write(f"\n[{datetime.datetime.now().strftime('%H:%M:%S')}] [XAI AUTO] Generando mapas visuales para {model_name} (Script 6)...\n")
             p_img = subprocess.Popen(["python", script_img], stdout=log, stderr=subprocess.STDOUT, env=env_vars, text=True, encoding="utf-8", errors="replace")
             p_img.wait()
-            
+
             log.write(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [XAI AUTO] Calculando métricas matemáticas reales para {model_name} (Script 7)...\n")
             p_math = subprocess.Popen(["python", script_math], stdout=log, stderr=subprocess.STDOUT, env=env_vars, text=True, encoding="utf-8", errors="replace")
             p_math.wait()
-                
+
             log.write(f"\n✅ [XAI AUTO] Explicabilidad completada para {model_name}.\n")
 
     # Finalizada la iteración de modelos, ejecutamos estadísticas globales
     with open(LOG_FILE, "a", encoding="utf-8", errors="replace") as f:
         f.write(f"\n{'='*60}\n[{datetime.datetime.now().strftime('%H:%M:%S')}] ENTRENAMIENTOS COMPLETADOS.\n")
         f.write("Generando Ranking Global y Matriz de Wilcoxon...\n")
-        
+
     env_vars_comp = os.environ.copy()
     env_vars_comp["TFG_SESSION_ID"] = session_id
     script_comp_path = os.path.join(base_path, "pneumoniacnn-main", "code", "3_evaluate_statistics.py")
-    
+
     with open(LOG_FILE, "a", encoding="utf-8", errors="replace") as log:
         process_comp = subprocess.Popen(["python", script_comp_path], stdout=log, stderr=subprocess.STDOUT, env=env_vars_comp, text=True, encoding="utf-8", errors="replace")
         process_comp.wait()
@@ -188,7 +184,7 @@ async def start_training(
 @router.get("/api/train/logs")
 async def get_training_logs():
     if not os.path.exists(LOG_FILE): return JSONResponse(content={"logs": "Esperando..."})
-    with open(LOG_FILE, "r", encoding="utf-8", errors="replace") as f: lines = f.readlines()[-60:] 
+    with open(LOG_FILE, encoding="utf-8", errors="replace") as f: lines = f.readlines()[-60:]
     return JSONResponse(content={"logs": "".join(lines)})
 
 @router.get("/api/train/models")
@@ -209,21 +205,21 @@ async def get_model_results(session_id: str, model_name: str):
     csv_path = f"{model_dir}/kfold_results.csv"
     if not os.path.exists(csv_path): return JSONResponse(status_code=404, content={"error": "Resultados no encontrados"})
     data = []
-    with open(csv_path, mode='r', encoding='utf-8') as f:
+    with open(csv_path, encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader: data.append(row)
     images = [f"/training_results/{session_id}/{model_name}/{file}" for file in os.listdir(model_dir) if file.endswith(".png")]
     calib_data = {"brier": "-", "ece": "-"}
     calib_path = f"{model_dir}/calibration_metrics.txt"
     if os.path.exists(calib_path):
-        with open(calib_path, "r", encoding="utf-8") as f:
+        with open(calib_path, encoding="utf-8") as f:
             for line in f.readlines():
                 if "Brier" in line: calib_data["brier"] = line.split(":")[1].strip()
                 if "ECE" in line: calib_data["ece"] = line.split(":")[1].strip()
     xai_metrics = []
     xai_csv_path = f"{model_dir}/xai_metrics_comparison.csv"
     if os.path.exists(xai_csv_path):
-        with open(xai_csv_path, mode='r', encoding='utf-8') as f:
+        with open(xai_csv_path, encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader: xai_metrics.append(row)
     return JSONResponse(content={"status": "success", "data": data, "images": images, "calib": calib_data, "xai_metrics": xai_metrics})
@@ -232,12 +228,12 @@ async def get_model_results(session_id: str, model_name: str):
 async def run_evaluation_script(session_id: str = Form(...), model_name: str = Form(...), dataset_path: str = Form("")):
     session_dir = f"training_results/{session_id}"
     saved_path_file = os.path.join(session_dir, "dataset_path.txt")
-    
+
     if not dataset_path and os.path.exists(saved_path_file):
-        with open(saved_path_file, "r", encoding="utf-8") as f: dataset_path = f.read().strip()
-    if not dataset_path or not os.path.exists(dataset_path): 
+        with open(saved_path_file, encoding="utf-8") as f: dataset_path = f.read().strip()
+    if not dataset_path or not os.path.exists(dataset_path):
         return JSONResponse(status_code=400, content={"status": "error", "message": "No se encontró la ruta del dataset original."})
-    
+
     # === EJECUCIÓN SINCRÓNA (El servidor obliga a la web a esperar) ===
     base_path = os.getcwd()
     env_vars = os.environ.copy()
@@ -246,22 +242,22 @@ async def run_evaluation_script(session_id: str = Form(...), model_name: str = F
         "TFG_MODEL_NAME": model_name,
         "TFG_DATASET_DIR": dataset_path
     })
-    
+
     script_img = os.path.join(base_path, "pneumoniacnn-main", "code", "6_xai_qualitative.py")
     script_math = os.path.join(base_path, "pneumoniacnn-main", "code", "7_xai_quantitative.py")
-    
+
     # Usamos "a" (append) para no borrar el registro de entrenamiento original en el log
     with open(LOG_FILE, "a", encoding="utf-8", errors="replace") as log:
         log.write(f"\n[{datetime.datetime.now().strftime('%H:%M:%S')}] [MODO MANUAL] 1/2: Generando Mapas XAI...\n")
         p_img = subprocess.Popen(["python", script_img], stdout=log, stderr=subprocess.STDOUT, env=env_vars, text=True, encoding="utf-8", errors="replace")
         p_img.wait()
-        
+
         log.write(f"\n[{datetime.datetime.now().strftime('%H:%M:%S')}] [MODO MANUAL] 2/2: Calculando Métricas Cuantitativas...\n")
         p_math = subprocess.Popen(["python", script_math], stdout=log, stderr=subprocess.STDOUT, env=env_vars, text=True, encoding="utf-8", errors="replace")
         p_math.wait()
-        
+
         log.write("\n✅ [PROCESO XAI MANUAL COMPLETADO]\n")
-        
+
     # Solo devolvemos la respuesta de "success" cuando el wait() de los scripts ha terminado
     return JSONResponse(content={"status": "success", "message": "Generación completada. Recargando..."})
 
@@ -308,15 +304,15 @@ async def get_session_ranking(session_id: str):
     heatmap_path = f"/training_results/{session_id}/wilcoxon_heatmap.png"
     if not os.path.exists(csv_path): return JSONResponse(status_code=404, content={"error": "Aún no se ha comparado esta sesión."})
     data = []
-    with open(csv_path, mode='r', encoding='utf-8') as f:
+    with open(csv_path, encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader: data.append(row)
     config_data = {}
     config_path = f"{session_dir}/config.json"
     if os.path.exists(config_path):
-        with open(config_path, "r", encoding="utf-8") as f: config_data = json.load(f)
+        with open(config_path, encoding="utf-8") as f: config_data = json.load(f)
     elif os.path.exists(f"{session_dir}/dataset_path.txt"):
-        with open(f"{session_dir}/dataset_path.txt", "r", encoding="utf-8") as f: config_data["dataset_path"] = f.read().strip()
+        with open(f"{session_dir}/dataset_path.txt", encoding="utf-8") as f: config_data["dataset_path"] = f.read().strip()
     return JSONResponse(content={"status": "success", "ranking": data, "heatmap": heatmap_path, "config": config_data})
 
 # === RUTAS DE VALIDACIÓN EXTERNA ===
@@ -334,12 +330,12 @@ async def run_external_validation(background_tasks: BackgroundTasks, session_id:
             log.write(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] Iniciando Validación Externa para sesión {session_id}...\n")
             process_val = subprocess.Popen(["python", script_val], stdout=log, stderr=subprocess.STDOUT, env=env_vars, text=True, encoding="utf-8", errors="replace")
             process_val.wait()
-            
+
             log.write(f"\n[{datetime.datetime.now().strftime('%H:%M:%S')}] Calculando Test Estadístico de DeLong...\n")
             process_delong = subprocess.Popen(["python", script_delong], stdout=log, stderr=subprocess.STDOUT, env=env_vars, text=True, encoding="utf-8", errors="replace")
             process_delong.wait()
             log.write("\n✅ [VALIDACIÓN EXTERNA COMPLETADA]\n")
-            
+
     background_tasks.add_task(run_validation)
     return JSONResponse(content={"status": "success", "message": "Validación Externa iniciada."})
 
@@ -351,7 +347,7 @@ async def get_external_validation_results(session_id: str):
     delong_path = f"/training_results/{session_id}/external_validation/delong_heatmap.png"
     if not os.path.exists(csv_path): return JSONResponse(status_code=404, content={"error": "Aún no hay resultados de validación externa."})
     data = []
-    with open(csv_path, mode='r', encoding='utf-8') as f:
+    with open(csv_path, encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader: data.append(row)
     return JSONResponse(content={"status": "success", "metrics": data, "roc": roc_path, "delong": delong_path})
@@ -363,11 +359,11 @@ class MedicalReport(FPDF):
         # Fondo del encabezado
         self.set_fill_color(30, 41, 59) # Azul muy oscuro (estilo slate-800)
         self.rect(0, 0, 210, 35, 'F')
-        
+
         self.set_text_color(255, 255, 255)
         self.set_font("Arial", "B", 16)
         self.cell(0, 10, "X-RAY CONSULTANT AI - MEDICAL REPORT", ln=True, align="L")
-        
+
         self.set_font("Arial", "", 10)
         self.cell(0, 5, f"Protocolo MLOps: Deep Learning para Detección de Neumonía", ln=True, align="L")
         self.ln(10)
@@ -395,15 +391,15 @@ async def generate_pdf_report(session_id: str):
     pdf = MedicalReport()
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.add_page()
-    
+
     # --- 1. RESUMEN DE CONFIGURACIÓN ---
     pdf.section_title("1. CONFIGURACIÓN DEL SISTEMA Y PARÁMETROS")
     pdf.set_font("Arial", "", 10)
     pdf.set_text_color(50, 50, 50)
-    
+
     config_path = os.path.join(session_dir, "config.json")
     if os.path.exists(config_path):
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(config_path, encoding="utf-8") as f:
             cfg = json.load(f)
             # Tabla de configuración (2 columnas)
             data = [
@@ -423,7 +419,7 @@ async def generate_pdf_report(session_id: str):
     ranking_csv = os.path.join(session_dir, "session_ranking.csv")
     if os.path.exists(ranking_csv):
         pdf.section_title("2. RENDIMIENTO GLOBAL (K-FOLD CROSS-VALIDATION)")
-        
+
         # Tabla de métricas
         pdf.set_fill_color(71, 85, 105) # Encabezado tabla (slate-600)
         pdf.set_text_color(255, 255, 255)
@@ -431,10 +427,10 @@ async def generate_pdf_report(session_id: str):
         pdf.cell(80, 8, " Arquitectura de Modelo", border=1, fill=True)
         pdf.cell(50, 8, " Media AUC", border=1, fill=True)
         pdf.cell(50, 8, " Desviación Estándar", border=1, fill=True, ln=True)
-        
+
         pdf.set_text_color(30, 41, 59)
         pdf.set_font("Arial", "", 9)
-        with open(ranking_csv, mode='r', encoding='utf-8') as f:
+        with open(ranking_csv, encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for i, row in enumerate(reader):
                 fill = (i % 2 == 0) # Filas alternas
@@ -456,7 +452,7 @@ async def generate_pdf_report(session_id: str):
     if os.path.exists(ext_dir):
         pdf.add_page()
         pdf.section_title("3. VALIDACIÓN EXTERNA (DATASET INDEPENDIENTE)")
-        
+
         # Métricas externas
         ext_csv = os.path.join(ext_dir, "external_validation_metrics.csv")
         if os.path.exists(ext_csv):
@@ -465,9 +461,9 @@ async def generate_pdf_report(session_id: str):
             pdf.cell(40, 8, " Accuracy", border=1)
             pdf.cell(40, 8, " F1-Score", border=1)
             pdf.cell(40, 8, " AUC", border=1, ln=True)
-            
+
             pdf.set_font("Arial", "", 9)
-            with open(ext_csv, mode='r', encoding='utf-8') as f:
+            with open(ext_csv, encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
                     pdf.cell(60, 7, row['Model'], border=1)
@@ -498,7 +494,7 @@ async def generate_pdf_report(session_id: str):
                 pdf.set_font("Arial", "B", 10)
                 pdf.cell(0, 8, "Métricas de Fidelidad XAI (Calculadas sobre 5 muestras):", ln=True)
                 pdf.set_font("Arial", "", 8)
-                with open(xai_cuanti, mode='r', encoding='utf-8') as f:
+                with open(xai_cuanti, encoding='utf-8') as f:
                     reader = csv.DictReader(f)
                     headers = reader.fieldnames
                     col_width = 190 / len(headers)
@@ -512,9 +508,9 @@ async def generate_pdf_report(session_id: str):
             pdf.ln(5)
             pdf.set_font("Arial", "B", 10)
             pdf.cell(0, 8, "Mapas de Calor de Interpretabilidad Visual:", ln=True)
-            
+
             xai_imgs = sorted([f for f in os.listdir(m_path) if f.startswith("xai_example_") and f.endswith(".png")])
-            
+
             # Imprimimos en 2 columnas para ahorrar espacio y reducir blanco
             for i in range(0, len(xai_imgs), 2):
                 img1 = os.path.join(m_path, xai_imgs[i])

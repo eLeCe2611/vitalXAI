@@ -1,13 +1,13 @@
 import os
+
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["USE_TF"] = "1"
 
-import sys
+import cv2
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-import cv2
 from sklearn.metrics import auc, brier_score_loss
 from transformers import TFAutoModelForImageClassification
 
@@ -85,22 +85,22 @@ def calculate_insertion_deletion(img_input, xai_map, steps=10):
     sorted_indices = np.argsort(flat_map)[::-1]
     n_pixels = len(sorted_indices)
     step_size = n_pixels // steps
-    
+
     deletion_probs, insertion_probs = [original_prob], [0.0]
-    
+
     if IS_TRANSFORMER:
         del_img, img_flat = img_input.copy().reshape(3, -1), img_input.copy().reshape(3, -1)
     else:
         del_img, img_flat = img_input.copy().reshape(-1, 3), img_input.copy().reshape(-1, 3)
-    
+
     ins_img = np.zeros_like(del_img)
 
     for i in range(1, steps + 1):
         idx_to_modify = sorted_indices[:i * step_size]
-        
+
         del_temp = del_img.copy()
         ins_temp = ins_img.copy()
-        
+
         if IS_TRANSFORMER:
             del_temp[:, idx_to_modify] = 0
             ins_temp[:, idx_to_modify] = img_flat[:, idx_to_modify]
@@ -111,7 +111,7 @@ def calculate_insertion_deletion(img_input, xai_map, steps=10):
             ins_temp[idx_to_modify, :] = img_flat[idx_to_modify, :]
             del_tensor = tf.convert_to_tensor(del_temp.reshape(1, IMG_SIZE[0], IMG_SIZE[1], 3), dtype=tf.float32)
             ins_tensor = tf.convert_to_tensor(ins_temp.reshape(1, IMG_SIZE[0], IMG_SIZE[1], 3), dtype=tf.float32)
-            
+
         deletion_probs.append(predict_prob(del_tensor))
         insertion_probs.append(predict_prob(ins_tensor))
 
@@ -130,9 +130,9 @@ def calculate_stability(img_input, original_map):
     img_tensor = tf.convert_to_tensor(img_input, dtype=tf.float32)
     noise = tf.random.normal(shape=tf.shape(img_tensor), mean=0.0, stddev=0.05) # 5% de ruido
     noisy_img_tensor = tf.clip_by_value(img_tensor + noise, 0.0, 1.0)
-    
+
     noisy_map = get_xai_map(noisy_img_tensor)
-    
+
     # Error Cuadrático Medio entre el mapa original y el mapa de la imagen con ruido
     mse = np.mean((original_map - noisy_map) ** 2)
     # Lo invertimos para que mayor = mejor (de 0 a 1)
@@ -155,51 +155,51 @@ def calculate_ece(y_true, y_prob, n_bins=10):
 # ==========================================
 def main():
     print(f"[XAI AUTO] Calculando métricas cuantitativas REALES para {MODEL_NAME}...")
-    
+
     # 1. EVALUACIÓN DE CALIBRACIÓN (10 imágenes: 5 Normales, 5 Neumonías)
     norm_dir = os.path.join(DATASET_DIR, "NORMAL")
     pneu_dir = os.path.join(DATASET_DIR, "PNEUMONIA")
-    
+
     calib_images = [os.path.join(norm_dir, f) for f in os.listdir(norm_dir)[:5]] + \
                    [os.path.join(pneu_dir, f) for f in os.listdir(pneu_dir)[:5]]
     y_true_calib = np.array([0]*5 + [1]*5)
     y_prob_calib = []
-    
+
     for path in calib_images:
         img_input = preprocess_image(path)
         img_tensor = tf.convert_to_tensor(img_input, dtype=tf.float32)
         y_prob_calib.append(predict_prob(img_tensor))
-        
+
     y_prob_calib = np.array(y_prob_calib)
-    
+
     brier = brier_score_loss(y_true_calib, y_prob_calib)
     ece = calculate_ece(y_true_calib, y_prob_calib)
-    
+
     with open(f"{OUTPUT_DIR}/calibration_metrics.txt", "w") as f:
         f.write(f"Brier Score: {brier:.4f}\nECE Score: {ece:.4f}\n")
 
     # 2. EVALUACIÓN DE EXPLICABILIDAD (5 imágenes Neumonía)
     xai_images = [os.path.join(pneu_dir, f) for f in os.listdir(pneu_dir)[:5]]
-    
+
     d_aucs, i_aucs, sparsities, entropies, stabilities = [], [], [], [], []
-    
+
     for path in xai_images:
         img_input = preprocess_image(path)
         img_tensor = tf.convert_to_tensor(img_input, dtype=tf.float32)
         xai_map = get_xai_map(img_tensor)
-        
+
         d_auc, i_auc, spars = calculate_insertion_deletion(img_input, xai_map, steps=10)
         entr = calculate_entropy(xai_map)
         stab = calculate_stability(img_input, xai_map)
-        
+
         d_aucs.append(d_auc)
         i_aucs.append(i_auc)
         sparsities.append(spars)
         entropies.append(entr)
         stabilities.append(stab)
-        
+
     method_name = "Saliency Map" if IS_TRANSFORMER else "Grad-CAM"
-    
+
     metrics_data = [{
         "Method": method_name,
         "deletion_auc": f"{np.mean(d_aucs):.4f} ± {np.std(d_aucs):.4f}",
@@ -208,7 +208,7 @@ def main():
         "entropy": f"{np.mean(entropies):.4f} ± {np.std(entropies):.4f}",
         "stability": f"{np.mean(stabilities):.4f} ± {np.std(stabilities):.4f}"
     }]
-    
+
     df = pd.DataFrame(metrics_data)
     df.to_csv(f"{OUTPUT_DIR}/xai_metrics_comparison.csv", index=False)
     print("[XAI AUTO] Métricas cuantitativas completadas.")

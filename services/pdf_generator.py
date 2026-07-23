@@ -1,6 +1,8 @@
-from fpdf import FPDF
 import os
 from datetime import datetime
+
+from fpdf import FPDF
+
 
 class PDFReport(FPDF):
     def header(self):
@@ -19,31 +21,31 @@ def generate_medical_report(image_path, xai_path, label, confidence, model_name)
     pdf = PDFReport()
     pdf.add_page()
     pdf.set_font('Arial', '', 12)
-    
+
     # Datos de la consulta
     pdf.set_fill_color(240, 240, 240)
     pdf.cell(0, 10, f" Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M')}", 0, 1, 'L', fill=True)
     pdf.cell(0, 10, f" Modelo de IA Utilizado: {model_name}", 0, 1, 'L', fill=True)
     pdf.ln(10)
-    
+
     # Resultado
     pdf.set_font('Arial', 'B', 14)
     if label == "Neumonía":
         pdf.set_text_color(192, 57, 43) # Rojo
     else:
         pdf.set_text_color(39, 174, 96) # Verde
-        
+
     pdf.cell(0, 10, f"DIAGNOSTICO: {label.upper()}", 0, 1, 'C')
     pdf.set_text_color(0)
     pdf.set_font('Arial', '', 12)
     pdf.cell(0, 10, f"Nivel de Confianza: {confidence}%", 0, 1, 'C')
     pdf.ln(10)
-    
+
     # Imágenes
     pdf.set_font('Arial', 'B', 12)
     pdf.cell(90, 10, 'Radiografia Original', 0, 0, 'C')
     pdf.cell(90, 10, 'Mapa de Calor (XAI)', 0, 1, 'C')
-    
+
     # Insertar imágenes ajustando tamaño
     # (Coordenadas x, y, ancho)
     try:
@@ -57,5 +59,5 @@ def generate_medical_report(image_path, xai_path, label, confidence, model_name)
     filename = f"report_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
     filepath = os.path.join("static", "reports", filename)
     pdf.output(filepath, 'F')
-    
+
     return filepath
