@@ -99,11 +99,30 @@ class TestJwtTokens:
 
         from services.auth_service import verify_refresh_token
         mock_cursor = MagicMock()
-        # First query (active token): returns None
-        # Second query (grace period): returns user_id
         mock_cursor.fetchone.side_effect = [None, {"user_id": 42}]
         mock_conn = MagicMock()
         mock_conn.cursor.return_value = mock_cursor
         with p("services.auth_service.get_db_connection", return_value=mock_conn):
             result = verify_refresh_token("recently-revoked-token")
         assert result == 42
+
+    def test_theft_detection_revokes_all_tokens(self):
+        """Old revoked token (outside grace period) triggers mass revocation."""
+        from unittest.mock import MagicMock
+        from unittest.mock import patch as p
+
+        from services.auth_service import verify_refresh_token
+        mock_cursor = MagicMock()
+        # Query 1 (active): None
+        # Query 2 (grace period): None
+        # Query 3 (old revoked): {"user_id": 42}
+        mock_cursor.fetchone.side_effect = [None, None, {"user_id": 42}]
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        with p("services.auth_service.get_db_connection", return_value=mock_conn):
+            result = verify_refresh_token("stolen-token")
+        assert result is None
+        # Verify mass revocation was called for user 42
+        revoke_calls = [c for c in mock_cursor.execute.call_args_list if "UPDATE refresh_tokens" in str(c) and "user_id" in str(c)]
+        assert len(revoke_calls) >= 1, "Mass revoke should be called"
+        assert "user_id = 42" in str(revoke_calls[-1]) or "42" in str(revoke_calls[-1][0][1])

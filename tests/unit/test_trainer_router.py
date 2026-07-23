@@ -3,10 +3,11 @@ from unittest.mock import MagicMock, mock_open, patch
 
 class TestChat:
     def test_new_session_creates_conversation(self, client):
-        with patch("routers.trainer.client.chat.completions.create") as mock_groq:
-            mock_groq.return_value.choices = [
-                MagicMock(message=MagicMock(content="¡Hola! ¿Qué modelos quieres usar?"))
-            ]
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value.choices = [
+            MagicMock(message=MagicMock(content="¡Hola! ¿Qué modelos quieres usar?"))
+        ]
+        with patch("services.chatbot_service.client", mock_client):
             response = client.post("/api/chat",
                                    data={"session_id": "test_1", "message": "Hola"})
             assert response.status_code == 200
@@ -14,20 +15,22 @@ class TestChat:
             assert "response" in data
 
     def test_existing_session_reuses_conversation(self, client):
-        with patch("routers.trainer.client.chat.completions.create") as mock_groq:
-            mock_groq.return_value.choices = [
-                MagicMock(message=MagicMock(content="1"))
-            ]
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value.choices = [
+            MagicMock(message=MagicMock(content="1"))
+        ]
+        with patch("services.chatbot_service.client", mock_client):
             client.post("/api/chat", data={"session_id": "test_2", "message": "Hola"})
-            mock_groq.return_value.choices = [
+            mock_client.chat.completions.create.return_value.choices = [
                 MagicMock(message=MagicMock(content="2"))
             ]
             response = client.post("/api/chat", data={"session_id": "test_2", "message": "Adiós"})
             assert response.status_code == 200
 
     def test_handles_groq_error(self, client):
-        with patch("routers.trainer.client.chat.completions.create",
-                   side_effect=Exception("API Key invalid")):
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.side_effect = Exception("API Key invalid")
+        with patch("services.chatbot_service.client", mock_client):
             response = client.post("/api/chat",
                                    data={"session_id": "test_3", "message": "Hola"})
             assert response.status_code == 500
@@ -37,8 +40,8 @@ class TestChat:
 
 class TestBrowseFolder:
     def test_returns_selected_path(self, client):
-        with patch("routers.trainer.tk.Tk") as mock_tk, \
-             patch("routers.trainer.filedialog.askdirectory", return_value="C:/dataset"):
+        with patch("services.mlops_engine.tk.Tk") as mock_tk, \
+             patch("services.mlops_engine.filedialog.askdirectory", return_value="C:/dataset"):
             response = client.get("/api/train/browse")
             assert response.status_code == 200
             assert response.json()["path"] == "C:/dataset"
@@ -233,10 +236,10 @@ class TestGroqApiKey:
         with patch.dict(os.environ, {"GROQ_API_KEY": "test-groq-key-from-env"}):
             import importlib
 
-            import routers.trainer
-            importlib.reload(routers.trainer)
+            import services.chatbot_service
+            importlib.reload(services.chatbot_service)
 
-            assert routers.trainer.GROQ_API_KEY == "test-groq-key-from-env"
+            assert services.chatbot_service.GROQ_API_KEY == "test-groq-key-from-env"
 
         # Restore original env + module state
-        importlib.reload(routers.trainer)
+        importlib.reload(services.chatbot_service)
