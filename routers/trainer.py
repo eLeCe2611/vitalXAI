@@ -22,8 +22,10 @@ from fpdf import FPDF
 # === INTEGRACIÓN GROQ AI (Llama 3) ===
 from groq import Groq
 
-# (Recuerda mantener tu clave de API segura)
-GROQ_API_KEY = "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"
+# Leer API Key desde variable de entorno
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+if not GROQ_API_KEY:
+    print("AVISO: GROQ_API_KEY no configurada. El chatbot no funcionará.")
 client = Groq(api_key=GROQ_API_KEY)
 
 SYSTEM_PROMPT = """
