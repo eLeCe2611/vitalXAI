@@ -26,23 +26,23 @@ Recommendation: What to do to resolve it.
 
 ## DBT-001: Contraseñas en texto plano (auth.py)
 Date: 2026-07-23
-Status: open
+Status: resolved (TASK-002)
 Risk: high
 Impact: high
 Suggested priority: critical
 Evidence: `routers/auth.py:19,126`
-Description: Las contraseñas se comparan directamente como strings en la BD. No hay hashing (bcrypt/argon2).
-Recommendation: Implementar hashing con `passlib` o `bcrypt` antes de TASK-002.
+Description: Las contraseñas se comparaban directamente como strings en la BD.
+Recommendation: Implementado bcrypt hashing en TASK-002.
 
 ## DBT-002: API Key de Groq hardcodeada (trainer.py)
 Date: 2026-07-23
-Status: open
+Status: resolved (TASK-002)
 Risk: high
 Impact: high
 Suggested priority: critical
-Evidence: `routers/trainer.py:30`
-Description: `GROQ_API_KEY = "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"` visible en el código fuente.
-Recommendation: Mover a variable de entorno, leer con `os.getenv("GROQ_API_KEY")`.
+Evidence: `routers/trainer.py:26`
+Description: GROQ_API_KEY hardcodeada visible en el código fuente.
+Recommendation: Movido a variable de entorno (os.getenv) en TASK-002.
 
 ## DBT-003: Cobertura de tests en trainer.py (33%) y xai_generator.py (48%)
 Date: 2026-07-23

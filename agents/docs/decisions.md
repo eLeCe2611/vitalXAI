@@ -54,3 +54,31 @@ Status: accepted
 Context: El proyecto no tenía test runner, linter ni type checker configurados.
 Decision: pytest + pytest-cov + pytest-mock para tests. Ruff para lint. Configuración en pyproject.toml unificado. pytest-sugar para output formateado.
 Consequences: Estandariza el tooling. pyproject.toml como fuente única de configuración. Queda pendiente type checking (deferido).
+
+## ADR-005: bcrypt para hashing de contraseñas
+Date: 2026-07-23
+Status: accepted
+Context: Las contraseñas se almacenaban en texto plano (DBT-001). Se necesita un algoritmo de hashing probado.
+Decision: Usar `bcrypt` (librería directa, no via passlib) por su simplicidad y compatibilidad con Python 3.11+. passlib 1.7.4 no es compatible con bcrypt 5.x.
+Consequences: Las contraseñas existentes en texto plano no son migrables. Los usuarios deben restablecer su contraseña.
+
+## ADR-006: python-jose[cryptography] para JWT
+Date: 2026-07-23
+Status: accepted
+Context: Se necesita autenticación stateless con JWT en lugar de session_token plano.
+Decision: Usar `python-jose[cryptography]` 3.5.0 para crear y verificar tokens JWT. Access token (15 min) + Refresh token (7 días con rotación) almacenados en httponly cookies.
+Consequences: Las rutas protegidas verifican el JWT del cookie. Refresh tokens se almacenan hasheados en tabla `refresh_tokens` para permitir revocación.
+
+## ADR-007: slowapi para rate limiting in-memory
+Date: 2026-07-23
+Status: accepted
+Context: No hay protección contra ataques de fuerza bruta ni abuso de API.
+Decision: Usar `slowapi` 0.1.10 con límite de 5 peticiones/min en /login y 60 peticiones/min en el resto de endpoints. Almacenamiento en memoria.
+Consequences: Los límites se reinician al reiniciar el servidor. No requiere Redis para el ámbito del TFG.
+
+## ADR-008: Estrategia de refresh tokens con rotación y margen de gracia
+Date: 2026-07-23
+Status: accepted
+Context: Se necesita refresh token rotation para mejorar seguridad (si un token es robado, al usarlo se invalida).
+Decision: Los refresh tokens se almacenan hasheados (SHA-256) en tabla `refresh_tokens`. La rotación invalida el token anterior y crea uno nuevo. Margen de gracia de 60s para mitigar race conditions entre pestañas concurrentes.
+Consequences: Si un token rotado se reutiliza dentro de los 60s, se acepta (grace period). Pasado ese tiempo, se rechaza y se invalidan todos los tokens del usuario (detección de robo).
