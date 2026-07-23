@@ -1,19 +1,21 @@
+import datetime
 import os
 import shutil
-import datetime
-from fastapi import APIRouter, UploadFile, File, Form, Request
+
+from fastapi import APIRouter, File, Form, Request, UploadFile
 from fastapi.responses import JSONResponse
+
 from database import get_db_connection
 
 # IMPORTANTE: Estas importaciones asumen que tienes estos archivos en la carpeta services/
 from services.ml_engine import process_and_predict
-from services.xai_generator import generate_xai_heatmap
 from services.pdf_generator import generate_medical_report
+from services.xai_generator import generate_xai_heatmap
 
 router = APIRouter()
 
 @router.post("/predict")
-async def predict(request: Request, file: UploadFile = File(...), model_name: str = Form(...)):
+async def predict(request: Request, file: UploadFile = File(...), model_name: str = Form(...)):  # noqa: B008
     try:
         user_id = request.cookies.get("session_token")
         if not user_id:
@@ -22,11 +24,11 @@ async def predict(request: Request, file: UploadFile = File(...), model_name: st
         # 1. Guardar archivo subido
         timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         filename = f"{timestamp}_{file.filename}"
-        
+
         # Asegúrate de que static/uploads/ existe
         os.makedirs(os.path.join("static", "uploads"), exist_ok=True)
         upload_path = os.path.join("static", "uploads", filename)
-        
+
         with open(upload_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
@@ -45,15 +47,15 @@ async def predict(request: Request, file: UploadFile = File(...), model_name: st
         # 5. Guardar en Base de Datos
         conn = get_db_connection()
         cursor = conn.cursor()
-        
+
         cursor.execute("SELECT COUNT(*) FROM consultations WHERE user_id = %s AND model_name = %s", (user_id, model_name))
         count_previous = cursor.fetchone()[0]
         current_number = count_previous + 1
-        
+
         default_patient_name = f"Paciente sin nombre {model_name} #{current_number}"
-        
+
         query = """
-        INSERT INTO consultations 
+        INSERT INTO consultations
         (user_id, model_name, original_image_path, xai_image_path, prediction_label, confidence_score, patient_name, pdf_path)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """

@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Request, Form
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi import APIRouter, Form, Request
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+
 from database import get_db_connection
 
 router = APIRouter()
@@ -33,13 +34,13 @@ async def dashboard(request: Request):
     session_token = request.cookies.get("session_token")
     if not session_token:
         return RedirectResponse(url="/", status_code=303)
-    
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT first_name, last_name, role FROM users WHERE id = %s", (session_token,))
     user = cursor.fetchone()
     conn.close()
-    
+
     if not user:
         return RedirectResponse(url="/logout", status_code=303)
 
@@ -49,11 +50,11 @@ async def dashboard(request: Request):
     role = user.get('role') or "Facultativo"
 
     response = templates.TemplateResponse("dashboard.html", {
-        "request": request, 
+        "request": request,
         "full_name": full_name,
         "role": role
     })
-    
+
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     return response
 
@@ -63,13 +64,13 @@ async def training_lab(request: Request):
     session_token = request.cookies.get("session_token")
     if not session_token:
         return RedirectResponse(url="/", status_code=303)
-    
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT first_name, last_name, role FROM users WHERE id = %s", (session_token,))
     user = cursor.fetchone()
     conn.close()
-    
+
     if not user:
         return RedirectResponse(url="/logout", status_code=303)
 
@@ -79,11 +80,11 @@ async def training_lab(request: Request):
     role = user.get('role') or "Facultativo"
 
     response = templates.TemplateResponse("training.html", {
-        "request": request, 
+        "request": request,
         "full_name": full_name,
         "role": role
     })
-    
+
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     return response
 
@@ -111,21 +112,21 @@ async def process_register(
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        
+
         cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
         existing_user = cursor.fetchone()
-        
+
         if existing_user:
             conn.close()
             return JSONResponse(status_code=400, content={"status": "error", "code": "user_exists"})
 
         query = """
-        INSERT INTO users (username, password_hash, first_name, last_name, role) 
+        INSERT INTO users (username, password_hash, first_name, last_name, role)
         VALUES (%s, %s, %s, %s, %s)
         """
         cursor.execute(query, (username, password, first_name, last_name, role))
         conn.commit()
-        
+
         new_user_id = cursor.lastrowid
         conn.close()
 

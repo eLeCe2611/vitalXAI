@@ -1,5 +1,6 @@
 import mysql.connector
 
+
 def get_db_connection():
     """Establece y devuelve la conexión a la base de datos MySQL (XAMPP)."""
     return mysql.connector.connect(
