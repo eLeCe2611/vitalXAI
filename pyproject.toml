@@ -28,5 +28,15 @@ ignore = ["S101", "E501", "E701", "N806", "E722", "S110", "S603", "S607", "F841"
 [tool.ruff.format]
 quote-style = "double"
 
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+ignore_missing_imports = true
+files = [
+    "services/auth_service.py",
+    "services/csrf_middleware.py",
+    "services/rate_limiter.py",
+]
+
 [tool.checklist]
 mark-completed = true
