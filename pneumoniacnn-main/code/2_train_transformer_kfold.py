@@ -5,35 +5,37 @@ Entrenamiento avanzado de Transformers usando 5-fold CV en la plataforma MLOps.
 """
 
 import os
+
 # --- CONFIGURACIÓN ESTRICTA PARA HUGGING FACE Y TENSORFLOW ---
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["USE_TF"] = "1" # <--- ESTO OBLIGA A HUGGING FACE A MOSTRAR LAS CLASES TF
 # -------------------------------------------------------------
 
-import sys
 import random
+import sys
+
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
-from tf_keras.optimizers import AdamW
-from tf_keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
+from tf_keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from tf_keras.losses import BinaryCrossentropy
+from tf_keras.optimizers import AdamW
 from transformers import TFAutoModelForImageClassification
 
 # ======================================================
 # CONFIGURACIÓN DINÁMICA WEB
 # ======================================================
 DATASET_DIR = os.getenv("TFG_DATASET_DIR")
-SESSION_ID = os.getenv("TFG_SESSION_ID") 
+SESSION_ID = os.getenv("TFG_SESSION_ID")
 
 if not DATASET_DIR or not SESSION_ID:
     print(f"\n[ERROR CRÍTICO] Faltan variables de entorno.")
     sys.exit(1)
 
-MODEL_NAME = os.getenv("TFG_MODEL_NAME", "swin_base") 
+MODEL_NAME = os.getenv("TFG_MODEL_NAME", "swin_base")
 OUTPUT_DIR = f"training_results/{SESSION_ID}/{MODEL_NAME}"
 
 HF_MODEL_IDS = {
@@ -131,10 +133,10 @@ def main():
 
         train_ds = build_dataset(image_paths[balanced_idx], labels[balanced_idx], True)
         val_ds   = build_dataset(image_paths[va], labels[va], False)
-        
+
         model = build_hf_model(architecture=MODEL_NAME, lr=SAFE_LR)
         ckpt = f"{OUTPUT_DIR}/best_fold{fold}.weights.h5"
-        
+
         callbacks = [
             ModelCheckpoint(filepath=ckpt, save_weights_only=True, monitor='val_loss', mode='min', save_best_only=True),
             EarlyStopping(patience=10, restore_best_weights=True),
@@ -162,11 +164,11 @@ def main():
     df_res = pd.DataFrame(results)
     df_res.loc["mean"] = df_res.mean()
     df_res.loc["std"]  = df_res.std()
-    
+
     df_res["fold"] = df_res["fold"].astype(str)
     df_res.at["mean", "fold"] = "Media"
     df_res.at["std", "fold"] = "Std"
-    
+
     df_res.to_csv(f"{OUTPUT_DIR}/kfold_results.csv", index=False)
     print("\n===== FINAL SUMMARY =====")
     print(df_res)

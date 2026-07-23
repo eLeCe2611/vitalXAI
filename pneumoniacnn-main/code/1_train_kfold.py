@@ -6,29 +6,29 @@ CNN training and predictive performance evaluation using
 """
 
 import os
-import sys
 import random
+import sys
+
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-import matplotlib.pyplot as plt
-from tensorflow.keras import layers, models
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+from tensorflow.keras import layers, models
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.optimizers import Adam
 
 # ======================================================
 # CONFIGURACIÓN DINÁMICA (ESTRICTA - CONECTADA A LA WEB)
 # ======================================================
 DATASET_DIR = os.getenv("TFG_DATASET_DIR")
-SESSION_ID = os.getenv("TFG_SESSION_ID") 
+SESSION_ID = os.getenv("TFG_SESSION_ID")
 
 if not DATASET_DIR or not os.path.exists(DATASET_DIR) or not SESSION_ID:
     print(f"\n[ERROR CRÍTICO] Faltan variables de entorno (Dataset o Session ID).")
     sys.exit(1)
 
-MODEL_NAME = os.getenv("TFG_MODEL_NAME", "DenseNet121") 
+MODEL_NAME = os.getenv("TFG_MODEL_NAME", "DenseNet121")
 OUTPUT_DIR = f"training_results/{SESSION_ID}/{MODEL_NAME}"
 
 # Asignación dinámica del tamaño de imagen según la arquitectura elegida
@@ -97,15 +97,15 @@ def build_model(architecture="ResNet50", lr=1e-4):
     print(f"Construyendo modelo: {architecture} con tamaño de entrada {IMG_SIZE}")
     strategy = tf.distribute.get_strategy()
     with strategy.scope():
-        
+
         # Magia de Python: Carga cualquier modelo de tf.keras.applications por su nombre de texto
         try:
             model_class = getattr(tf.keras.applications, architecture)
-        except AttributeError:
-            raise ValueError(f"Error: La arquitectura '{architecture}' no existe en TensorFlow Keras Applications.")
-            
+        except AttributeError as err:
+            raise ValueError(f"Error: La arquitectura '{architecture}' no existe en TensorFlow Keras Applications.") from err
+
         base = model_class(weights="imagenet", include_top=False, input_shape=(*IMG_SIZE,3))
-        base.trainable = False  
+        base.trainable = False
 
         x = layers.GlobalAveragePooling2D()(base.output)
         x = layers.Dense(512, activation="relu")(x)
@@ -141,7 +141,7 @@ def main():
 
         train_ds = build_dataset(image_paths[balanced_idx], labels[balanced_idx], True)
         val_ds   = build_dataset(image_paths[va], labels[va], False)
-        
+
         model = build_model(architecture=MODEL_NAME, lr=LEARNING_RATE)
         ckpt = f"{OUTPUT_DIR}/best_fold{fold}.keras"
 
@@ -168,7 +168,7 @@ def main():
     df_res = pd.DataFrame(results)
     df_res.loc["mean"] = df_res.mean()
     df_res.loc["std"]  = df_res.std()
-    
+
     df_res["fold"] = df_res["fold"].astype(str)
     df_res.at["mean", "fold"] = "Media"
     df_res.at["std", "fold"] = "Std"
