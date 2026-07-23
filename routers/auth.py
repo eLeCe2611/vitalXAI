@@ -39,7 +39,7 @@ templates = Jinja2Templates(directory="templates")
 # 1. PANTALLA DE INICIO (LOGIN)
 @router.get("/", response_class=HTMLResponse)
 async def login_page(request: Request, error: str = None):
-    return templates.TemplateResponse("login.html", {"request": request, "error": error})
+    return templates.TemplateResponse(request, "login.html", {"error": error})
 
 # 2. PROCESAR EL LOGIN
 @router.post("/login")
@@ -82,8 +82,7 @@ async def dashboard(request: Request):
     full_name = f"{fname} {lname}".strip()
     role = user.get('role') or "Facultativo"
 
-    response = templates.TemplateResponse("dashboard.html", {
-        "request": request,
+    response = templates.TemplateResponse(request, "dashboard.html", {
         "full_name": full_name,
         "role": role
     })
@@ -112,8 +111,7 @@ async def training_lab(request: Request):
     full_name = f"{fname} {lname}".strip()
     role = user.get('role') or "Facultativo"
 
-    response = templates.TemplateResponse("training.html", {
-        "request": request,
+    response = templates.TemplateResponse(request, "training.html", {
         "full_name": full_name,
         "role": role
     })
@@ -152,7 +150,7 @@ async def logout(request: Request):
 # 6. PANTALLA DE REGISTRO
 @router.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
+    return templates.TemplateResponse(request, "register.html")
 
 # 7. PROCESAR EL REGISTRO
 @router.post("/api/register")
