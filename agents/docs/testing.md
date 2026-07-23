@@ -8,7 +8,7 @@
 | Targeted unit | `python -m pytest tests/unit/test_<module>.py -v` |
 | Full unit | `python -m pytest tests/unit/ -v` |
 | Lint | `ruff check .` |
-| Typecheck | `not available` (project has no type stubs) |
+| Typecheck | `python -m mypy` (configured modules in pyproject.toml) |
 
 ### Slow (pre-merge / CI)
 | Purpose | Command |
@@ -18,7 +18,7 @@
 | Build | `not available` |
 | Full validation | `python -m pytest tests/ -v && ruff check .` |
 | Coverage report | `python -m pytest tests/unit/ --cov=services --cov=routers --cov=database.py --cov-report=term-missing` |
-| DESIGN.md lint | `not available` (no design.md yet) |
+| DESIGN.md lint | `not available` (requires Node.js) |
 
 ## Test Levels
 | Level | Purpose | Isolation | When to run |

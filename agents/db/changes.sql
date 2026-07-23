@@ -23,3 +23,12 @@ Forward:
 -- Los usuarios existentes con contraseñas en texto plano deben restablecer su contraseña.
 Rollback:
 -- No es posible revertir hashes bcrypt a texto plano. Restaurar desde backup.
+
+[TASK-004] Añadir FK y NOT NULL a training_jobs.user_id; completar init_db con todas las tablas
+Date: 2026-07-24
+Forward:
+ALTER TABLE training_jobs MODIFY user_id INT NOT NULL;
+ALTER TABLE training_jobs ADD FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+Rollback:
+ALTER TABLE training_jobs DROP FOREIGN KEY training_jobs_ibfk_1;
+ALTER TABLE training_jobs MODIFY user_id INT NULL;

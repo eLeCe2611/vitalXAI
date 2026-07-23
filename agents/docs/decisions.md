@@ -82,3 +82,17 @@ Status: accepted
 Context: Se necesita refresh token rotation para mejorar seguridad (si un token es robado, al usarlo se invalida).
 Decision: Los refresh tokens se almacenan hasheados (SHA-256) en tabla `refresh_tokens`. La rotación invalida el token anterior y crea uno nuevo. Margen de gracia de 60s para mitigar race conditions entre pestañas concurrentes.
 Consequences: Si un token rotado se reutiliza dentro de los 60s, se acepta (grace period). Pasado ese tiempo, se rechaza y se invalidan todos los tokens del usuario (detección de robo).
+
+## ADR-009: mypy para type checking gradual
+Date: 2026-07-23
+Status: accepted
+Context: ADR-004 dejó diferida la configuración de type checking. El proyecto acumula type hints parciales (TASK-002/003).
+Decision: Usar mypy 2.3.0 con configuración en pyproject.toml. Enfoque estricto gradual: empezar con archivos clave (auth_service, csrf_middleware, rate_limiter) e incorporar más módulos progresivamente. `ignore_missing_imports = true` para librerías sin stubs (TensorFlow, Keras).
+Consequences: mypy se ejecuta desde la raíz del proyecto con `python -m mypy`. No se requiere que todo el código pase mypy desde el inicio. Los archivos bajo escrutinio se listan en `[tool.mypy] files`.
+
+## ADR-010: GitHub Actions CI/CD en Windows
+Date: 2026-07-23
+Status: accepted
+Context: El proyecto carece de CI/CD. Las pruebas se ejecutan solo localmente. El proyecto usa Tkinter (específico de Windows) y subprocess para scripts de entrenamiento.
+Decision: Usar GitHub Actions con runner `windows-latest`. Workflow en `.github/workflows/ci.yml`. Triggers en push y PR sobre `main` y `refactorizacion`. Pasos: checkout, Python 3.11, cache pip, install deps, ruff lint, pytest con cobertura (threshold 70%).
+Consequences: Los tests se ejecutan automáticamente en cada push/PR. Windows runner es más lento que Ubuntu pero necesario por dependencias de Tkinter. La instalación de TensorFlow puede alargar el tiempo de CI.
