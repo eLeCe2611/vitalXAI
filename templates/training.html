@@ -19,6 +19,9 @@
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 h-screen flex overflow-hidden font-sans transition-colors duration-300 relative">
+<script>
+(function(){const c=document.cookie.match(/csrf_token=([^;]+)/);if(!c)return;const t=c[1];const o=fetch;window.fetch=function(u,r){if(!r||(r.method||'GET').toUpperCase()==='GET')return o(u,r);r.headers=r.headers||{};r.headers['X-CSRF-Token']=t;return o(u,r)}})();
+</script>
 
     <aside class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col shadow-sm z-20 transition-colors duration-300">
         <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20 transition-colors duration-300">
