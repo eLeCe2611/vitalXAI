@@ -1,13 +1,21 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from database import init_db
 
 # AÑADIMOS 'trainer' a la lista de imports
 from routers import auth, history, inference, trainer
+from services.csrf_middleware import CSRFMiddleware, SecurityHeadersMiddleware
+from services.rate_limiter import limiter
 
 app = FastAPI(title="X-Ray AI Consultant")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(CSRFMiddleware)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 # Añade esta línea debajo de app.mount("/static", ...)
