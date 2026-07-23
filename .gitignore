@@ -58,6 +58,10 @@ training_results/
 training_log.txt
 *.log
 
+# ─── Cobertura de código ───
+.coverage
+coverage/
+
 # ─── Sistema ───
 .DS_Store
 Thumbs.db
