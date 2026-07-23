@@ -220,3 +220,23 @@ class TestReportEndpoint:
             response = client.post("/api/train/session/rename",
                                    data={"old_name": "RUN_OLD", "new_name": "Existing"})
             assert response.status_code == 400
+
+
+class TestGroqApiKey:
+    """Tests for GROQ_API_KEY environment variable usage."""
+
+    def test_groq_api_key_reads_from_env(self):
+        """GROQ_API_KEY must be read from environment, not hardcoded."""
+        import os
+        from unittest.mock import patch
+
+        with patch.dict(os.environ, {"GROQ_API_KEY": "test-groq-key-from-env"}):
+            import importlib
+
+            import routers.trainer
+            importlib.reload(routers.trainer)
+
+            assert routers.trainer.GROQ_API_KEY == "test-groq-key-from-env"
+
+        # Restore original env + module state
+        importlib.reload(routers.trainer)

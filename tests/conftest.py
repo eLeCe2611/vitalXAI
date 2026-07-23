@@ -1,9 +1,11 @@
+import secrets
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from main import app
+from services.auth_service import create_access_token
 
 # Modules that import get_db_connection directly
 _DB_CLIENTS = [
@@ -12,6 +14,7 @@ _DB_CLIENTS = [
     "routers.history",
     "routers.inference",
     "services.trainer_engine",
+    "services.auth_service",
 ]
 
 
@@ -34,19 +37,48 @@ def mock_db_connection():
 
 @pytest.fixture
 def client():
+    tc = TestClient(app)
+    # Pre-fetch CSRF token so the cookie is in the jar
+    tc.get("/register")
+    csrf = tc.cookies.get("csrf_token")
+    if not csrf:
+        csrf = secrets.token_urlsafe(32)
+        tc.cookies.set("csrf_token", csrf)
+
+    def _add_csrf(method):
+        original = getattr(tc, method)
+        def _wrapper(*args, **kwargs):
+            headers = kwargs.pop("headers", {})
+            if "X-CSRF-Token" not in headers:
+                headers["X-CSRF-Token"] = csrf
+            kwargs["headers"] = headers
+            return original(*args, **kwargs)
+        _wrapper.__name__ = method
+        return _wrapper
+
+    tc.post = _add_csrf("post")
+    tc.put = _add_csrf("put")
+    tc.delete = _add_csrf("delete")
+    return tc
+
+
+@pytest.fixture
+def raw_client():
+    """Client WITHOUT auto-CSRF handling. Used for CSRF-specific tests."""
     return TestClient(app)
 
 
 @pytest.fixture
 def auth_client(client, mock_db_connection):
-    """Client with a valid session cookie and a DB mock returning valid user."""
+    """Client with a valid JWT access token and a DB mock returning valid user."""
     cursor = mock_db_connection["cursor"]
     def fetchone_side_effect(*args, **kwargs):
         return {"id": 1, "username": "doctor1",
                 "first_name": "Ana", "last_name": "Perez",
                 "role": "Radiólogo Especialista"}
     cursor.fetchone.side_effect = fetchone_side_effect
-    client.cookies.set("session_token", "1")
+    token = create_access_token(1)
+    client.cookies.set("access_token", token)
     return client
 
 

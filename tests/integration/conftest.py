@@ -1,3 +1,4 @@
+import secrets
 import sqlite3
 from unittest.mock import patch
 
@@ -40,6 +41,15 @@ CREATE TABLE IF NOT EXISTS training_jobs (
     started_at TEXT DEFAULT (datetime('now')),
     finished_at TEXT
 );
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token_hash TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    revoked INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 """
 
 
@@ -71,6 +81,11 @@ class SQLiteCursor:
     def execute(self, sql, params=None):
         # Translate MySQL %s placeholders to SQLite ?
         sql_sqlite = sql.replace("%s", "?")
+        # Translate MySQL NOW() to SQLite datetime('now')
+        sql_sqlite = sql_sqlite.replace("NOW()", "datetime('now')")
+        # Translate MySQL INTERVAL seconds to SQLite modifier
+        import re as _re
+        sql_sqlite = _re.sub(r"datetime\('now'\) - INTERVAL (\d+) SECOND", r"datetime('now', '-\1 seconds')", sql_sqlite)
         if params is None:
             self._cursor.execute(sql_sqlite)
         else:
@@ -114,6 +129,7 @@ def sqlite_db():
         patch("routers.history.get_db_connection", return_value=conn),
         patch("routers.inference.get_db_connection", return_value=conn),
         patch("services.trainer_engine.get_db_connection", return_value=conn),
+        patch("services.auth_service.get_db_connection", return_value=conn),
     ]
     for p in patchers:
         p.start()
@@ -125,4 +141,25 @@ def sqlite_db():
 
 @pytest.fixture
 def client():
-    return TestClient(app)
+    tc = TestClient(app)
+    tc.get("/register")
+    csrf = tc.cookies.get("csrf_token")
+    if not csrf:
+        csrf = secrets.token_urlsafe(32)
+        tc.cookies.set("csrf_token", csrf)
+
+    def _add_csrf(method):
+        original = getattr(tc, method)
+        def _wrapper(*args, **kwargs):
+            headers = kwargs.pop("headers", {})
+            if "X-CSRF-Token" not in headers:
+                headers["X-CSRF-Token"] = csrf
+            kwargs["headers"] = headers
+            return original(*args, **kwargs)
+        _wrapper.__name__ = method
+        return _wrapper
+
+    tc.post = _add_csrf("post")
+    tc.put = _add_csrf("put")
+    tc.delete = _add_csrf("delete")
+    return tc
