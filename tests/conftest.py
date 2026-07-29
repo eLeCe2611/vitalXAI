@@ -14,6 +14,7 @@ _DB_CLIENTS = [
     "routers.auth",
     "routers.history",
     "routers.inference",
+    "routers.queue",
     "routers.trainer",
     "services.trainer_engine",
     "services.auth_service",

@@ -79,8 +79,8 @@ class TestInitDb:
         mock_db_pool.return_value.get_connection.return_value = mock_conn
         mock_cursor = mock_conn.cursor.return_value
         init_db()
-        assert mock_cursor.execute.call_count == 4
-        tables = ["users", "consultations", "training_jobs", "refresh_tokens"]
+        assert mock_cursor.execute.call_count == 5
+        tables = ["users", "consultations", "training_jobs", "job_queue", "refresh_tokens"]
         for i, table in enumerate(tables):
             sql = mock_cursor.execute.call_args_list[i][0][0]
             assert f"CREATE TABLE IF NOT EXISTS {table}" in sql

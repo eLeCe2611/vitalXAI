@@ -97,13 +97,14 @@ class TestBrowseFolder:
 
 
 class TestStartTraining:
-    def test_starts_training_with_valid_params(self, client):
+    def test_starts_training_with_valid_params(self, client, mock_db_connection):
         _auth(client)
+        cursor = mock_db_connection["cursor"]
+        cursor.lastrowid = 99
         with patch("os.path.exists", return_value=True), \
              patch("os.makedirs"), \
              patch("builtins.open", mock_open()), \
-             patch("json.dump"), \
-             patch("routers.trainer.run_training_queue") as mock_run:
+             patch("json.dump"):
             response = client.post("/api/train/start", data={
                 "model_names": "DenseNet121,ResNet50",
                 "dataset_path": "C:/dataset",
@@ -111,8 +112,8 @@ class TestStartTraining:
             })
             assert response.status_code == 200
             data = response.json()
-            assert data["status"] == "success"
-            mock_run.assert_called_once()
+            assert data["status"] == "queued"
+            assert data["job_id"] == 99
 
     def test_rejects_invalid_dataset_path(self, client):
         _auth(client)
