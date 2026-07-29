@@ -83,28 +83,40 @@ const dict = {
             try {
                 const response = await fetch('/predict', { method: 'POST', body: formData });
                 const result = await response.json();
-                if (response.ok) {
-                    const isPneu = result.label === "Neumon\u00eda";
-                    const col = isPneu ? "text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/20" : "text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/20";
+                if (response.ok && result.status === "queued") {
+                    var jobId = result.job_id;
+                    var pos = result.position || '?';
+                    loadingMsg.querySelector('.bg-white, .dark\\:bg-gray-800').innerHTML = '<div class="flex items-center gap-3"><i class="fa-solid fa-clock text-yellow-500"></i> <span>Diagn\u00f3stico encolado en posici\u00f3n ' + pos + ' (trabajo #' + jobId + ')</span></div>';
 
-                    let labelStr = result.label;
-                    if (currentLang === 'en') labelStr = isPneu ? "Pneumonia" : "Normal";
-
-                    loadingMsg.querySelector('.bg-white, .dark\\:bg-gray-800').innerHTML = `
-                        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
-                            <div class="md:col-span-2">
-                                <h3 class="text-xs font-bold text-gray-500 mb-2"><span class="ui-diagnosis-txt">${t.diagnosis}</span></h3>
-                                <div class="flex items-center gap-4 p-4 rounded-xl border ${col}"><i class="fa-solid ${isPneu ? 'fa-virus-covid' : 'fa-shield-heart'} text-3xl"></i><div><p class="font-black text-xl">${labelStr}</p><p class="text-sm"><span class="ui-confidence-txt">${t.confidence}</span>: ${result.confidence}%</p></div></div>
-                            </div>
-                            <div class="md:col-span-3">
-                                <h3 class="text-xs font-bold text-gray-500 mb-2"><span class="ui-heatmap-txt">${t.heatmap}</span></h3>
-                                <img src="${result.xai_image}" class="rounded-xl w-full cursor-pointer" onclick="openImageModal(this.src)">
-                            </div>
-                        </div>
-                    `;
-                    loadHistory();
+                    var pollCount = 0;
+                    var pollInterval = setInterval(async function () {
+                        pollCount++;
+                        try {
+                            var r = await fetch('/api/queue/status?t=' + Date.now());
+                            var d = await r.json();
+                            if (d.status === "success" && d.jobs) {
+                                var job = d.jobs.find(function (j) { return j.id === jobId; });
+                                if (job) {
+                                    if (job.status === "running") {
+                                        loadingMsg.querySelector('.bg-white, .dark\\:bg-gray-800').innerHTML = '<div class="flex items-center gap-3"><i class="fa-solid fa-circle-notch fa-spin text-blue-600"></i> <span>Procesando diagnóstico...</span></div>';
+                                    } else if (job.status === "completed") {
+                                        clearInterval(pollInterval);
+                                        loadingMsg.querySelector('.bg-white, .dark\\:bg-gray-800').innerHTML = '<div class="flex items-center gap-3"><i class="fa-solid fa-check-circle text-green-500"></i> <span>Diagnóstico completado</span></div>';
+                                        loadHistory();
+                                        pollQueue();
+                                    } else if (job.status === "failed") {
+                                        clearInterval(pollInterval);
+                                        loadingMsg.querySelector('.bg-white, .dark\\:bg-gray-800').innerHTML = '<p class="text-red-500">Error: ' + (job.error_message || 'Fall\u00f3') + '</p>';
+                                    }
+                                }
+                                if (pollCount > 600) { clearInterval(pollInterval); }
+                            }
+                        } catch (e) {}
+                    }, 2000);
+                } else if (!response.ok) {
+                    loadingMsg.querySelector('.bg-white, .dark\\:bg-gray-800').innerHTML = '<p class="text-red-500">Error al encolar</p>';
                 }
-            } catch (error) { loadingMsg.querySelector('.bg-white, .dark\\:bg-gray-800').innerHTML = `<p class="text-red-500">Error</p>`; }
+            } catch (error) { loadingMsg.querySelector('.bg-white, .dark\\:bg-gray-800').innerHTML = '<p class="text-red-500">Error</p>'; }
         }
 
         async function loadHistory() {

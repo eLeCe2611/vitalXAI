@@ -62,7 +62,7 @@ function buildConsultationCard(item, t) {
     var closeModals = 'window.closeAdminUsersModal();window.closeAdminUserConsultationsModal();';
     var onclickAttr;
     if (isOnDashboard()) {
-        onclickAttr = closeModals + 'window.adminReviewConsultation(\'' + p.replace(/'/g, "\\'") + '\',\'' + (item.xai_image_path || '').replace(/\\/g, '/').replace(/'/g, "\\'") + '\',\'' + item.prediction_label + '\',' + item.confidence_score + ',\'' + (item.model_name || '').replace(/'/g, "\\'") + '\',\'' + (item.patient_name || '').replace(/'/g, "\\'") + '\')';
+        onclickAttr = closeModals + 'window.adminReviewConsultation(' + item.id + ',\'' + p.replace(/'/g, "\\'") + '\',\'' + (item.xai_image_path || '').replace(/\\/g, '/').replace(/'/g, "\\'") + '\',\'' + item.prediction_label + '\',' + item.confidence_score + ',\'' + (item.model_name || '').replace(/'/g, "\\'") + '\',\'' + (item.patient_name || '').replace(/'/g, "\\'") + '\')';
     } else {
         onclickAttr = closeModals + 'window.location.href=\'/dashboard?cid=' + item.id + '\'';
     }
@@ -83,9 +83,9 @@ function buildConsultationCard(item, t) {
         + '</div>';
 }
 
-window.adminReviewConsultation = function (imgPath, xaiPath, label, confidence, model, patient) {
+window.adminReviewConsultation = function (id, imgPath, xaiPath, label, confidence, model, patient) {
     if (typeof window.openConsultationDetail === 'function') {
-        window.openConsultationDetail(0, imgPath, xaiPath, label, confidence, model, patient, '');
+        window.openConsultationDetail(id, imgPath, xaiPath, label, confidence, model, patient, '');
     }
 };
 
@@ -197,7 +197,7 @@ window.openAdminUserConsultationsModal = async function (userId, userName) {
                 var onclickSession = isOnTraining()
                     ? 'window.closeAdminUsersModal();window.closeAdminUserConsultationsModal();viewSessionResults(\'' + sess.session_id + '\')'
                     : 'window.closeAdminUsersModal();window.closeAdminUserConsultationsModal();window.location.href=\'/training?session=' + sess.session_id + '\'';
-                html += '<div onclick="' + onclickSession + '" class="bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 mb-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"><div class="flex justify-between items-center"><div><p class="text-sm font-bold text-gray-800 dark:text-white">' + t.sessionId + ': ' + sess.session_id + '</p><p class="text-xs text-gray-500">' + t.model + ': ' + sess.models.join(', ') + '</p><p class="text-xs text-gray-400">' + sess.model_count + ' ' + t.model.toLowerCase() + '(s)</p></div><div class="flex gap-2"><span class="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full font-semibold">' + t.open + '</span></div></div></div>';
+                html += '<div onclick="' + onclickSession + '" class="bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 mb-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"><div class="flex justify-between items-center"><div><p class="text-sm font-bold text-gray-800 dark:text-white">' + t.sessionId + ': ' + sess.session_id + '</p><p class="text-xs text-gray-500">' + t.model + ': ' + sess.models.join(', ') + '</p><p class="text-xs text-gray-400">' + sess.models.length + ' ' + t.model.toLowerCase() + '(s)</p></div><div class="flex gap-2"><span class="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full font-semibold">' + t.open + '</span></div></div></div>';
             });
         } else {
             html += '<p class="text-sm text-gray-400 italic">' + t.noData + '</p>';
@@ -216,6 +216,44 @@ window.closeAdminUserConsultationsModal = function () {
     var el = document.getElementById('admin-user-consultations-modal');
     if (el) el.classList.add('hidden');
 };
+
+async function pollQueue() {
+    try {
+        var resp = await fetch('/api/queue/status?t=' + Date.now());
+        var data = await resp.json();
+        var panel = document.getElementById('queue-panel');
+        var items = document.getElementById('queue-items');
+        if (!panel || !items) return;
+        if (data.status === "success" && data.has_pending) {
+            panel.classList.remove('hidden');
+            var html = '';
+            data.jobs.forEach(function (j) {
+                if (j.status === 'queued' || j.status === 'running') {
+                    var icon = j.job_type === 'diagnosis' ? 'fa-stethoscope' : 'fa-flask';
+                    var label = j.job_type === 'diagnosis' ? 'Diagn\u00f3stico' : 'Entrenamiento';
+                    var statusText = j.status === 'running' ? 'Procesando...' : ('Posici\u00f3n #' + (j.position || '?'));
+                    var statusColor = j.status === 'running' ? 'text-green-500' : 'text-blue-500';
+                    var tooltip = j.job_type === 'diagnosis' ? 'Modelo: ' + (j.model_name || '?') : 'Sesi\u00f3n: ' + (j.session_id || '?');
+                    var delBtn = j.status === 'queued' ? '<button onclick="window.cancelQueueJob(' + j.id + ')" class="text-red-400 hover:text-red-600 text-xs ml-1" title="Cancelar"><i class="fa-solid fa-trash-can"></i></button>' : '';
+                    html += '<div class="flex items-center gap-2 text-xs group relative" title="' + tooltip + '"><i class="fa-solid ' + icon + ' text-gray-400"></i><span class="text-gray-700 dark:text-gray-300 truncate max-w-[100px]">' + label + '</span><span class="ml-auto ' + statusColor + ' font-semibold">' + statusText + '</span>' + delBtn + '</div>';
+                }
+            });
+            items.innerHTML = html || '<p class="text-xs text-gray-400 italic">Sin trabajos pendientes</p>';
+        } else {
+            panel.classList.add('hidden');
+        }
+    } catch (e) {}
+}
+
+window.cancelQueueJob = async function (jobId) {
+    if (!confirm('\u00bfCancelar este trabajo?')) return;
+    try {
+        await fetch('/api/queue/cancel/' + jobId, { method: 'DELETE' });
+    } catch (e) {}
+};
+
+setInterval(pollQueue, 5000);
+setTimeout(pollQueue, 500);
 
 window.adminDeleteConsultation = async function (consultationId) {
     const t = getAdminLang();
