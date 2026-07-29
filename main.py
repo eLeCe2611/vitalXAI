@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -39,6 +40,7 @@ app.add_middleware(CSRFMiddleware)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 # Añade esta línea debajo de app.mount("/static", ...)
+os.makedirs("training_results", exist_ok=True)
 app.mount("/training_results", StaticFiles(directory="training_results"), name="training_results")
 
 app.include_router(auth.router)
