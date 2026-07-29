@@ -179,9 +179,25 @@ const dict = { es: {}, en: {} };
             else { content.classList.add('hidden'); icon.classList.replace('fa-chevron-up', 'fa-chevron-down'); }
         }
 
+        function customPrompt(msg, def) {
+            return new Promise(resolve => {
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center';
+                const box = document.createElement('div');
+                box.style.cssText = 'background:white;padding:24px;border-radius:12px;min-width:320px;box-shadow:0 4px 24px rgba(0,0,0,0.2)';
+                box.innerHTML = `<p style="margin:0 0 12px;font-weight:700;font-size:14px">${msg}</p><input id="cp-input" value="${def}" style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:8px;font-size:14px;box-sizing:border-box"><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button id="cp-cancel" style="padding:8px 16px;border-radius:8px;border:1px solid #ccc;background:white;cursor:pointer">Cancelar</button><button id="cp-ok" style="padding:8px 16px;border-radius:8px;border:none;background:#2563eb;color:white;cursor:pointer">Renombrar</button></div>`;
+                wrap.appendChild(box); document.body.appendChild(wrap);
+                document.getElementById('cp-input').focus();
+                document.getElementById('cp-input').select();
+                document.getElementById('cp-ok').onclick = () => { const v = document.getElementById('cp-input').value; document.body.removeChild(wrap); resolve(v); };
+                document.getElementById('cp-cancel').onclick = () => { document.body.removeChild(wrap); resolve(null); };
+                document.getElementById('cp-input').onkeydown = e => { if(e.key==='Enter') document.getElementById('cp-ok').click(); if(e.key==='Escape') document.getElementById('cp-cancel').click(); };
+            });
+        }
+
         async function renameSession(event, oldId) {
             if(event) event.stopPropagation();
-            const newName = prompt("Nuevo nombre para esta sesión:", oldId);
+            const newName = await customPrompt("Nuevo nombre para esta sesión:", oldId);
             if (!newName || newName === oldId) return;
             const formData = new FormData(); formData.append('old_name', oldId); formData.append('new_name', newName);
             try {
