@@ -98,6 +98,7 @@ websockets==16.0
 Werkzeug==3.1.6
 wheel==0.46.3
 wrapt==2.1.2
+ruff==0.15.22
 mypy==2.3.0
 bcrypt==5.0.0
 python-jose==3.5.0
