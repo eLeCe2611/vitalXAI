@@ -39,6 +39,12 @@
 | POST | `/api/history/update_name` | Form: consultation_id, new_name | `{"status": "success"}` | JWT + ownership | 403 if consultation belongs to another user |
 | POST | `/api/history/delete` | Form: consultation_id | `{"status": "success"}` | JWT + ownership | 403 if consultation belongs to another user |
 
+### Admin (role=admin required)
+| Method | Path | Request | Response | Auth | Notes |
+|---|---|---|---|---|---|
+| GET | `/api/admin/users` | Cookie: access_token | `{"status": "success", "users": [{"id", "username", "first_name", "last_name", "role", "consultation_count"}]}` | JWT + admin role | 403 if user role != "admin". Returns all users with their consultation count. |
+| GET | `/api/admin/users/{user_id}/consultations` | Cookie: access_token | `{"status": "success", "consultations": [...]}` | JWT + admin role | 403 if not admin, 404 if user_id not found |
+
 ### Training / MLOps
 | Method | Path | Request | Response | Auth | Notes |
 |---|---|---|---|---|---|

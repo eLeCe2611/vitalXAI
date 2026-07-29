@@ -25,3 +25,4 @@ When the task is complete and the user approves closeout, move the task to `## D
 - TASK-003: Refactorización de código (trainer.py, JS inline, type hints, pooling, deprecations, deps)
 - TASK-004: Estructura del proyecto (CI/CD, type checker, design.md, domain.md)
 - TASK-005: Aislamiento de historiales por usuario (Diagnóstico Rápido y Laboratorio de Entrenamiento)
+- TASK-006: Panel de administración para rol admin (visión global de consultas)
