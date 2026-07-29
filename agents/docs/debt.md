@@ -74,6 +74,26 @@ Evidence: `routers/trainer.py` (fpdf2 deprecated params), `main.py:21` (`@app.on
 Description: Múltiples deprecation warnings de fpdf2 (ln=True, font Arial), FastAPI (on_event), y Starlette (TemplateResponse). No bloqueantes pero requerirán migración.
 Recommendation: Abordar en TASK-002 como parte de la refactorización.
 
+## DBT-007: Archivos estáticos de training_results accesibles sin autenticación
+Date: 2026-07-29
+Status: open
+Risk: medium
+Impact: medium
+Suggested priority: medium
+Evidence: `main.py:44` — `app.mount("/training_results", StaticFiles(directory="training_results"), ...)`
+Description: El directorio `training_results/` está montado como StaticFiles, lo que permite a cualquier usuario (incluso sin autenticación) acceder a imágenes, PDFs y resultados de entrenamiento si conoce o adivina el session_id. No hay verificación de ownership en el servidor de archivos estáticos.
+Recommendation: Migrar a un endpoint autenticado que sirva archivos previa verificación de ownership, en lugar de StaticFiles directo.
+
+## DBT-008: Path traversal potencial en endpoints de sesiones MLOps
+Date: 2026-07-29
+Status: open
+Risk: medium
+Impact: high
+Suggested priority: high
+Evidence: `services/mlops_engine.py:109,201,211,222` — rutas construidas con `os.path.join("training_results", session_id, ...)`
+Description: Los endpoints toman `session_id` como string sin sanitizar. Aunque el ownership check mitiga el riesgo, funciones como `delete_session` y `safe_rename` usan `shutil.rmtree` y `os.rename` sobre rutas construidas con input del usuario. Si el ownership check se saltara o tuviera un bug, un atacante podría eliminar o renombrar directorios fuera de `training_results/`.
+Recommendation: Sanitizar `session_id` para eliminar `..` y separadores de ruta antes de construir rutas. O validar que la ruta resuelta esté dentro de `training_results/`.
+
 ## DBT-005: Ruff lint warnings no críticos
 Date: 2026-07-23
 Status: open
