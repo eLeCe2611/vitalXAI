@@ -1,11 +1,30 @@
+import importlib.machinery
 import secrets
+import sys
+import types
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
 from main import app
 from services.auth_service import create_access_token
+
+# Create a proper mock module for cv2 to prevent OpenCV import errors
+_mock_cv2_module = types.ModuleType("cv2")
+_mock_cv2_spec = importlib.machinery.ModuleSpec("cv2", None, origin="mock")
+_mock_cv2_module.__spec__ = _mock_cv2_spec
+_mock_cv2 = MagicMock()
+_mock_cv2.imread.return_value = np.zeros((224, 224, 3), dtype=np.uint8)
+_mock_cv2.cvtColor.return_value = np.zeros((224, 224, 3), dtype=np.uint8)
+_mock_cv2.resize.return_value = np.zeros((224, 224, 3), dtype=np.uint8)
+_mock_cv2.COLOR_BGR2RGB = 4
+_mock_cv2.IMREAD_COLOR = 1
+for attr in ("imread", "cvtColor", "resize", "COLOR_BGR2RGB", "IMREAD_COLOR"):
+    _mock_cv2_module.__dict__[attr] = getattr(_mock_cv2, attr)
+if "cv2" not in sys.modules:
+    sys.modules["cv2"] = _mock_cv2_module
 
 # Modules that import get_db_connection directly
 _DB_CLIENTS = [
