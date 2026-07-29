@@ -161,8 +161,9 @@ class TestGetModels:
 
 
 class TestSessionResults:
-    def test_returns_403_for_unowned_session(self, client):
+    def test_returns_403_for_unowned_session(self, client, mock_db_connection):
         _auth(client)
+        mock_db_connection["cursor"].fetchone.return_value = {"role": "doctor"}
         with _not_owning():
             response = client.get("/api/train/results/fake_session/fake_model")
             assert response.status_code == 403
@@ -175,8 +176,9 @@ class TestSessionResults:
 
 
 class TestRunEval:
-    def test_returns_403_for_unowned_session(self, client):
+    def test_returns_403_for_unowned_session(self, client, mock_db_connection):
         _auth(client)
+        mock_db_connection["cursor"].fetchone.return_value = {"role": "doctor"}
         with _not_owning():
             response = client.post("/api/train/run_eval", data={"session_id": "s", "model_name": "m"})
             assert response.status_code == 403
@@ -190,8 +192,9 @@ class TestRunEval:
 
 
 class TestSessionMgmt:
-    def test_delete_returns_403_for_unowned_session(self, client):
+    def test_delete_returns_403_for_unowned_session(self, client, mock_db_connection):
         _auth(client)
+        mock_db_connection["cursor"].fetchone.return_value = {"role": "doctor"}
         with _not_owning():
             response = client.delete("/api/train/session/RUN_20260101")
             assert response.status_code == 403
@@ -210,8 +213,9 @@ class TestSessionMgmt:
             response = client.delete("/api/train/session/ghost")
             assert response.status_code == 404
 
-    def test_rename_returns_403_for_unowned_session(self, client):
+    def test_rename_returns_403_for_unowned_session(self, client, mock_db_connection):
         _auth(client)
+        mock_db_connection["cursor"].fetchone.return_value = {"role": "doctor"}
         with _not_owning():
             response = client.post("/api/train/session/rename",
                                    data={"old_name": "RUN_OLD", "new_name": "MySession"})
@@ -237,24 +241,27 @@ class TestSessionMgmt:
 
 
 class TestCompare:
-    def test_returns_403_for_unowned_session(self, client):
+    def test_returns_403_for_unowned_session(self, client, mock_db_connection):
         _auth(client)
+        mock_db_connection["cursor"].fetchone.return_value = {"role": "doctor"}
         with _not_owning():
             response = client.post("/api/train/session/compare", data={"session_id": "s"})
             assert response.status_code == 403
 
 
 class TestRanking:
-    def test_returns_403_for_unowned_session(self, client):
+    def test_returns_403_for_unowned_session(self, client, mock_db_connection):
         _auth(client)
+        mock_db_connection["cursor"].fetchone.return_value = {"role": "doctor"}
         with _not_owning():
             response = client.get("/api/train/session/s/ranking")
             assert response.status_code == 403
 
 
 class TestExtValidation:
-    def test_returns_403_for_unowned_session(self, client):
+    def test_returns_403_for_unowned_session(self, client, mock_db_connection):
         _auth(client)
+        mock_db_connection["cursor"].fetchone.return_value = {"role": "doctor"}
         with _not_owning():
             response = client.post("/api/train/session/external_validation",
                                    data={"session_id": "s", "dataset_path": "/d"})
@@ -262,16 +269,18 @@ class TestExtValidation:
 
 
 class TestExtResults:
-    def test_returns_403_for_unowned_session(self, client):
+    def test_returns_403_for_unowned_session(self, client, mock_db_connection):
         _auth(client)
+        mock_db_connection["cursor"].fetchone.return_value = {"role": "doctor"}
         with _not_owning():
             response = client.get("/api/train/session/s/external_results")
             assert response.status_code == 403
 
 
 class TestReportEndpoint:
-    def test_returns_403_for_unowned_session(self, client):
+    def test_returns_403_for_unowned_session(self, client, mock_db_connection):
         _auth(client)
+        mock_db_connection["cursor"].fetchone.return_value = {"role": "doctor"}
         with _not_owning(), patch("os.path.exists", return_value=False):
             response = client.get("/api/train/session/s/report")
             assert response.status_code == 403

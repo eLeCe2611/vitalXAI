@@ -12,7 +12,7 @@ class TestGetHistory:
         cursor.fetchall.return_value = [
             {"id": 1, "user_id": 1, "timestamp": datetime(2026, 7, 23, 10, 0, 0),
              "model_name": "DenseNet121", "original_image_path": "img.jpg",
-             "xai_image_path": "xai.jpg", "prediction_label": "Neumonía",
+             "xai_image_path": "xai.jpg", "prediction_label": "Neumon\u00eda",
              "confidence_score": 85.0, "patient_name": "Paciente X", "pdf_path": "report.pdf"}
         ]
         token = create_access_token(1)
@@ -44,7 +44,7 @@ class TestUpdateName:
     def test_returns_403_for_unowned_consultation(self, client, mock_db_connection):
         from services.auth_service import create_access_token
         cursor = mock_db_connection["cursor"]
-        cursor.fetchone.return_value = {"user_id": 2}
+        cursor.fetchone.side_effect = [{"user_id": 2}, {"role": "doctor"}]
         token = create_access_token(1)
         client.cookies.set("access_token", token)
         response = client.post("/api/history/update_name",
@@ -54,11 +54,11 @@ class TestUpdateName:
     def test_successful_update(self, client, mock_db_connection):
         from services.auth_service import create_access_token
         cursor = mock_db_connection["cursor"]
-        cursor.fetchone.return_value = {"user_id": 1}
+        cursor.fetchone.side_effect = [{"user_id": 1}, {"role": "doctor"}]
         token = create_access_token(1)
         client.cookies.set("access_token", token)
         response = client.post("/api/history/update_name",
-                               data={"consultation_id": 1, "new_name": "Juan Pérez"})
+                               data={"consultation_id": 1, "new_name": "Juan P\u00e9rez"})
         assert response.status_code == 200
         assert response.json()["status"] == "success"
 
@@ -71,7 +71,7 @@ class TestDeleteRecord:
     def test_returns_403_for_unowned_consultation(self, client, mock_db_connection):
         from services.auth_service import create_access_token
         cursor = mock_db_connection["cursor"]
-        cursor.fetchone.return_value = {"user_id": 2}
+        cursor.fetchone.side_effect = [{"user_id": 2}, {"role": "doctor"}]
         token = create_access_token(1)
         client.cookies.set("access_token", token)
         response = client.post("/api/history/delete", data={"consultation_id": 1})
@@ -80,7 +80,7 @@ class TestDeleteRecord:
     def test_successful_deletion(self, client, mock_db_connection):
         from services.auth_service import create_access_token
         cursor = mock_db_connection["cursor"]
-        cursor.fetchone.return_value = {"user_id": 1}
+        cursor.fetchone.side_effect = [{"user_id": 1}, {"role": "doctor"}]
         token = create_access_token(1)
         client.cookies.set("access_token", token)
         response = client.post("/api/history/delete", data={"consultation_id": 1})
