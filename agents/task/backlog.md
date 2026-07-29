@@ -15,7 +15,6 @@ When work starts on a current task, create:
 When the task is complete and the user approves closeout, move the task to `## Done` and move its task files to `agents/task/archive/` in the same step.
 
 ## Current
-- TASK-007: Cola única FIFO global con prioridad para diagnósticos
 
 ## To do
 
@@ -27,3 +26,4 @@ When the task is complete and the user approves closeout, move the task to `## D
 - TASK-004: Estructura del proyecto (CI/CD, type checker, design.md, domain.md)
 - TASK-005: Aislamiento de historiales por usuario (Diagnóstico Rápido y Laboratorio de Entrenamiento)
 - TASK-006: Panel de administración para rol admin (visión global de consultas)
+- TASK-007: Cola única FIFO global con prioridad para diagnósticos
