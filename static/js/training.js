@@ -414,5 +414,12 @@ const dict = { es: {}, en: {} };
 
         window.addEventListener('DOMContentLoaded', () => {
             const sT = localStorage.getItem('theme'); if (sT === 'dark' || (!sT && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); document.getElementById('theme-icon').className='fa-solid fa-sun text-lg'; }
-            changeLanguage(); loadSidebarModels();
+            changeLanguage();
+            var params = new URLSearchParams(window.location.search);
+            var sessionParam = params.get('session');
+            loadSidebarModels().then(function () {
+                if (sessionParam) {
+                    try { viewSessionResults(sessionParam); } catch(e) { console.error('Error loading session:', e); }
+                }
+            });
         });
