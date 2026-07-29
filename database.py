@@ -66,6 +66,21 @@ def init_db():
     )
     """)
     cursor.execute("""
+    CREATE TABLE IF NOT EXISTS job_queue (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        job_type VARCHAR(20) NOT NULL,
+        status VARCHAR(20) DEFAULT 'queued',
+        payload JSON,
+        result JSON,
+        error_message TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        started_at DATETIME NULL,
+        finished_at DATETIME NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+    """)
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS refresh_tokens (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
