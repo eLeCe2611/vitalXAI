@@ -10,6 +10,7 @@ os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
 from fastapi import APIRouter, BackgroundTasks, Form, Request
 from fastapi.responses import JSONResponse
 
+from database import get_db_connection
 from services import mlops_engine
 from services.auth_service import get_user_id_from_token
 from services.chatbot_service import chat_endpoint as _chat_endpoint
@@ -30,8 +31,18 @@ def _require_auth(request: Request):
     return user_id
 
 
-def _require_ownership(session_id: str, user_id: int) -> bool:
-    return mlops_engine._verify_session_ownership(session_id, user_id)
+def _require_ownership(session_id: str, user_id: int, request: Request | None = None) -> bool:
+    if mlops_engine._verify_session_ownership(session_id, user_id):
+        return True
+    if request is not None:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT role FROM users WHERE id = %s", (user_id,))
+        user = cursor.fetchone()
+        conn.close()
+        if user and user["role"] == "admin":
+            return True
+    return False
 
 
 @router.post("/api/chat")
@@ -89,7 +100,7 @@ async def get_model_results(request: Request, session_id: str, model_name: str):
     user_id = _require_auth(request)
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "No autenticado"})
-    if not _require_ownership(session_id, user_id):
+    if not _require_ownership(session_id, user_id, request):
         return JSONResponse(status_code=403, content={"error": "No tienes permiso para acceder a esta sesi\u00f3n"})
     result = mlops_engine.get_model_results_data(session_id, model_name)
     if result is None:
@@ -102,7 +113,7 @@ async def run_evaluation_script(request: Request, session_id: str = Form(...), m
     user_id = _require_auth(request)
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "No autenticado"})
-    if not _require_ownership(session_id, user_id):
+    if not _require_ownership(session_id, user_id, request):
         return JSONResponse(status_code=403, content={"error": "No tienes permiso para acceder a esta sesi\u00f3n"})
     resolved = mlops_engine.resolve_dataset_path(session_id, dataset_path)
     if not resolved or not os.path.exists(resolved):
@@ -116,7 +127,7 @@ async def delete_session(request: Request, session_id: str):
     user_id = _require_auth(request)
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "No autenticado"})
-    if not _require_ownership(session_id, user_id):
+    if not _require_ownership(session_id, user_id, request):
         return JSONResponse(status_code=403, content={"error": "No tienes permiso para eliminar esta sesi\u00f3n"})
     status, content = mlops_engine.delete_session(session_id)
     return JSONResponse(status_code=status, content=content)
@@ -127,7 +138,7 @@ async def rename_session(request: Request, old_name: str = Form(...), new_name: 
     user_id = _require_auth(request)
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "No autenticado"})
-    if not _require_ownership(old_name, user_id):
+    if not _require_ownership(old_name, user_id, request):
         return JSONResponse(status_code=403, content={"error": "No tienes permiso para renombrar esta sesi\u00f3n"})
     status, content = mlops_engine.safe_rename(old_name, new_name)
     return JSONResponse(status_code=status, content=content)
@@ -138,7 +149,7 @@ async def compare_session_models(request: Request, background_tasks: BackgroundT
     user_id = _require_auth(request)
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "No autenticado"})
-    if not _require_ownership(session_id, user_id):
+    if not _require_ownership(session_id, user_id, request):
         return JSONResponse(status_code=403, content={"error": "No tienes permiso para acceder a esta sesi\u00f3n"})
     background_tasks.add_task(mlops_engine.run_statistical_comparison, session_id)
     return JSONResponse(content={"status": "success", "message": "Rec\u00e1lculo iniciado."})
@@ -149,7 +160,7 @@ async def get_session_ranking(request: Request, session_id: str):
     user_id = _require_auth(request)
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "No autenticado"})
-    if not _require_ownership(session_id, user_id):
+    if not _require_ownership(session_id, user_id, request):
         return JSONResponse(status_code=403, content={"error": "No tienes permiso para acceder a esta sesi\u00f3n"})
     result = mlops_engine.get_session_ranking_data(session_id)
     if result is None:
@@ -162,7 +173,7 @@ async def run_external_validation(request: Request, background_tasks: Background
     user_id = _require_auth(request)
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "No autenticado"})
-    if not _require_ownership(session_id, user_id):
+    if not _require_ownership(session_id, user_id, request):
         return JSONResponse(status_code=403, content={"error": "No tienes permiso para acceder a esta sesi\u00f3n"})
     if not dataset_path or not os.path.exists(dataset_path):
         return JSONResponse(status_code=400, content={"status": "error", "message": "La ruta del dataset externo no es v\u00e1lida."})
@@ -175,7 +186,7 @@ async def get_external_validation_results(request: Request, session_id: str):
     user_id = _require_auth(request)
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "No autenticado"})
-    if not _require_ownership(session_id, user_id):
+    if not _require_ownership(session_id, user_id, request):
         return JSONResponse(status_code=403, content={"error": "No tienes permiso para acceder a esta sesi\u00f3n"})
     result = mlops_engine.get_external_results_data(session_id)
     if result is None:
@@ -188,6 +199,6 @@ async def pdf_report_route(request: Request, session_id: str):
     user_id = _require_auth(request)
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "No autenticado"})
-    if not _require_ownership(session_id, user_id):
+    if not _require_ownership(session_id, user_id, request):
         return JSONResponse(status_code=403, content={"error": "No tienes permiso para acceder a esta sesi\u00f3n"})
     return await _generate_pdf_report(session_id)
