@@ -16,9 +16,11 @@ When the task is complete and the user approves closeout, move the task to `## D
 
 ## Current
 
-## To do
 
-- TASK-002: Refactorización del proyecto (seguridad, código, estructura)
+## To do
 
 ## Done
 - TASK-001: Infraestructura de tests y cobertura completa (unitarios e integración)
+- TASK-002: Seguridad (hashing, JWT, CSRF, rate limiting, headers, .env)
+- TASK-003: Refactorización de código (trainer.py, JS inline, type hints, pooling, deprecations, deps)
+- TASK-004: Estructura del proyecto (CI/CD, type checker, design.md, domain.md)

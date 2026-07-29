@@ -2,13 +2,14 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse
 
 from database import get_db_connection
+from services.auth_service import get_user_id_from_token
 
 router = APIRouter()
 
 @router.get("/api/history")
 async def get_history(request: Request):
     try:
-        user_id = request.cookies.get("session_token")
+        user_id = get_user_id_from_token(request.cookies.get("access_token"))
         if not user_id:
             return JSONResponse(status_code=401, content={"error": "No autenticado"})
 

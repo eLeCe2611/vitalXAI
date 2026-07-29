@@ -2,13 +2,13 @@ class TestAuthFlow:
     def test_register_login_dashboard(self, client, sqlite_db):
         # Register
         resp = client.post("/api/register", data={
-            "username": "doctor1", "password": "pass",
+            "username": "doctor1@hospital.com", "password": "pass1234",
             "first_name": "Ana", "last_name": "Perez",
             "role": "Radiólogo Especialista"
         })
         assert resp.status_code == 200
         assert resp.json()["status"] == "success"
-        token = resp.cookies.get("session_token")
+        token = resp.cookies.get("access_token")
         assert token is not None
 
         # Dashboard with token
@@ -17,22 +17,24 @@ class TestAuthFlow:
         assert "Ana" in resp.text
 
     def test_login_with_registered_user(self, client, sqlite_db):
-        # Seed user directly
+        import bcrypt as _bcrypt
+        # Seed user directly with bcrypt hash
         cur = sqlite_db.cursor()
+        hashed = _bcrypt.hashpw(b"secret", _bcrypt.gensalt()).decode()
         cur.execute(
             "INSERT INTO users (username, password_hash, first_name, last_name, role) "
             "VALUES (?, ?, ?, ?, ?)",
-            ("existing", "secret", "Carlos", "Lopez", "Neumólogo")
+            ("existing@hospital.com", hashed, "Carlos", "Lopez", "Neumólogo")
         )
         sqlite_db.commit()
 
         # Login
-        resp = client.post("/login", data={"username": "existing", "password": "secret"},
+        resp = client.post("/login", data={"username": "existing@hospital.com", "password": "secret"},
                            follow_redirects=False)
         assert resp.status_code == 303
         assert resp.headers["location"] == "/dashboard"
 
-        # Follow redirect
+        # Follow redirect (now with JWT cookies from login)
         resp = client.get("/dashboard")
         assert resp.status_code == 200
         assert "Carlos" in resp.text
@@ -43,6 +45,7 @@ class TestAuthFlow:
         assert resp.headers["location"] == "/"
 
     def test_history_empty_for_new_user(self, client, sqlite_db):
+        from services.auth_service import create_access_token
         cur = sqlite_db.cursor()
         cur.execute(
             "INSERT INTO users (username, password_hash, first_name, last_name, role) "
@@ -50,7 +53,8 @@ class TestAuthFlow:
             ("newdoc", "x", "Nuevo", "Doctor", "Residente")
         )
         sqlite_db.commit()
-        client.cookies.set("session_token", "1")
+        token = create_access_token(1)
+        client.cookies.set("access_token", token)
         resp = client.get("/api/history")
         assert resp.status_code == 200
         assert resp.json()["data"] == []

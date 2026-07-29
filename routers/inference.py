@@ -6,20 +6,39 @@ from fastapi import APIRouter, File, Form, Request, UploadFile
 from fastapi.responses import JSONResponse
 
 from database import get_db_connection
+from services.auth_service import get_user_id_from_token
 
 # IMPORTANTE: Estas importaciones asumen que tienes estos archivos en la carpeta services/
 from services.ml_engine import process_and_predict
 from services.pdf_generator import generate_medical_report
 from services.xai_generator import generate_xai_heatmap
 
+_ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/jpg"}
+_MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+
 router = APIRouter()
 
 @router.post("/predict")
 async def predict(request: Request, file: UploadFile = File(...), model_name: str = Form(...)):  # noqa: B008
     try:
-        user_id = request.cookies.get("session_token")
+        user_id = get_user_id_from_token(request.cookies.get("access_token"))
         if not user_id:
             return JSONResponse(status_code=401, content={"error": "No autenticado"})
+
+        if file.content_type not in _ALLOWED_MIME_TYPES:
+            return JSONResponse(
+                status_code=400,
+                content={"status": "error", "message": "Solo se permiten imágenes (JPEG/PNG)"}
+            )
+
+        file.file.seek(0, 2)
+        file_size = file.file.tell()
+        file.file.seek(0)
+        if file_size > _MAX_FILE_SIZE:
+            return JSONResponse(
+                status_code=400,
+                content={"status": "error", "message": "La imagen no puede superar los 10 MB"}
+            )
 
         # 1. Guardar archivo subido
         timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")

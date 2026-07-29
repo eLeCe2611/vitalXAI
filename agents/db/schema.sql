@@ -25,12 +25,23 @@ CREATE TABLE IF NOT EXISTS consultations (
 
 CREATE TABLE IF NOT EXISTS training_jobs (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
+    user_id INT NOT NULL,
     dataset_path VARCHAR(500),
     model_name VARCHAR(100),
     status VARCHAR(50) DEFAULT 'In Progress',
     progress FLOAT DEFAULT 0.0,
     metrics_json TEXT,
     started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    finished_at DATETIME NULL
+    finished_at DATETIME NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token_hash VARCHAR(255) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    revoked BOOLEAN DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
