@@ -10,9 +10,11 @@ from services.auth_service import create_access_token
 # Modules that import get_db_connection directly
 _DB_CLIENTS = [
     "database",
+    "routers.admin",
     "routers.auth",
     "routers.history",
     "routers.inference",
+    "routers.trainer",
     "services.trainer_engine",
     "services.auth_service",
 ]
