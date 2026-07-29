@@ -16,11 +16,14 @@ When the task is complete and the user approves closeout, move the task to `## D
 
 ## Current
 
-
 ## To do
+
 
 ## Done
 - TASK-001: Infraestructura de tests y cobertura completa (unitarios e integración)
 - TASK-002: Seguridad (hashing, JWT, CSRF, rate limiting, headers, .env)
 - TASK-003: Refactorización de código (trainer.py, JS inline, type hints, pooling, deprecations, deps)
 - TASK-004: Estructura del proyecto (CI/CD, type checker, design.md, domain.md)
+- TASK-005: Aislamiento de historiales por usuario (Diagnóstico Rápido y Laboratorio de Entrenamiento)
+- TASK-006: Panel de administración para rol admin (visión global de consultas)
+- TASK-007: Cola única FIFO global con prioridad para diagnósticos

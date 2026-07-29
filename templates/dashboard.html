@@ -76,6 +76,24 @@
             </p>
         </div>
 
+        {% if is_admin %}
+        <div
+            class="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-300">
+            <button onclick="window.openAdminUsersModal()"
+                class="w-full text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-semibold flex items-center gap-2 transition-colors">
+                <i class="fa-solid fa-users-gear w-5 text-center"></i> <span id="ui-admin-btn">Panel de Administración</span>
+            </button>
+        </div>
+        {% endif %}
+        <div id="queue-panel" class="hidden p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-300">
+            <div class="flex items-center gap-2 mb-2">
+                <i class="fa-solid fa-list-ol text-purple-500 text-xs"></i>
+                <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider" id="ui-queue-title">Cola de trabajos</span>
+            </div>
+            <div id="queue-items" class="space-y-1 max-h-32 overflow-y-auto">
+                <p class="text-xs text-gray-400 italic" id="ui-queue-empty">Sin trabajos pendientes</p>
+            </div>
+        </div>
         <div
             class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-300">
             <a href="/logout"
@@ -138,6 +156,61 @@
             </div>
         </div>
 
+        <div id="consultation-detail-panel"
+            class="hidden flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
+            <div class="max-w-4xl mx-auto">
+                <button onclick="window.closeConsultationDetail()" class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 mb-4 flex items-center gap-1 transition-colors">
+                    <i class="fa-solid fa-arrow-left"></i> <span id="ui-back">Volver</span>
+                </button>
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800 dark:text-white" id="cd-title">Detalle de Consulta</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400" id="cd-timestamp"></p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="window.adminShowRenamePrompt(window._cdId, window._cdPatient)" class="bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 px-3 py-2 rounded-xl font-bold text-xs transition-colors flex items-center gap-1">
+                                <i class="fa-solid fa-pen"></i> <span id="ui-cd-rename">Renombrar</span>
+                            </button>
+                            <button onclick="window.adminDeleteConsultation(window._cdId)" class="bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 px-3 py-2 rounded-xl font-bold text-xs transition-colors flex items-center gap-1">
+                                <i class="fa-solid fa-trash-can"></i> <span id="ui-cd-delete">Eliminar</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-5 space-y-5">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-original-label">Radiograf\u00eda Original</span></p>
+                                <img id="cd-original" src="" class="w-full rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="window.openImageModal(this.src)">
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-xai-label">Mapas de Calor XAI</span></p>
+                                <img id="cd-xai" src="" class="w-full rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="window.openImageModal(this.src)">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t border-gray-100 dark:border-gray-700">
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-diagnosis-label">Diagn\u00f3stico</span></p>
+                                <p id="cd-label" class="text-sm font-black"></p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-confidence-label">Confianza</span></p>
+                                <p id="cd-confidence" class="text-sm font-black text-blue-600 dark:text-blue-400"></p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-model-label">Modelo</span></p>
+                                <p id="cd-model" class="text-sm font-semibold text-gray-700 dark:text-gray-300"></p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-patient-label">Paciente</span></p>
+                                <p id="cd-patient" class="text-sm font-semibold text-gray-700 dark:text-gray-300"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div
             class="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] transition-colors duration-300 z-10">
             <div class="max-w-5xl mx-auto flex items-end gap-3">
@@ -189,6 +262,43 @@
         </div>
     </main>
 
+    <div id="admin-users-modal"
+        class="fixed inset-0 z-50 hidden bg-black/60 flex items-center justify-center backdrop-blur-sm transition-opacity"
+        onclick="closeAdminUsersModal()">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col m-4 border border-gray-200 dark:border-gray-700"
+            onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-bold text-gray-800 dark:text-white" id="ui-admin-modal-title">Usuarios</h2>
+                <button onclick="closeAdminUsersModal()"
+                    class="text-gray-400 hover:text-red-500 transition-colors">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-2" id="admin-users-list">
+                <p class="text-sm text-gray-400 italic">Cargando...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-user-consultations-modal"
+        class="fixed inset-0 z-50 hidden bg-black/60 flex items-center justify-center backdrop-blur-sm transition-opacity"
+        onclick="closeAdminUserConsultationsModal()">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col m-4 border border-gray-200 dark:border-gray-700"
+            onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-bold text-gray-800 dark:text-white" id="ui-admin-consult-modal-title">Consultas</h2>
+                <button onclick="closeAdminUserConsultationsModal()"
+                    class="text-gray-400 hover:text-red-500 transition-colors">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-3" id="admin-user-consultations-list">
+                <p class="text-sm text-gray-400 italic">Cargando...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/admin.js"></script>
     <script src="/static/js/dashboard.js"></script>
 </body>
 

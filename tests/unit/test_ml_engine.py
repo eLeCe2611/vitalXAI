@@ -1,15 +1,7 @@
 import os
 from unittest.mock import MagicMock, patch
 
-import numpy as np
 import pytest
-
-
-@pytest.fixture
-def mock_cv2():
-    with patch("services.ml_engine.cv2") as mock:
-        mock.imread.return_value = np.zeros((224, 224, 3), dtype=np.uint8)
-        yield mock
 
 
 @pytest.fixture
@@ -77,15 +69,17 @@ class TestProcessAndPredict:
         model.predict.return_value = [[0.85]]
         return model
 
-    def test_cnn_prediction_pneumonia(self, mock_cv2, mock_tf, mock_model_cnn):
+    def test_cnn_prediction_pneumonia(self, mock_tf, mock_model_cnn):
         with patch("services.ml_engine.get_model", return_value=mock_model_cnn):
+            import cv2
+
             from services.ml_engine import process_and_predict
             label, confidence = process_and_predict("DenseNet121", "fake.jpg")
-            mock_cv2.imread.assert_called_once_with("fake.jpg")
+            cv2.imread.assert_called_once_with("fake.jpg")
             assert label == "Neumonía"
             assert confidence == 85.0
 
-    def test_cnn_prediction_normal(self, mock_cv2, mock_tf, mock_model_cnn):
+    def test_cnn_prediction_normal(self, mock_tf, mock_model_cnn):
         mock_model_cnn.predict.return_value = [[0.3]]
         with patch("services.ml_engine.get_model", return_value=mock_model_cnn):
             from services.ml_engine import process_and_predict
@@ -93,7 +87,7 @@ class TestProcessAndPredict:
             assert label == "Normal"
             assert confidence == 70.0
 
-    def test_transformer_prediction(self, mock_cv2, mock_tf):
+    def test_transformer_prediction(self, mock_tf):
         mock_tf.sigmoid.return_value = [0.92]
         mock_tf.convert_to_tensor.return_value = "tensor"
         mock_model = MagicMock()
@@ -103,21 +97,25 @@ class TestProcessAndPredict:
             label, confidence = process_and_predict("deit", "fake.jpg")
             assert label == "Neumonía"
 
-    def test_image_size_for_inception(self, mock_cv2, mock_tf, mock_model_cnn):
+    def test_image_size_for_inception(self, mock_tf, mock_model_cnn):
         with patch("services.ml_engine.get_model", return_value=mock_model_cnn):
+            import cv2
+
             from services.ml_engine import process_and_predict
             process_and_predict("InceptionV3", "fake.jpg")
-            call_args = mock_cv2.resize.call_args
+            call_args = cv2.resize.call_args
             assert call_args[0][1] == (299, 299)
 
-    def test_image_size_for_vit384(self, mock_cv2, mock_tf, mock_model_cnn):
+    def test_image_size_for_vit384(self, mock_tf, mock_model_cnn):
         with patch("services.ml_engine.get_model", return_value=mock_model_cnn):
+            import cv2
+
             from services.ml_engine import process_and_predict
             process_and_predict("vit_384", "fake.jpg")
-            call_args = mock_cv2.resize.call_args
+            call_args = cv2.resize.call_args
             assert call_args[0][1] == (384, 384)
 
-    def test_confidence_clamped_to_0_100(self, mock_cv2, mock_tf, mock_model_cnn):
+    def test_confidence_clamped_to_0_100(self, mock_tf, mock_model_cnn):
         mock_model_cnn.predict.return_value = [[0.999]]
         with patch("services.ml_engine.get_model", return_value=mock_model_cnn):
             from services.ml_engine import process_and_predict

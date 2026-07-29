@@ -2,6 +2,10 @@ import os
 
 os.environ['USE_TF'] = '1'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+# trainer.py establece TF_USE_LEGACY_KERAS=1 para los scripts de entrenamiento,
+# pero los modelos están guardados en formato Keras 3. Lo eliminamos aquí
+# para que TF cargue con Keras 3 nativo.
+os.environ.pop('TF_USE_LEGACY_KERAS', None)
 
 import cv2
 import numpy as np

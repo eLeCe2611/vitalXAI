@@ -105,13 +105,27 @@ def browse_folder():
         return None
 
 
-def create_training_session(model_names: str, dataset_path: str, epochs: int, batch_size: int, learning_rate: float):
+def _verify_session_ownership(session_id: str, user_id: int) -> bool:
+    config_path = os.path.join("training_results", session_id, "config.json")
+    if not os.path.exists(config_path):
+        return False
+    try:
+        with open(config_path, encoding="utf-8") as f:
+            config = json.load(f)
+        return config.get("user_id") == user_id
+    except (json.JSONDecodeError, OSError):
+        return False
+
+
+def create_training_session(model_names: str, dataset_path: str, epochs: int, batch_size: int, learning_rate: float, user_id: int | None = None):
     session_id = f"RUN_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
     session_dir = f"training_results/{session_id}"
     os.makedirs(session_dir, exist_ok=True)
     with open(os.path.join(session_dir, "dataset_path.txt"), "w", encoding="utf-8") as f:
         f.write(dataset_path)
     config = {"dataset_path": dataset_path, "epochs": epochs, "batch_size": batch_size, "learning_rate": learning_rate, "models": [m.strip() for m in model_names.split(",")]}
+    if user_id is not None:
+        config["user_id"] = user_id
     with open(os.path.join(session_dir, "config.json"), "w", encoding="utf-8") as f:
         json.dump(config, f)
     return session_id
@@ -143,7 +157,7 @@ def get_model_results_data(session_id: str, model_name: str):
     return {"data": data, "images": images, "calib": calib, "xai_metrics": xai_metrics}
 
 
-def get_trained_sessions():
+def get_trained_sessions(user_id: int | None = None):
     base_dir = "training_results"
     if not os.path.exists(base_dir):
         return []
@@ -151,6 +165,8 @@ def get_trained_sessions():
     for folder in sorted(os.listdir(base_dir), reverse=True):
         path = os.path.join(base_dir, folder)
         if os.path.isdir(path):
+            if user_id is not None and not _verify_session_ownership(folder, user_id):
+                continue
             models = [m for m in os.listdir(path) if os.path.exists(os.path.join(path, m, "kfold_results.csv"))]
             if models:
                 sessions.append({"session_id": folder, "models": models})

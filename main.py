@@ -14,8 +14,9 @@ from slowapi.errors import RateLimitExceeded  # noqa: E402
 from database import init_db  # noqa: E402
 
 # AÑADIMOS 'trainer' a la lista de imports
-from routers import auth, history, inference, trainer  # noqa: E402
+from routers import admin, auth, history, inference, queue, trainer  # noqa: E402
 from services.csrf_middleware import CSRFMiddleware, SecurityHeadersMiddleware  # noqa: E402
+from services.queue_worker import start_worker  # noqa: E402
 from services.rate_limiter import limiter  # noqa: E402
 
 
@@ -29,6 +30,8 @@ async def lifespan(app: FastAPI):
         print("❌ ATENCIÓN: No se pudo conectar a la base de datos MySQL.")
         print("❌ Asegúrate de que XAMPP está abierto y MySQL está en 'Start'.")
         print("==========================================================")
+    start_worker(app)
+    print("✅ Worker de cola iniciado.")
     yield
 
 
@@ -43,9 +46,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 os.makedirs("training_results", exist_ok=True)
 app.mount("/training_results", StaticFiles(directory="training_results"), name="training_results")
 
+app.include_router(admin.router)
 app.include_router(auth.router)
 app.include_router(history.router)
 app.include_router(inference.router)
+app.include_router(queue.router)
 app.include_router(trainer.router)
 
 if __name__ == "__main__":

@@ -81,10 +81,12 @@ async def dashboard(request: Request):
     lname = user.get('last_name') or ""
     full_name = f"{fname} {lname}".strip()
     role = user.get('role') or "Facultativo"
+    is_admin = role == "admin"
 
     response = templates.TemplateResponse(request, "dashboard.html", {
         "full_name": full_name,
-        "role": role
+        "role": role,
+        "is_admin": is_admin
     })
 
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
@@ -110,10 +112,12 @@ async def training_lab(request: Request):
     lname = user.get('last_name') or ""
     full_name = f"{fname} {lname}".strip()
     role = user.get('role') or "Facultativo"
+    is_admin = role == "admin"
 
     response = templates.TemplateResponse(request, "training.html", {
         "full_name": full_name,
-        "role": role
+        "role": role,
+        "is_admin": is_admin
     })
 
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
