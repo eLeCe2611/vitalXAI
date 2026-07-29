@@ -1,6 +1,7 @@
 """
 trainer.py (FACHADA LIGERA - Rutas MLOPS)
 """
+import json
 import os
 
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
@@ -65,15 +66,33 @@ async def browse_folder(request: Request):
 
 
 @router.post("/api/train/start")
-async def start_training(request: Request, background_tasks: BackgroundTasks, model_names: str = Form(...), dataset_path: str = Form(...), epochs: int = Form(...), batch_size: int = Form(...), learning_rate: float = Form(...)):
+async def start_training(request: Request, model_names: str = Form(...), dataset_path: str = Form(...), epochs: int = Form(...), batch_size: int = Form(...), learning_rate: float = Form(...)):
     user_id = _require_auth(request)
     if not user_id:
         return JSONResponse(status_code=401, content={"error": "No autenticado"})
     if not dataset_path or not os.path.exists(dataset_path):
         return JSONResponse(status_code=400, content={"status": "error", "message": "La ruta no existe."})
     session_id = mlops_engine.create_training_session(model_names, dataset_path, epochs, batch_size, learning_rate, user_id=user_id)
-    background_tasks.add_task(run_training_queue, session_id, [m.strip() for m in model_names.split(",")], dataset_path, epochs, batch_size, learning_rate)
-    return JSONResponse(content={"status": "success", "message": f"Iniciada sesi\u00f3n {session_id}."})
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO job_queue (user_id, job_type, payload) VALUES (%s, %s, %s)",
+        (user_id, "training", json.dumps({
+            "session_id": session_id,
+            "models": [m.strip() for m in model_names.split(",")],
+            "dataset_path": dataset_path,
+            "epochs": epochs,
+            "batch_size": batch_size,
+            "learning_rate": learning_rate,
+        }))
+    )
+    conn.commit()
+    job_id = cursor.lastrowid
+    conn.close()
+
+    return JSONResponse(content={"status": "queued", "job_id": job_id, "session_id": session_id,
+                                  "message": f"Entrenamiento encolado como trabajo #{job_id}"})
 
 
 @router.get("/api/train/logs")

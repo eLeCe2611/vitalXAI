@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 import shutil
 
@@ -8,15 +9,43 @@ from fastapi.responses import JSONResponse
 from database import get_db_connection
 from services.auth_service import get_user_id_from_token
 
-# IMPORTANTE: Estas importaciones asumen que tienes estos archivos en la carpeta services/
-from services.ml_engine import process_and_predict
-from services.pdf_generator import generate_medical_report
-from services.xai_generator import generate_xai_heatmap
-
 _ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/jpg"}
 _MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 router = APIRouter()
+
+
+def _enqueue_job(user_id: int, job_type: str, payload: dict) -> int:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO job_queue (user_id, job_type, payload) VALUES (%s, %s, %s)",
+        (user_id, job_type, json.dumps(payload))
+    )
+    conn.commit()
+    job_id = cursor.lastrowid
+    conn.close()
+    return job_id
+
+
+def _queue_position(job_id: int, job_type: str) -> int:
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT COUNT(*) AS pos FROM job_queue
+        WHERE status = 'queued'
+          AND (
+            CASE job_type WHEN 'diagnosis' THEN 0 ELSE 1 END < CASE %s WHEN 'diagnosis' THEN 0 ELSE 1 END
+            OR (
+              CASE job_type WHEN 'diagnosis' THEN 0 ELSE 1 END = CASE %s WHEN 'diagnosis' THEN 0 ELSE 1 END
+              AND id < %s
+            )
+          )
+    """, (job_type, job_type, job_id))
+    row = cursor.fetchone()
+    conn.close()
+    return (row["pos"] if row else 0) + 1
+
 
 @router.post("/predict")
 async def predict(request: Request, file: UploadFile = File(...), model_name: str = Form(...)):  # noqa: B008
@@ -40,57 +69,25 @@ async def predict(request: Request, file: UploadFile = File(...), model_name: st
                 content={"status": "error", "message": "La imagen no puede superar los 10 MB"}
             )
 
-        # 1. Guardar archivo subido
         timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         filename = f"{timestamp}_{file.filename}"
-
-        # Asegúrate de que static/uploads/ existe
         os.makedirs(os.path.join("static", "uploads"), exist_ok=True)
         upload_path = os.path.join("static", "uploads", filename)
 
         with open(upload_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # 2. Inferencia ML
-        label, confidence = process_and_predict(model_name, upload_path)
+        job_id = _enqueue_job(user_id, "diagnosis", {
+            "model_name": model_name,
+            "image_path": upload_path,
+        })
+        position = _queue_position(job_id, "diagnosis")
 
-        # 3. Generar Mapa de Calor (XAI)
-        os.makedirs(os.path.join("static", "results"), exist_ok=True)
-        xai_filename = f"xai_{filename}"
-        xai_path = os.path.join("static", "results", xai_filename)
-        generate_xai_heatmap(model_name, upload_path, xai_path)
-
-        # 4. Generar Reporte PDF
-        pdf_path = generate_medical_report(upload_path, xai_path, label, confidence, model_name)
-
-        # 5. Guardar en Base de Datos
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("SELECT COUNT(*) FROM consultations WHERE user_id = %s AND model_name = %s", (user_id, model_name))
-        count_previous = cursor.fetchone()[0]
-        current_number = count_previous + 1
-
-        default_patient_name = f"Paciente sin nombre {model_name} #{current_number}"
-
-        query = """
-        INSERT INTO consultations
-        (user_id, model_name, original_image_path, xai_image_path, prediction_label, confidence_score, patient_name, pdf_path)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(query, (user_id, model_name, upload_path, xai_path, label, confidence, default_patient_name, pdf_path))
-        conn.commit()
-        conn.close()
-
-        # 6. Respuesta JSON
         return JSONResponse(content={
-            "status": "success",
-            "label": label,
-            "confidence": confidence,
-            "original_image": f"/{upload_path}",
-            "xai_image": f"/{xai_path}",
-            "pdf_report": f"/{pdf_path}",
-            "model_used": model_name
+            "status": "queued",
+            "job_id": job_id,
+            "position": position,
+            "message": f"Diagnóstico encolado en posición {position}"
         })
 
     except Exception as e:
