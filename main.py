@@ -1,17 +1,21 @@
 from contextlib import asynccontextmanager
 
-import uvicorn
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
+from dotenv import load_dotenv
 
-from database import init_db
+load_dotenv()
+
+import uvicorn  # noqa: E402
+from fastapi import FastAPI  # noqa: E402
+from fastapi.staticfiles import StaticFiles  # noqa: E402
+from slowapi import _rate_limit_exceeded_handler  # noqa: E402
+from slowapi.errors import RateLimitExceeded  # noqa: E402
+
+from database import init_db  # noqa: E402
 
 # AÑADIMOS 'trainer' a la lista de imports
-from routers import auth, history, inference, trainer
-from services.csrf_middleware import CSRFMiddleware, SecurityHeadersMiddleware
-from services.rate_limiter import limiter
+from routers import auth, history, inference, trainer  # noqa: E402
+from services.csrf_middleware import CSRFMiddleware, SecurityHeadersMiddleware  # noqa: E402
+from services.rate_limiter import limiter  # noqa: E402
 
 
 @asynccontextmanager
