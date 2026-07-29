@@ -34,14 +34,21 @@ async def get_history(request: Request):
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-def _check_consultation_ownership(consultation_id: int, user_id: int):
+def _check_consultation_ownership(consultation_id: int, user_id: int, allow_admin: bool = False):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT user_id FROM consultations WHERE id = %s", (consultation_id,))
     consultation = cursor.fetchone()
-    conn.close()
     if not consultation:
+        conn.close()
         return "not_found"
+    if allow_admin:
+        cursor.execute("SELECT role FROM users WHERE id = %s", (user_id,))
+        user = cursor.fetchone()
+        if user and user["role"] == "admin":
+            conn.close()
+            return "ok"
+    conn.close()
     if consultation["user_id"] != user_id:
         return "forbidden"
     return "ok"
@@ -52,7 +59,7 @@ async def update_patient_name(request: Request, consultation_id: int = Form(...)
         user_id = get_user_id_from_token(request.cookies.get("access_token"))
         if not user_id:
             return JSONResponse(status_code=401, content={"error": "No autenticado"})
-        ownership = _check_consultation_ownership(consultation_id, user_id)
+        ownership = _check_consultation_ownership(consultation_id, user_id, allow_admin=True)
         if ownership == "not_found":
             return JSONResponse(status_code=404, content={"error": "Consulta no encontrada"})
         if ownership == "forbidden":
@@ -72,7 +79,7 @@ async def delete_history_record(request: Request, consultation_id: int = Form(..
         user_id = get_user_id_from_token(request.cookies.get("access_token"))
         if not user_id:
             return JSONResponse(status_code=401, content={"error": "No autenticado"})
-        ownership = _check_consultation_ownership(consultation_id, user_id)
+        ownership = _check_consultation_ownership(consultation_id, user_id, allow_admin=True)
         if ownership == "not_found":
             return JSONResponse(status_code=404, content={"error": "Consulta no encontrada"})
         if ownership == "forbidden":
