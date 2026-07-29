@@ -15,6 +15,7 @@ When work starts on a current task, create:
 When the task is complete and the user approves closeout, move the task to `## Done` and move its task files to `agents/task/archive/` in the same step.
 
 ## Current
+- TASK-007: Cola única FIFO global con prioridad para diagnósticos
 
 ## To do
 

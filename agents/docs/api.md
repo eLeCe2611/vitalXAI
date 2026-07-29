@@ -27,6 +27,11 @@
 | GET | `/register` | — | HTML register form | |
 | POST | `/api/register` | Form: username, password, first_name, last_name, role | `{"status": "success", "code": "success_register"}` | Sets `access_token` + `refresh_token` httponly cookies on success. Validates email format, password >= 8 chars |
 
+### Queue
+| Method | Path | Request | Response | Auth | Notes |
+|---|---|---|---|---|---|
+| GET | `/api/queue/status` | Cookie: access_token | `{"status": "success", "jobs": [...], "has_pending": bool, "queued_count": N}` | JWT required | Returns the authenticated user's jobs ordered by most recent. Each job shows type, status, position (if queued), and timestamps. |
+
 ### Inference
 | Method | Path | Request | Response | Notes |
 |---|---|---|---|---|
