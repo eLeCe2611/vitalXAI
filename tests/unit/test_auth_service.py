@@ -4,9 +4,9 @@ from jose import jwt
 
 class TestJwtTokens:
     def test_create_access_token_returns_token(self):
-        from services.auth_service import create_access_token
+        from services.auth_service import JWT_SECRET_KEY, create_access_token
         token = create_access_token(42)
-        payload = jwt.decode(token, "dev-secret-change-in-production", algorithms=["HS256"])
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
         assert payload["sub"] == "42"
         assert "exp" in payload
 
@@ -21,10 +21,10 @@ class TestJwtTokens:
 
         from jose import jwt
 
-        from services.auth_service import verify_access_token
+        from services.auth_service import JWT_SECRET_KEY, verify_access_token
         expired_token = jwt.encode(
             {"sub": 1, "exp": datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=1)},
-            "dev-secret-change-in-production", algorithm="HS256"
+            JWT_SECRET_KEY, algorithm="HS256"
         )
         assert verify_access_token(expired_token) is None
 
