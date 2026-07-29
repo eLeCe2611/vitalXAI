@@ -34,9 +34,29 @@ async def get_history(request: Request):
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+def _check_consultation_ownership(consultation_id: int, user_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT user_id FROM consultations WHERE id = %s", (consultation_id,))
+    consultation = cursor.fetchone()
+    conn.close()
+    if not consultation:
+        return "not_found"
+    if consultation["user_id"] != user_id:
+        return "forbidden"
+    return "ok"
+
 @router.post("/api/history/update_name")
-async def update_patient_name(consultation_id: int = Form(...), new_name: str = Form(...)):
+async def update_patient_name(request: Request, consultation_id: int = Form(...), new_name: str = Form(...)):
     try:
+        user_id = get_user_id_from_token(request.cookies.get("access_token"))
+        if not user_id:
+            return JSONResponse(status_code=401, content={"error": "No autenticado"})
+        ownership = _check_consultation_ownership(consultation_id, user_id)
+        if ownership == "not_found":
+            return JSONResponse(status_code=404, content={"error": "Consulta no encontrada"})
+        if ownership == "forbidden":
+            return JSONResponse(status_code=403, content={"error": "No tienes permiso para modificar esta consulta"})
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("UPDATE consultations SET patient_name = %s WHERE id = %s", (new_name, consultation_id))
@@ -47,8 +67,16 @@ async def update_patient_name(consultation_id: int = Form(...), new_name: str = 
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
 @router.post("/api/history/delete")
-async def delete_history_record(consultation_id: int = Form(...)):
+async def delete_history_record(request: Request, consultation_id: int = Form(...)):
     try:
+        user_id = get_user_id_from_token(request.cookies.get("access_token"))
+        if not user_id:
+            return JSONResponse(status_code=401, content={"error": "No autenticado"})
+        ownership = _check_consultation_ownership(consultation_id, user_id)
+        if ownership == "not_found":
+            return JSONResponse(status_code=404, content={"error": "Consulta no encontrada"})
+        if ownership == "forbidden":
+            return JSONResponse(status_code=403, content={"error": "No tienes permiso para eliminar esta consulta"})
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("DELETE FROM consultations WHERE id = %s", (consultation_id,))

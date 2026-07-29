@@ -36,8 +36,25 @@ class TestGetHistory:
 
 
 class TestUpdateName:
+    def test_requires_auth(self, client):
+        response = client.post("/api/history/update_name",
+                               data={"consultation_id": 1, "new_name": "Juan"})
+        assert response.status_code == 401
+
+    def test_returns_403_for_unowned_consultation(self, client, mock_db_connection):
+        from services.auth_service import create_access_token
+        cursor = mock_db_connection["cursor"]
+        cursor.fetchone.return_value = {"user_id": 2}
+        token = create_access_token(1)
+        client.cookies.set("access_token", token)
+        response = client.post("/api/history/update_name",
+                               data={"consultation_id": 1, "new_name": "Juan"})
+        assert response.status_code == 403
+
     def test_successful_update(self, client, mock_db_connection):
         from services.auth_service import create_access_token
+        cursor = mock_db_connection["cursor"]
+        cursor.fetchone.return_value = {"user_id": 1}
         token = create_access_token(1)
         client.cookies.set("access_token", token)
         response = client.post("/api/history/update_name",
@@ -47,8 +64,23 @@ class TestUpdateName:
 
 
 class TestDeleteRecord:
+    def test_requires_auth(self, client):
+        response = client.post("/api/history/delete", data={"consultation_id": 1})
+        assert response.status_code == 401
+
+    def test_returns_403_for_unowned_consultation(self, client, mock_db_connection):
+        from services.auth_service import create_access_token
+        cursor = mock_db_connection["cursor"]
+        cursor.fetchone.return_value = {"user_id": 2}
+        token = create_access_token(1)
+        client.cookies.set("access_token", token)
+        response = client.post("/api/history/delete", data={"consultation_id": 1})
+        assert response.status_code == 403
+
     def test_successful_deletion(self, client, mock_db_connection):
         from services.auth_service import create_access_token
+        cursor = mock_db_connection["cursor"]
+        cursor.fetchone.return_value = {"user_id": 1}
         token = create_access_token(1)
         client.cookies.set("access_token", token)
         response = client.post("/api/history/delete", data={"consultation_id": 1})
