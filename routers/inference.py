@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 
 from database import get_db_connection
 from services.auth_service import get_user_id_from_token
+from services.lang import get_lang_from_cookie, get_text
 
 _ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/jpg"}
 _MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
@@ -52,12 +53,12 @@ async def predict(request: Request, file: UploadFile = File(...), model_name: st
     try:
         user_id = get_user_id_from_token(request.cookies.get("access_token"))
         if not user_id:
-            return JSONResponse(status_code=401, content={"error": "No autenticado"})
+            return JSONResponse(status_code=401, content={"error": get_text("no_autenticado")})
 
         if file.content_type not in _ALLOWED_MIME_TYPES:
             return JSONResponse(
                 status_code=400,
-                content={"status": "error", "message": "Solo se permiten imágenes (JPEG/PNG)"}
+                content={"status": "error", "message": get_text("solo_imagenes")}
             )
 
         file.file.seek(0, 2)
@@ -66,7 +67,7 @@ async def predict(request: Request, file: UploadFile = File(...), model_name: st
         if file_size > _MAX_FILE_SIZE:
             return JSONResponse(
                 status_code=400,
-                content={"status": "error", "message": "La imagen no puede superar los 10 MB"}
+                content={"status": "error", "message": get_text("imagen_muy_grande")}
             )
 
         timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -77,9 +78,11 @@ async def predict(request: Request, file: UploadFile = File(...), model_name: st
         with open(upload_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
+        lang = get_lang_from_cookie(request)
         job_id = _enqueue_job(user_id, "diagnosis", {
             "model_name": model_name,
             "image_path": upload_path,
+            "lang": lang,
         })
         position = _queue_position(job_id, "diagnosis")
 
@@ -87,7 +90,7 @@ async def predict(request: Request, file: UploadFile = File(...), model_name: st
             "status": "queued",
             "job_id": job_id,
             "position": position,
-            "message": f"Diagnóstico encolado en posición {position}"
+            "message": get_text("diagnostico_encolado").format(position=position)
         })
 
     except Exception as e:
