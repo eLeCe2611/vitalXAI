@@ -19,9 +19,6 @@
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 h-screen flex overflow-hidden font-sans transition-colors duration-300 relative">
-<script>
-(function(){const c=document.cookie.match(/csrf_token=([^;]+)/);if(!c)return;const t=c[1];const o=fetch;window.fetch=function(u,r){if(!r||(r.method||'GET').toUpperCase()==='GET')return o(u,r);r.headers=r.headers||{};r.headers['X-CSRF-Token']=t;return o(u,r)}})();
-</script>
 
     <aside class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col shadow-sm z-20 transition-colors duration-300">
         <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20 transition-colors duration-300">
@@ -93,6 +90,17 @@
                 <button onclick="toggleTheme()" class="text-gray-500 dark:text-gray-400 hover:text-blue-500 focus:outline-none w-8 h-8 flex items-center justify-center rounded-lg transition-colors">
                     <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
                 </button>
+                <div class="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                    <i class="fa-solid fa-globe text-blue-500 dark:text-blue-400"></i>
+                    <label for="lang-selector" class="sr-only">Idioma:</label>
+                    <select id="lang-selector" onchange="changeLanguage()"
+                        class="bg-transparent border-none text-sm font-bold text-gray-600 dark:text-gray-200 focus:outline-none cursor-pointer pr-2 appearance-none">
+                        <option value="es" class="dark:bg-gray-800">Español</option>
+                        <option value="en" class="dark:bg-gray-800">English</option>
+                        <option value="zh" class="dark:bg-gray-800">中文 (Mandarin)</option>
+                        <option value="hi" class="dark:bg-gray-800">हिन्दी (Hindi)</option>
+                    </select>
+                </div>
             </div>
         </header>
 
@@ -101,10 +109,10 @@
                 
                 <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-between items-center shrink-0">
                     <h3 class="text-sm font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
-                        <i class="fa-solid fa-robot text-purple-500"></i> Asistente de Configuración
+                        <i class="fa-solid fa-robot text-purple-500"></i> <span data-i18n="trainConfigAssistant">Asistente de Configuración</span>
                     </h3>
                     <button onclick="browseFolderAndInsert()" class="text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2 shadow-sm focus:outline-none">
-                        <i class="fa-solid fa-folder-open"></i> Explorar Carpeta
+                        <i class="fa-solid fa-folder-open"></i> <span data-i18n="trainFolder">Explorar Carpeta</span>
                     </button>
                 </div>
 
@@ -118,7 +126,7 @@
 
                 <div class="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.2)] z-10">
                     <form id="chat-form" onsubmit="handleChatSubmit(event)" class="flex gap-2 relative">
-                        <input type="text" id="chat-input" class="flex-1 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3 text-sm text-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all" placeholder="Escribe aquí tu respuesta, pide la ruta, o pregúntame lo que quieras..." autocomplete="off">
+                        <input type="text" id="chat-input" class="flex-1 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3 text-sm text-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all" data-i18n-placeholder="trainChatPlaceholder" placeholder="Escribe aquí tu respuesta, pide la ruta, o pregúntame lo que quieras..." autocomplete="off">
                         <button type="submit" id="chat-send-btn" class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
                             <i class="fa-solid fa-paper-plane"></i>
                         </button>
@@ -132,50 +140,50 @@
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 gap-4">
                 <div>
                     <h2 class="text-2xl font-black text-gray-800 dark:text-white flex items-center gap-3">
-                        <i class="fa-solid fa-layer-group text-purple-500"></i> <span id="session-title-name">Sesión</span>
+                        <i class="fa-solid fa-layer-group text-purple-500"></i> <span id="session-title-name" data-i18n="trainSession">Sesión</span>
                     </h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Ranking Global y Análisis Estadístico</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" data-i18n="trainRankingTitle">Ranking Global y Análisis Estadístico</p>
                 </div>
                 <div class="flex flex-wrap gap-2 w-full lg:w-auto">
                     <button onclick="document.getElementById('session-results-panel').classList.add('hidden'); document.getElementById('config-panel').classList.remove('hidden');" class="flex-1 lg:flex-none bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-4 py-2.5 rounded-xl font-bold transition-all text-sm shadow-sm border border-gray-200 dark:border-gray-600 focus:outline-none flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-arrow-left"></i> Volver al Asistente
+                        <i class="fa-solid fa-arrow-left"></i> <span data-i18n="trainBackToAssistant">Volver al Asistente</span>
                     </button>
                     <button onclick="renameSession(null, currentViewingSession)" class="flex-1 lg:flex-none bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 px-4 py-2.5 rounded-xl font-bold transition-all text-sm shadow-sm border border-blue-200 dark:border-blue-800/50 focus:outline-none flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-pencil"></i> Renombrar
+                        <i class="fa-solid fa-pencil"></i> <span data-i18n="trainRename">Renombrar</span>
                     </button>
                     <button onclick="cloneSessionConfig()" class="flex-1 lg:flex-none bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50 px-4 py-2.5 rounded-xl font-bold transition-all text-sm shadow-sm border border-purple-200 dark:border-purple-800/50 focus:outline-none flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-copy"></i> Reutilizar Configuración
+                        <i class="fa-solid fa-copy"></i> <span data-i18n="trainReuseConfig">Reutilizar Configuración</span>
                     </button>
                     <button onclick="launchExternalValidation()" class="flex-1 lg:flex-none bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all text-sm shadow-sm focus:outline-none flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-hospital-user"></i> Validación Externa
+                        <i class="fa-solid fa-hospital-user"></i> <span data-i18n="trainExternalValidation">Validación Externa</span>
                     </button>
                     <button onclick="downloadPDFReport()" class="flex-1 lg:flex-none bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all text-sm shadow-sm focus:outline-none flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-file-pdf"></i> Generar Reporte PDF
+                        <i class="fa-solid fa-file-pdf"></i> <span data-i18n="trainGeneratePdf">Generar Reporte PDF</span>
                     </button>
                     <button onclick="recalculateComparison(currentViewingSession)" class="flex-1 lg:flex-none bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all text-sm shadow-sm focus:outline-none flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-rotate"></i> Recalcular Wilcoxon
+                        <i class="fa-solid fa-rotate"></i> <span data-i18n="trainRecalculateWilcoxon">Recalcular Wilcoxon</span>
                     </button>
                 </div>
             </div>
 
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div><p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><i class="fa-regular fa-folder-open mr-1"></i> Ruta Dataset</p><p id="session-cfg-path" class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate" title="...">...</p></div>
-                    <div><p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><i class="fa-solid fa-rotate-right mr-1"></i> Épocas</p><p id="session-cfg-epochs" class="text-sm font-semibold text-gray-800 dark:text-gray-200 font-mono">...</p></div>
-                    <div><p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><i class="fa-solid fa-layer-group mr-1"></i> Batch Size</p><p id="session-cfg-batch" class="text-sm font-semibold text-gray-800 dark:text-gray-200 font-mono">...</p></div>
-                    <div><p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><i class="fa-solid fa-gauge-high mr-1"></i> Learning Rate</p><p id="session-cfg-lr" class="text-sm font-semibold text-gray-800 dark:text-gray-200 font-mono">...</p></div>
+                    <div><p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1" data-i18n="sessionPath"><i class="fa-regular fa-folder-open mr-1"></i> Ruta Dataset</p><p id="session-cfg-path" class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate" title="...">...</p></div>
+                    <div><p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1" data-i18n="sessionEpochs"><i class="fa-solid fa-rotate-right mr-1"></i> Épocas</p><p id="session-cfg-epochs" class="text-sm font-semibold text-gray-800 dark:text-gray-200 font-mono">...</p></div>
+                    <div><p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1" data-i18n="sessionBatch"><i class="fa-solid fa-layer-group mr-1"></i> Batch Size</p><p id="session-cfg-batch" class="text-sm font-semibold text-gray-800 dark:text-gray-200 font-mono">...</p></div>
+                    <div><p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1" data-i18n="sessionLR"><i class="fa-solid fa-gauge-high mr-1"></i> Learning Rate</p><p id="session-cfg-lr" class="text-sm font-semibold text-gray-800 dark:text-gray-200 font-mono">...</p></div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                 <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
                     <div class="p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-                        <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-trophy text-yellow-500"></i> Ranking por AUC Medio (K-Fold)</h3>
+                        <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2" data-i18n="sessionRank"><i class="fa-solid fa-trophy text-yellow-500"></i> Ranking por AUC Medio (K-Fold)</h3>
                     </div>
                     <div class="overflow-x-auto p-2 flex-1 flex items-center">
                         <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
                             <thead class="text-xs uppercase border-b border-gray-200 dark:border-gray-700 text-gray-400">
-                                <tr><th class="px-4 py-3 font-black">Posición</th><th class="px-4 py-3 font-black">Modelo</th><th class="px-4 py-3">Media AUC</th><th class="px-4 py-3">Std Dev</th></tr>
+                                <tr><th class="px-4 py-3 font-black" data-i18n="trainPos">Posición</th><th class="px-4 py-3 font-black" data-i18n="trainModel">Modelo</th><th class="px-4 py-3" data-i18n="trainMeanAuc">Media AUC</th><th class="px-4 py-3" data-i18n="trainStdDev">Std Dev</th></tr>
                             </thead>
                             <tbody id="session-ranking-table" class="divide-y divide-gray-100 dark:divide-gray-700"></tbody>
                         </table>
@@ -183,35 +191,35 @@
                 </div>
 
                 <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col p-6 items-center justify-center">
-                    <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-full mb-4"><i class="fa-solid fa-scale-balanced text-green-500 mr-2"></i> Matriz Wilcoxon</h3>
-                    <img id="session-heatmap-img" src="" alt="Matriz Wilcoxon" class="w-full max-w-sm object-contain rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hidden cursor-zoom-in hover:scale-105 transition-transform duration-300" onclick="openImageModal(this.src)">
-                    <p id="session-heatmap-error" class="text-sm text-gray-400 italic hidden">Mapa de calor no generado. Se necesitan al menos 2 modelos.</p>
+                    <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-full mb-4" data-i18n="sessionHeatmap"><i class="fa-solid fa-scale-balanced text-green-500 mr-2"></i> Matriz Wilcoxon</h3>
+                    <img id="session-heatmap-img" src="" alt="Wilcoxon" class="w-full max-w-sm object-contain rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hidden cursor-zoom-in hover:scale-105 transition-transform duration-300" onclick="openImageModal(this.src)">
+                    <p id="session-heatmap-error" class="text-sm text-gray-400 italic hidden" data-i18n="trainNoResults">Mapa de calor no generado. Se necesitan al menos 2 modelos.</p>
                 </div>
             </div>
 
             <div id="external-validation-container" class="hidden mt-6 space-y-6">
-                <h3 class="text-lg font-black text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2"><i class="fa-solid fa-hospital-user text-purple-500 mr-2"></i> Fase 2: Validación Externa (Dataset Independiente)</h3>
+                <h3 class="text-lg font-black text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2" data-i18n="extValidation"><i class="fa-solid fa-hospital-user text-purple-500 mr-2"></i> Fase 2: Validación Externa (Dataset Independiente)</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                        <div class="p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50"><h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-chart-line text-blue-500"></i> Rendimiento Real</h3></div>
+                        <div class="p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50"><h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2" data-i18n="sessionRank"><i class="fa-solid fa-chart-line text-blue-500"></i> Rendimiento Real</h3></div>
                         <div class="overflow-x-auto p-2">
-                            <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300"><thead class="text-xs uppercase border-b border-gray-200 dark:border-gray-700 text-gray-400"><tr><th class="px-4 py-3 font-black">Modelo</th><th class="px-4 py-3">Accuracy</th><th class="px-4 py-3">F1-Score</th><th class="px-4 py-3 text-blue-500 font-bold">AUC</th></tr></thead><tbody id="external-ranking-table" class="divide-y divide-gray-100 dark:divide-gray-700"></tbody></table>
+                            <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300"><thead class="text-xs uppercase border-b border-gray-200 dark:border-gray-700 text-gray-400"><tr><th class="px-4 py-3 font-black" data-i18n="trainModel">Modelo</th><th class="px-4 py-3" data-i18n="extAccuracy">Accuracy</th><th class="px-4 py-3" data-i18n="extF1">F1-Score</th><th class="px-4 py-3 text-blue-500 font-bold" data-i18n="extAUC">AUC</th></tr></thead><tbody id="external-ranking-table" class="divide-y divide-gray-100 dark:divide-gray-700"></tbody></table>
                         </div>
                     </div>
                     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex flex-col items-center justify-center">
-                        <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-full mb-4 text-center"><i class="fa-solid fa-chart-area text-indigo-500 mr-2"></i> Curvas ROC</h3>
-                        <img id="external-roc-img" src="" alt="Curva ROC" class="w-full max-w-md object-contain rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm cursor-zoom-in hover:scale-105 transition-transform duration-300" onclick="openImageModal(this.src)">
+                        <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-full mb-4 text-center" data-i18n="extValidation">Curvas ROC</h3>
+                        <img id="external-roc-img" src="" alt="ROC" class="w-full max-w-md object-contain rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm cursor-zoom-in hover:scale-105 transition-transform duration-300" onclick="openImageModal(this.src)">
                     </div>
                 </div>
                 <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center">
-                    <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-full mb-4 text-center"><i class="fa-solid fa-scale-balanced text-purple-500 mr-2"></i> Matriz DeLong (Comparación de Curvas ROC)</h3>
-                    <img id="external-delong-img" src="" alt="Matriz DeLong" class="w-full max-w-md object-contain rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hidden cursor-zoom-in hover:scale-105 transition-transform duration-300" onclick="openImageModal(this.src)">
-                    <p id="external-delong-error" class="text-sm text-gray-400 italic hidden">Mapa de calor no generado. Se necesitan al menos 2 modelos.</p>
+                    <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-full mb-4 text-center" data-i18n="sessionHeatmap">Matriz DeLong (Comparación de Curvas ROC)</h3>
+                    <img id="external-delong-img" src="" alt="DeLong" class="w-full max-w-md object-contain rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hidden cursor-zoom-in hover:scale-105 transition-transform duration-300" onclick="openImageModal(this.src)">
+                    <p id="external-delong-error" class="text-sm text-gray-400 italic hidden" data-i18n="trainNoResults">Mapa de calor no generado. Se necesitan al menos 2 modelos.</p>
                 </div>
             </div>
 
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">Explorar Modelos (XAI & K-Fold)</h3>
+                <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-100 dark:border-gray-700 pb-2" data-i18n="sessionModels">Explorar Modelos (XAI & K-Fold)</h3>
                 <div id="session-models-grid" class="flex flex-wrap gap-3"></div>
             </div>
         </div>
@@ -220,39 +228,39 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 gap-4">
                 <div>
                     <h2 class="text-2xl font-black text-gray-800 dark:text-white flex items-center gap-3">
-                        <i class="fa-solid fa-microchip text-blue-500"></i> <span id="res-model-name">Modelo</span>
+                        <i class="fa-solid fa-microchip text-blue-500"></i> <span id="res-model-name" data-i18n="trainModel">Modelo</span>
                     </h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Resultados de Cross Validation (5-Fold)</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" data-i18n="kFoldTitle">Resultados de Cross Validation (5-Fold)</p>
                 </div>
                 <div class="flex flex-wrap gap-3 w-full md:w-auto">
                     <button onclick="viewSessionResults(currentViewingSession);" class="flex-1 md:flex-none bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-5 py-2.5 rounded-xl font-bold transition-all text-sm shadow-sm border border-gray-200 dark:border-gray-600 focus:outline-none">
-                        <i class="fa-solid fa-arrow-left mr-1"></i> Volver a la Sesión
+                        <i class="fa-solid fa-arrow-left mr-1"></i> <span data-i18n="trainBackToAssistant">Volver a la Sesión</span>
                     </button>
                     <button id="btn-generate-xai" onclick="generateXAI()" class="flex-1 md:flex-none bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center justify-center gap-2 shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Generar XAI y Métricas
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="kFoldXaiMetrics">Generar XAI y Métricas</span>
                     </button>
                 </div>
             </div>
 
             <div id="res-math-panel" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="col-span-1 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-center">
-                    <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase mb-5 tracking-wider flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-blue-500"></i> Calibración Médica</h3>
+                    <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase mb-5 tracking-wider flex items-center gap-2" data-i18n="kFoldCalibration"><i class="fa-solid fa-scale-balanced text-blue-500"></i> Calibración Médica</h3>
                     <div class="space-y-6">
-                        <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold mb-1">Brier Score (Ideal: 0.0)</p><p class="text-3xl font-black text-blue-600 dark:text-blue-400 font-mono" id="ui-brier">-</p></div>
-                        <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold mb-1">Error ECE (Ideal: 0.0)</p><p class="text-3xl font-black text-purple-600 dark:text-purple-400 font-mono" id="ui-ece">-</p></div>
+                        <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold mb-1" data-i18n="kFoldBrier">Brier Score (Ideal: 0.0)</p><p class="text-3xl font-black text-blue-600 dark:text-blue-400 font-mono" id="ui-brier">-</p></div>
+                        <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold mb-1" data-i18n="kFoldEce">Error ECE (Ideal: 0.0)</p><p class="text-3xl font-black text-purple-600 dark:text-purple-400 font-mono" id="ui-ece">-</p></div>
                     </div>
                 </div>
                 <div class="col-span-1 md:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
-                    <div class="p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50"><h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-calculator text-purple-500"></i> Evaluación Matemática XAI</h3></div>
+                    <div class="p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50"><h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2" data-i18n="kFoldXaiMetrics"><i class="fa-solid fa-calculator text-purple-500"></i> Evaluación Matemática XAI</h3></div>
                     <div class="overflow-x-auto p-2 flex-1 flex items-center">
-                        <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300"><thead class="text-xs uppercase border-b border-gray-200 dark:border-gray-700 text-gray-400"><tr><th class="px-4 py-3 font-black">Método</th><th class="px-4 py-3">Deletion ↓</th><th class="px-4 py-3">Insertion ↑</th><th class="px-4 py-3">Sparsity ↑</th><th class="px-4 py-3">Entropy ↓</th><th class="px-4 py-3">Stability ↑</th></tr></thead><tbody id="res-xai-table" class="divide-y divide-gray-100 dark:divide-gray-700"></tbody></table>
+                        <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300"><thead class="text-xs uppercase border-b border-gray-200 dark:border-gray-700 text-gray-400"><tr><th class="px-4 py-3 font-black" data-i18n="kFoldMethod">Método</th><th class="px-4 py-3" data-i18n="kFoldDeletion">Deletion ↓</th><th class="px-4 py-3" data-i18n="kFoldInsertion">Insertion ↑</th><th class="px-4 py-3" data-i18n="kFoldSparsity">Sparsity ↑</th><th class="px-4 py-3" data-i18n="kFoldEntropy">Entropy ↓</th><th class="px-4 py-3" data-i18n="kFoldStability">Stability ↑</th></tr></thead><tbody id="res-xai-table" class="divide-y divide-gray-100 dark:divide-gray-700"></tbody></table>
                     </div>
                 </div>
             </div>
 
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300"><thead class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700"><tr><th class="px-6 py-4">Fold</th><th class="px-6 py-4">Accuracy</th><th class="px-6 py-4">Precision</th><th class="px-6 py-4">Recall</th><th class="px-6 py-4">F1-Score</th><th class="px-6 py-4 font-black text-blue-500">AUC</th></tr></thead><tbody id="res-table-body" class="divide-y divide-gray-100 dark:divide-gray-700"></tbody></table>
+                    <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300"><thead class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700"><tr><th class="px-6 py-4">Fold</th><th class="px-6 py-4" data-i18n="kFoldAccuracy">Accuracy</th><th class="px-6 py-4" data-i18n="kFoldPrecision">Precision</th><th class="px-6 py-4" data-i18n="kFoldRecall">Recall</th><th class="px-6 py-4" data-i18n="kFoldF1">F1-Score</th><th class="px-6 py-4 font-black text-blue-500" data-i18n="kFoldAUC">AUC</th></tr></thead><tbody id="res-table-body" class="divide-y divide-gray-100 dark:divide-gray-700"></tbody></table>
                 </div>
             </div>
 
@@ -305,6 +313,7 @@
         </div>
     </div>
 
+    <script src="/static/js/i18n.js"></script>
     <script src="/static/js/admin.js"></script>
     <script src="/static/js/training.js"></script>
 </body>
