@@ -64,11 +64,12 @@ const dict = {
         trainGenerating: "Generando...",
         trainLogWaiting: "Esperando...",
         // Queue
-        queueTitle: "Cola de trabajos", queueEmpty: "Sin trabajos pendientes",
-        queueDiagnosis: "Diagnóstico", queueTraining: "Entrenamiento",
+        queueTitle: "Cola de trabajos",         queueEmpty: "Sin trabajos pendientes",
+        queueDiagnosis: "Diagnóstico", queueTraining: "Entrenamiento", queueExtValidation: "Validación Externa",
         queueProcessing: "Procesando...", queuePosition: "Posición #{pos}",
         queueCancel: "Cancelar", queueCancelConfirm: "¿Cancelar este trabajo?",
         queueEnqueued: "Diagnóstico encolado en posición {pos} (trabajo #{id})",
+        queueEnqueuedExt: "Validación Externa encolada como trabajo #{id}",
         queueRunning: "Procesando diagnóstico...",
         queueCompleted: "Diagnóstico completado",
         queueError: "Error: {msg}",
@@ -168,10 +169,11 @@ const dict = {
         trainGenerating: "Generating...",
         trainLogWaiting: "Waiting...",
         queueTitle: "Job Queue", queueEmpty: "No pending jobs",
-        queueDiagnosis: "Diagnosis", queueTraining: "Training",
+        queueDiagnosis: "Diagnosis", queueTraining: "Training", queueExtValidation: "Ext. Validation",
         queueProcessing: "Processing...", queuePosition: "Position #{pos}",
         queueCancel: "Cancel", queueCancelConfirm: "Cancel this job?",
         queueEnqueued: "Diagnosis queued at position {pos} (job #{id})",
+        queueEnqueuedExt: "External Validation queued as job #{id}",
         queueRunning: "Processing diagnosis...",
         queueCompleted: "Diagnosis completed",
         queueError: "Error: {msg}",
@@ -264,10 +266,11 @@ const dict = {
         trainGenerating: "生成中...",
         trainLogWaiting: "等待中...",
         queueTitle: "作业队列", queueEmpty: "无待处理作业",
-        queueDiagnosis: "诊断", queueTraining: "训练",
+        queueDiagnosis: "诊断", queueTraining: "训练", queueExtValidation: "外部验证",
         queueProcessing: "处理中...", queuePosition: "位置 #{pos}",
         queueCancel: "取消", queueCancelConfirm: "取消此作业？",
         queueEnqueued: "诊断已排队，位置 {pos} (作业 #{id})",
+        queueEnqueuedExt: "外部验证已排队，作业 #{id}",
         queueRunning: "处理诊断中...",
         queueCompleted: "诊断完成",
         queueError: "错误: {msg}",
@@ -360,10 +363,11 @@ const dict = {
         trainGenerating: "जनरेट हो रहा...",
         trainLogWaiting: "प्रतीक्षा...",
         queueTitle: "कार्य कतार", queueEmpty: "कोई लंबित कार्य नहीं",
-        queueDiagnosis: "निदान", queueTraining: "प्रशिक्षण",
+        queueDiagnosis: "निदान", queueTraining: "प्रशिक्षण", queueExtValidation: "बाहरी सत्यापन",
         queueProcessing: "प्रक्रिया...", queuePosition: "स्थान #{pos}",
         queueCancel: "रद्द करें", queueCancelConfirm: "यह कार्य रद्द करें?",
         queueEnqueued: "निदान कतार में स्थान {pos} (कार्य #{id})",
+        queueEnqueuedExt: "बाहरी सत्यापन कतार में कार्य #{id}",
         queueRunning: "निदान प्रक्रिया...",
         queueCompleted: "निदान पूर्ण",
         queueError: "त्रुटि: {msg}",
@@ -477,4 +481,24 @@ function changeLanguage() {
         const key = el.getAttribute('data-i18n-label');
         el.setAttribute('label', t(key));
     });
+}
+
+function showToast(message, type) {
+    var toast = document.createElement('div');
+    var isDark = document.documentElement.classList.contains('dark');
+    var bgColor = type === 'error' ? (isDark ? '#7f1d1d' : '#fef2f2') : (isDark ? '#065f46' : '#f0fdf4');
+    var textColor = type === 'error' ? (isDark ? '#fca5a5' : '#991b1b') : (isDark ? '#6ee7b7' : '#065f46');
+    var borderColor = type === 'error' ? (isDark ? '#991b1b' : '#fecaca') : (isDark ? '#047857' : '#bbf7d0');
+    toast.setAttribute('style', 'position:fixed;bottom:24px;right:24px;z-index:99999;background:' + bgColor + ';color:' + textColor + ';border:1px solid ' + borderColor + ';border-radius:12px;padding:12px 20px;font-size:14px;font-weight:600;box-shadow:0 10px 25px rgba(0,0,0,0.15);display:flex;align-items:center;gap:10px;max-width:400px;transition:opacity 0.3s,transform 0.3s;transform:translateY(20px);opacity:0');
+    toast.innerHTML = '<i class="fa-solid ' + (type === 'error' ? 'fa-circle-exclamation' : 'fa-check-circle') + '"></i> ' + message;
+    document.body.appendChild(toast);
+    requestAnimationFrame(function() {
+        toast.style.transform = 'translateY(0)';
+        toast.style.opacity = '1';
+    });
+    setTimeout(function() {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(20px)';
+        setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+    }, 4000);
 }

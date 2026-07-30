@@ -269,12 +269,18 @@ async function launchExternalValidation() {
         const response = await fetch('/api/train/browse');
         const data = await response.json();
         if(data.path) {
-            document.getElementById('session-results-panel').classList.add('hidden'); document.getElementById('training-console').classList.remove('hidden'); document.getElementById('loading-spinner').classList.remove('hidden');
-            const formData = new FormData(); formData.append('session_id', currentViewingSession); formData.append('dataset_path', data.path);
-            await fetch('/api/train/session/external_validation', { method: 'POST', body: formData });
-            if(logInterval) clearInterval(logInterval); logInterval = setInterval(fetchLogs, 2000);
+            const formData = new FormData();
+            formData.append('session_id', currentViewingSession);
+            formData.append('dataset_path', data.path);
+            const res = await fetch('/api/train/session/external_validation', { method: 'POST', body: formData });
+            const result = await res.json();
+            if (res.ok && result.status === "queued") {
+                showToast(t_('queueEnqueuedExt').replace('{id}', result.job_id), 'success');
+            } else {
+                showToast(result.message || t_('trainFolderError'), 'error');
+            }
         }
-    } catch (error) { alert(t_('trainFolderError')); }
+    } catch (error) { showToast(t_('trainFolderError'), 'error'); }
 }
 
 async function viewSessionResults(sessionId) {
