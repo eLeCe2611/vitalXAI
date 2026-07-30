@@ -12,6 +12,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
+from services.lang import get_text
+
 # Caché de modelos y configuración de Transformers
 loaded_models = {}
 MODELS_TRANSFORMERS = ["deit", "swin_base", "vit_384"]
@@ -56,7 +58,7 @@ def get_model(model_name: str):
 
     return loaded_models[model_name]
 
-def process_and_predict(model_name: str, image_path: str):
+def process_and_predict(model_name: str, image_path: str, lang: str = "es"):
     """Preprocesa la imagen y devuelve la predicción según la arquitectura."""
     model = get_model(model_name)
     is_transformer = model_name in MODELS_TRANSFORMERS
@@ -86,7 +88,7 @@ def process_and_predict(model_name: str, image_path: str):
 
     # Lógica de confianza
     is_pneumonia = prediction > 0.5
-    label = "Neumonía" if is_pneumonia else "Normal"
+    label = get_text("label_pneumonia", lang) if is_pneumonia else get_text("label_normal", lang)
     confidence = prediction if is_pneumonia else (1 - prediction)
     confidence_percent = round(confidence * 100, 2)
 

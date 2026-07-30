@@ -15,6 +15,7 @@ from services.auth_service import (
     verify_password,
     verify_refresh_token,
 )
+from services.lang import get_text
 from services.rate_limiter import limiter
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -133,7 +134,7 @@ async def token_refresh(refresh_token: str = Cookie(None)):
         return JSONResponse(status_code=401, content={"status": "error", "message": "Invalid or revoked refresh token"})
     user_id = verify_refresh_token(new_raw_refresh)
     if not user_id:
-        return JSONResponse(status_code=500, content={"status": "error", "message": "Error al procesar el refresh token"})
+        return JSONResponse(status_code=500, content={"status": "error", "message": get_text("no_autenticado")})
     access = create_access_token(user_id)
     response = JSONResponse(content={"status": "success"})
     response.set_cookie(key="access_token", value=access, httponly=True, samesite="lax")

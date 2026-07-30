@@ -2,10 +2,10 @@ import matplotlib
 import numpy as np
 import tensorflow as tf
 
-matplotlib.use('Agg')  # IMPORTANTE: Evita que Matplotlib intente abrir ventanas en el servidor
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-# Importamos la función que tiene los modelos en caché
+from services.lang import get_text
 from services.ml_engine import get_model
 
 MODELS_TRANSFORMERS = ["deit", "swin_base", "vit_384"]
@@ -104,49 +104,43 @@ def get_cam_or_attention(model, img, is_transformer, img_size):
             gxi = tf.reduce_max(tf.abs(grads * img_tf[0]), axis=-1).numpy()
             return (gxi - gxi.min()) / (gxi.max() - gxi.min() + 1e-9)
 
-def generate_xai_heatmap(model_name: str, original_image_path: str, xai_save_path: str):
-    """
-    Función principal que el router llama para generar y guardar el gráfico 1x4.
-    """
+def generate_xai_heatmap(model_name: str, original_image_path: str, xai_save_path: str, lang: str = "es"):
     model = get_model(model_name)
     is_transformer = model_name in MODELS_TRANSFORMERS
     img_size = get_img_size(model_name)
     xai_method_name = "Attention Map" if is_transformer else "Grad-CAM"
 
-    # Preprocesar
     img = load_img_tf(original_image_path, img_size)
 
-    # Calcular mapas
     sal = saliency(model, img, is_transformer)
     sm = smoothgrad(model, img, is_transformer)
     cam = get_cam_or_attention(model, img, is_transformer, img_size)
 
-    # Dibujar figura 1x4
     plt.figure(figsize=(15, 5))
 
     plt.subplot(1, 4, 1)
     plt.imshow(img)
-    plt.title("Radiografía Original", fontsize=12)
+    plt.title(get_text("xai_original", lang), fontsize=12)
     plt.axis("off")
 
     plt.subplot(1, 4, 2)
     plt.imshow(sal, cmap="inferno")
-    plt.title("Saliency Map", fontsize=12)
+    plt.title(get_text("xai_saliency", lang), fontsize=12)
     plt.axis("off")
 
     plt.subplot(1, 4, 3)
     plt.imshow(sm, cmap="inferno")
-    plt.title("SmoothGrad", fontsize=12)
+    plt.title(get_text("xai_smoothgrad", lang), fontsize=12)
     plt.axis("off")
 
     plt.subplot(1, 4, 4)
     plt.imshow(img, alpha=0.5)
     plt.imshow(cam, cmap="jet", alpha=0.5)
-    plt.title(f"{xai_method_name} Overlay", fontsize=12)
+    plt.title(get_text("xai_overlay", lang).format(method=xai_method_name), fontsize=12)
     plt.axis("off")
 
     plt.tight_layout()
-    plt.savefig(xai_save_path, bbox_inches='tight', dpi=150) # DPI a 150 para no saturar web
+    plt.savefig(xai_save_path, bbox_inches='tight', dpi=150)
     plt.close()
 
     return xai_save_path
