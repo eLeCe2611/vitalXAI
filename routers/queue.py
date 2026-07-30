@@ -17,9 +17,9 @@ def _get_queue_position(job_id: int, job_type: str) -> int:
         SELECT COUNT(*) AS pos FROM job_queue
         WHERE status = 'queued'
           AND (
-            CASE job_type WHEN 'diagnosis' THEN 0 ELSE 1 END < CASE %s WHEN 'diagnosis' THEN 0 ELSE 1 END
+            CASE job_type WHEN 'training' THEN 1 ELSE 0 END < CASE %s WHEN 'training' THEN 1 ELSE 0 END
             OR (
-              CASE job_type WHEN 'diagnosis' THEN 0 ELSE 1 END = CASE %s WHEN 'diagnosis' THEN 0 ELSE 1 END
+              CASE job_type WHEN 'training' THEN 1 ELSE 0 END = CASE %s WHEN 'training' THEN 1 ELSE 0 END
               AND id < %s
             )
           )
@@ -74,6 +74,14 @@ async def queue_status(request: Request):
             j["session_id"] = p.get("session_id", "?")
             models = p.get("models", [])
             j["model_name"] = models[0] + "..." if models else "?"
+        elif j["job_type"] == "external_validation":
+            p = j["payload"]
+            if isinstance(p, str):
+                try:
+                    p = json.loads(p)
+                except Exception:
+                    p = {}
+            j["session_id"] = p.get("session_id", "?")
         del j["payload"]
 
     return JSONResponse(content={

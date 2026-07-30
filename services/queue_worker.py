@@ -22,7 +22,7 @@ def _next_job():
         FROM job_queue
         WHERE status = 'queued'
         ORDER BY
-            CASE job_type WHEN 'diagnosis' THEN 0 ELSE 1 END,
+            CASE job_type WHEN 'training' THEN 1 ELSE 0 END,
             id ASC
         LIMIT 1
     """)
@@ -129,12 +129,25 @@ def _process_training(job):
     return {"session_id": session_id, "status": "completed"}
 
 
+def _process_external_validation(job):
+    from services.mlops_engine import run_external_validation
+
+    payload = _get_payload(job)
+    session_id = payload["session_id"]
+    dataset_path = payload["dataset_path"]
+
+    run_external_validation(session_id, dataset_path)
+    return {"session_id": session_id, "status": "completed"}
+
+
 def _execute_job(job):
     try:
         if job["job_type"] == "diagnosis":
             return _process_diagnosis(job)
         elif job["job_type"] == "training":
             return _process_training(job)
+        elif job["job_type"] == "external_validation":
+            return _process_external_validation(job)
         else:
             raise ValueError(f"Unknown job type: {job['job_type']}")
     except Exception as e:
