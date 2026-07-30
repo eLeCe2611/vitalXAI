@@ -17,15 +17,6 @@ When the task is complete and the user approves closeout, move the task to `## D
 ## Current
 
 ## To do
-
-- TASK-009: Flujo de validación externa y corrección de logs
-  - Encolar validación externa en job_queue (como entrenamiento y diagnóstico) en vez de background_tasks.add_task
-  - Eliminar vista de terminal/logs al lanzar validación externa
-  - Mostrar solo un mensaje simple de "Validación externa encolada" + estado en la cola
-  - Añadir procesamiento de job_type "external_validation" en queue_worker.py
-  - Cambiar modo "w" a "a" en run_external_validation y run_statistical_comparison (no sobrescribir logs)
-  - Limpiar salida verbose de subprocess en scripts de validación externa, wilcoxon y XAI
-
 - TASK-010: Armonización visual completa — Clinical Clean
   - Migrar paleta de gray a slate (tonos fríos, más clínicos)
   - Refinar tipografía: mejor jerarquía (tracking-tight en títulos, mono en métricas)
@@ -52,3 +43,4 @@ When the task is complete and the user approves closeout, move the task to `## D
 - TASK-006: Panel de administración para rol admin (visión global de consultas)
 - TASK-007: Cola única FIFO global con prioridad para diagnósticos
 - TASK-008: Sistema de internacionalización unificado
+- TASK-009: Flujo de validación externa y corrección de logs
