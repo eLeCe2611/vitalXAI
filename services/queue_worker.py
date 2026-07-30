@@ -82,16 +82,17 @@ def _process_diagnosis(job):
     payload = _get_payload(job)
     model_name = payload["model_name"]
     image_path = payload["image_path"]
+    lang = payload.get("lang", "es")
 
-    label, confidence = process_and_predict(model_name, image_path)
+    label, confidence = process_and_predict(model_name, image_path, lang=lang)
 
     xai_dir = os.path.join("static", "results")
     os.makedirs(xai_dir, exist_ok=True)
     xai_filename = "xai_" + os.path.basename(image_path)
     xai_path = os.path.join(xai_dir, xai_filename)
-    generate_xai_heatmap(model_name, image_path, xai_path)
+    generate_xai_heatmap(model_name, image_path, xai_path, lang=lang)
 
-    pdf_path = generate_medical_report(image_path, xai_path, label, confidence, model_name)
+    pdf_path = generate_medical_report(image_path, xai_path, label, confidence, model_name, lang=lang)
 
     conn = get_db_connection()
     cursor = conn.cursor()
