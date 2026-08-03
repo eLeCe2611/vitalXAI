@@ -241,6 +241,8 @@ window.closeAdminUserConsultationsModal = function () {
     if (el) el.classList.add('hidden');
 };
 
+var _prevJobStatus = {};
+
 async function pollQueue() {
     try {
         var resp = await fetch('/api/queue/status?t=' + Date.now());
@@ -252,9 +254,14 @@ async function pollQueue() {
             const t_ = getAdminLang();
             var hasPending = data.has_pending;
             data.jobs.forEach(function (j) {
-                if (j.status === 'completed' && j.job_type === 'external_validation' && typeof currentViewingSession !== 'undefined' && currentViewingSession && j.session_id === currentViewingSession && typeof viewSessionResults === 'function') {
-                    viewSessionResults(currentViewingSession);
+                if (j.job_type === 'external_validation' && j.status === 'completed') {
+                    var prev = _prevJobStatus[j.id];
+                    if ((prev === 'running' || prev === 'queued') && typeof currentViewingSession !== 'undefined' && currentViewingSession && j.session_id === currentViewingSession && typeof viewSessionResults === 'function') {
+                        showToast(t_('queueEnqueuedExtDone'), 'success');
+                        viewSessionResults(currentViewingSession);
+                    }
                 }
+                _prevJobStatus[j.id] = j.status;
             });
             if (hasPending) {
                 panel.classList.remove('hidden');
@@ -265,7 +272,7 @@ async function pollQueue() {
                         var label = j.job_type === 'diagnosis' ? t_('queueDiagnosis') : (j.job_type === 'external_validation' ? t_('queueExtValidation') : t_('queueTraining'));
                         var statusText = j.status === 'running' ? t_('queueProcessing') : t_('queuePosition').replace('{pos}', (j.position || '?'));
                         var statusColor = j.status === 'running' ? 'text-green-500' : 'text-blue-500';
-                        var tooltip = j.job_type === 'diagnosis' ? 'Modelo: ' + (j.model_name || '?') : 'Sesión: ' + (j.session_id || '?');
+                        var tooltip = j.model_name ? (j.job_type === 'diagnosis' ? 'Modelo: ' : 'Modelos: ') + j.model_name : 'Sesión: ' + (j.session_id || '?');
                         var delBtn = j.status === 'queued' ? '<button onclick="window.cancelQueueJob(' + j.id + ')" class="text-red-400 hover:text-red-600 text-xs ml-1" title="' + t_('queueCancel') + '"><i class="fa-solid fa-trash-can"></i></button>' : '';
                         html += '<div class="flex items-center gap-2 text-xs group relative" title="' + tooltip + '"><i class="fa-solid ' + icon + ' text-gray-400"></i><span class="text-gray-700 dark:text-gray-300 truncate max-w-[100px]">' + label + '</span><span class="ml-auto ' + statusColor + ' font-semibold">' + statusText + '</span>' + delBtn + '</div>';
                     }
