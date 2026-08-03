@@ -58,6 +58,9 @@ training_results/
 training_log.txt
 *.log
 
+# ─── Artefactos de la demo en vivo ───
+demo_url.txt
+
 # ─── Cobertura de código ───
 .coverage
 coverage/
