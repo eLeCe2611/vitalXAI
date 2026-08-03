@@ -16,6 +16,8 @@ When the task is complete and the user approves closeout, move the task to `## D
 
 ## Current
 
+
+
 ## To do
 - TASK-010: Armonización visual completa — Clinical Clean
   - Migrar paleta de gray a slate (tonos fríos, más clínicos)
@@ -28,10 +30,6 @@ When the task is complete and the user approves closeout, move the task to `## D
   - Training: menos púrpura, acento cyan/azul, resultados en tarjetas
   - Actualizar agents/docs/design.md con la nueva paleta y tokens
 
-- TASK-011: Preparación de despliegue para demostración en vivo
-  - Configurar túnel seguro (ngrok/Cloudflare Tunnel) para acceso externo
-  - Script de inicio con un solo comando (servidor + túnel)
-  - Guía rápida para el día de la defensa (conexión, URL, pasos)
 
 
 ## Done
@@ -44,3 +42,7 @@ When the task is complete and the user approves closeout, move the task to `## D
 - TASK-007: Cola única FIFO global con prioridad para diagnósticos
 - TASK-008: Sistema de internacionalización unificado
 - TASK-009: Flujo de validación externa y corrección de logs
+- TASK-011: Preparación de despliegue para demostración en vivo
+  - Configurar túnel seguro (ngrok/Cloudflare Tunnel) para acceso externo
+  - Script de inicio con un solo comando (servidor + túnel)
+  - Guía rápida para el día de la defensa (conexión, URL, pasos)

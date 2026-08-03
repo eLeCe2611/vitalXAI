@@ -96,3 +96,10 @@ Status: accepted
 Context: El proyecto carece de CI/CD. Las pruebas se ejecutan solo localmente. El proyecto usa Tkinter (específico de Windows) y subprocess para scripts de entrenamiento.
 Decision: Usar GitHub Actions con runner `windows-latest`. Workflow en `.github/workflows/ci.yml`. Triggers en push y PR sobre `main` y `refactorizacion`. Pasos: checkout, Python 3.11, cache pip, install deps, ruff lint, pytest con cobertura (threshold 70%).
 Consequences: Los tests se ejecutan automáticamente en cada push/PR. Windows runner es más lento que Ubuntu pero necesario por dependencias de Tkinter. La instalación de TensorFlow puede alargar el tiempo de CI.
+
+## ADR-011: Estrategia de despliegue para la demostración en vivo
+Date: 2026-08-03
+Status: accepted
+Context: La app depende de datasets locales, pesos de modelos, subprocesos de entrenamiento (TensorFlow) y el diálogo Tkinter. Un PaaS gratuito no soporta este stack (sin GPU, disco efímero, sleep, sin MySQL propio). Para la demo en vivo se necesita acceso externo gratuito desde un portátil en la universidad mientras la app corre en el PC de casa.
+Decision: La app corre en el PC de casa y se expone con un túnel HTTPS saliente. `cloudflared` (Cloudflare Tunnel quick tunnel) como proveedor por defecto y `ngrok` (free, subdominio fijo) como alternativa, seleccionable con `TUNNEL_PROVIDER`. Arranque de un solo comando (`scripts/demo_start.ps1`/`.bat`): CWD fijo a la raíz del repo, prechecks de `.env` y MySQL, uvicorn sin `reload` en `127.0.0.1:8000` y URL pública en `demo_url.txt`. Para lanzar entrenamiento/validación externa sin diálogo Tkinter (servidor desatendido), `browse_folder()` usa `TFG_DEMO_DATASET` / `TFG_DEMO_EXTERNAL_DATASET` (query param `for_external` en `/api/train/browse`); sin variables, mantiene el diálogo. Sin precarga de modelos (carga perezosa actual).
+Consequences: La URL de cloudflared es aleatoria en cada arranque (ngrok ofrece URL fija con cuenta gratuita). El túnel expone la app públicamente, algo inherente al objetivo de la demo. El lanzamiento de entrenamiento depende del LLM de Groq. Proceso completo documentado en `Documentacion/Guia_Despliegue_Demo.md`.
