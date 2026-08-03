@@ -1,5 +1,6 @@
 
 import json
+import os
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
@@ -73,7 +74,7 @@ async def queue_status(request: Request):
                     p = {}
             j["session_id"] = p.get("session_id", "?")
             models = p.get("models", [])
-            j["model_name"] = models[0] + "..." if models else "?"
+            j["model_name"] = ", ".join(models) if models else "?"
         elif j["job_type"] == "external_validation":
             p = j["payload"]
             if isinstance(p, str):
@@ -82,6 +83,16 @@ async def queue_status(request: Request):
                 except Exception:
                     p = {}
             j["session_id"] = p.get("session_id", "?")
+            session_models = []
+            config_path = os.path.join("training_results", j["session_id"], "config.json")
+            if os.path.exists(config_path):
+                try:
+                    with open(config_path, encoding="utf-8") as f:
+                        cfg = json.load(f)
+                    session_models = cfg.get("models", [])
+                except (json.JSONDecodeError, OSError):
+                    session_models = []
+            j["model_name"] = ", ".join(session_models) if session_models else "Todos los modelos"
         del j["payload"]
 
     return JSONResponse(content={
