@@ -116,7 +116,11 @@ def run_external_validation(session_id: str, dataset_path: str) -> None:
         log.write("\n\u2705 [VALIDACI\u00d3N EXTERNA COMPLETADA]\n")
 
 
-def browse_folder():
+def browse_folder(for_external: bool = False):
+    demo_var = "TFG_DEMO_EXTERNAL_DATASET" if for_external else "TFG_DEMO_DATASET"
+    demo_path = os.getenv(demo_var)
+    if demo_path:
+        return {"path": demo_path}
     try:
         root = tk.Tk()
         root.withdraw()

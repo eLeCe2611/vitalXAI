@@ -56,11 +56,11 @@ async def chat_route(request: Request, session_id: str = Form(...), message: str
 
 
 @router.get("/api/train/browse")
-async def browse_folder(request: Request):
+async def browse_folder(request: Request, for_external: str = "false"):
     user_id = _require_auth(request)
     if not user_id:
         return JSONResponse(status_code=401, content={"error": get_text("no_autenticado")})
-    result = mlops_engine.browse_folder()
+    result = mlops_engine.browse_folder(for_external=(for_external.lower() == "true"))
     if result is None:
         return JSONResponse(status_code=500, content={"error": "No se pudo abrir el explorador."})
     return result
