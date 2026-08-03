@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import tkinter as tk
+from contextlib import suppress
 from tkinter import filedialog
 
 LOG_FILE = "training_log.txt"
@@ -72,10 +73,32 @@ def run_statistical_comparison(session_id: str) -> None:
     env_vars = os.environ.copy()
     env_vars["TFG_SESSION_ID"] = session_id
     script_path = os.path.join(base_path, "pneumoniacnn-main", "code", "3_evaluate_statistics.py")
+    _clear_recalc_status(session_id)
     with open(LOG_FILE, "a", encoding="utf-8", errors="replace") as log:
         log.write(f"\n[{datetime.datetime.now().strftime('%H:%M:%S')}] Recalculando estad\u00edsticas de la sesi\u00f3n {session_id}...\n")
         subprocess.Popen(["python", script_path], stdout=log, stderr=subprocess.STDOUT, env=env_vars, text=True, encoding="utf-8", errors="replace").wait()
         log.write("\n\u2705 [COMPARACI\u00d3N COMPLETADA]\n")
+    _mark_recalc_completed(session_id)
+
+
+def _recalc_status_path(session_id: str) -> str:
+    return os.path.join("training_results", session_id, "recalc_complete.txt")
+
+
+def _clear_recalc_status(session_id: str) -> None:
+    path = _recalc_status_path(session_id)
+    with suppress(OSError):
+        os.remove(path)
+
+def _mark_recalc_completed(session_id: str) -> None:
+    path = _recalc_status_path(session_id)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(datetime.datetime.now().isoformat())
+
+
+def get_recalc_status(session_id: str) -> str:
+    return "completed" if os.path.exists(_recalc_status_path(session_id)) else "running"
 
 
 def run_external_validation(session_id: str, dataset_path: str) -> None:

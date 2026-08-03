@@ -176,6 +176,16 @@ async def compare_session_models(request: Request, background_tasks: BackgroundT
     return JSONResponse(content={"status": "success", "message": get_text("recalculo_iniciado")})
 
 
+@router.get("/api/train/session/{session_id}/recalc_status")
+async def get_recalc_status(request: Request, session_id: str):
+    user_id = _require_auth(request)
+    if not user_id:
+        return JSONResponse(status_code=401, content={"error": get_text("no_autenticado")})
+    if not _require_ownership(session_id, user_id, request):
+        return JSONResponse(status_code=403, content={"error": get_text("no_permiso_sesion")})
+    return JSONResponse(content={"status": mlops_engine.get_recalc_status(session_id)})
+
+
 @router.get("/api/train/session/{session_id}/ranking")
 async def get_session_ranking(request: Request, session_id: str):
     user_id = _require_auth(request)
