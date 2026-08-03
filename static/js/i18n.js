@@ -49,6 +49,12 @@ const dict = {
         trainExternalValidation: "Validación Externa",
         trainGeneratePdf: "Generar Reporte PDF",
         trainRecalculateWilcoxon: "Recalcular Wilcoxon",
+        wilcoxonStarted: "Recálculo de Wilcoxon iniciado",
+        xaiStarted: "Generación de XAI y métricas iniciada",
+        xaiCompleted: "Generación de XAI y métricas completada",
+        xaiError: "Error al generar XAI y métricas",
+        wilcoxonCompleted: "Recálculo de Wilcoxon completado",
+        wilcoxonError: "Error al recalcular Wilcoxon",
         trainPos: "Posición", trainModel: "Modelo", trainMeanAuc: "Media AUC",
         trainStdDev: "Std Dev", trainNoSessions: "No hay sesiones guardadas",
         trainThinking: "Pensando...", trainConnectionError: "Error de conexión con el servidor.",
@@ -64,11 +70,13 @@ const dict = {
         trainGenerating: "Generando...",
         trainLogWaiting: "Esperando...",
         // Queue
-        queueTitle: "Cola de trabajos", queueEmpty: "Sin trabajos pendientes",
-        queueDiagnosis: "Diagnóstico", queueTraining: "Entrenamiento",
+        queueTitle: "Cola de trabajos",         queueEmpty: "Sin trabajos pendientes",
+        queueDiagnosis: "Diagnóstico", queueTraining: "Entrenamiento", queueExtValidation: "Validación Externa",
         queueProcessing: "Procesando...", queuePosition: "Posición #{pos}",
         queueCancel: "Cancelar", queueCancelConfirm: "¿Cancelar este trabajo?",
         queueEnqueued: "Diagnóstico encolado en posición {pos} (trabajo #{id})",
+        queueEnqueuedExt: "Validación Externa encolada como trabajo #{id}",
+        queueEnqueuedExtDone: "Validación Externa completada",
         queueRunning: "Procesando diagnóstico...",
         queueCompleted: "Diagnóstico completado",
         queueError: "Error: {msg}",
@@ -153,6 +161,12 @@ const dict = {
         trainExternalValidation: "External Validation",
         trainGeneratePdf: "Generate PDF Report",
         trainRecalculateWilcoxon: "Recalculate Wilcoxon",
+        wilcoxonStarted: "Wilcoxon recalculation started",
+        xaiStarted: "XAI and metrics generation started",
+        xaiCompleted: "XAI and metrics generation completed",
+        xaiError: "Error generating XAI and metrics",
+        wilcoxonCompleted: "Wilcoxon recalculation completed",
+        wilcoxonError: "Error recalculating Wilcoxon",
         trainPos: "Position", trainModel: "Model", trainMeanAuc: "Mean AUC",
         trainStdDev: "Std Dev", trainNoSessions: "No saved sessions",
         trainThinking: "Thinking...", trainConnectionError: "Connection error.",
@@ -168,10 +182,12 @@ const dict = {
         trainGenerating: "Generating...",
         trainLogWaiting: "Waiting...",
         queueTitle: "Job Queue", queueEmpty: "No pending jobs",
-        queueDiagnosis: "Diagnosis", queueTraining: "Training",
+        queueDiagnosis: "Diagnosis", queueTraining: "Training", queueExtValidation: "Ext. Validation",
         queueProcessing: "Processing...", queuePosition: "Position #{pos}",
         queueCancel: "Cancel", queueCancelConfirm: "Cancel this job?",
         queueEnqueued: "Diagnosis queued at position {pos} (job #{id})",
+        queueEnqueuedExt: "External Validation queued as job #{id}",
+        queueEnqueuedExtDone: "External Validation completed",
         queueRunning: "Processing diagnosis...",
         queueCompleted: "Diagnosis completed",
         queueError: "Error: {msg}",
@@ -249,6 +265,12 @@ const dict = {
         trainExternalValidation: "外部验证",
         trainGeneratePdf: "生成 PDF 报告",
         trainRecalculateWilcoxon: "重新计算 Wilcoxon",
+        wilcoxonStarted: "Wilcoxon 重新计算已开始",
+        xaiStarted: "XAI 和指标生成已开始",
+        xaiCompleted: "XAI 和指标生成已完成",
+        xaiError: "生成 XAI 和指标时出错",
+        wilcoxonCompleted: "Wilcoxon 重新计算已完成",
+        wilcoxonError: "Wilcoxon 重新计算错误",
         trainPos: "位置", trainModel: "模型", trainMeanAuc: "平均 AUC",
         trainStdDev: "标准差", trainNoSessions: "无保存的会话",
         trainThinking: "思考中...", trainConnectionError: "连接错误。",
@@ -264,10 +286,12 @@ const dict = {
         trainGenerating: "生成中...",
         trainLogWaiting: "等待中...",
         queueTitle: "作业队列", queueEmpty: "无待处理作业",
-        queueDiagnosis: "诊断", queueTraining: "训练",
+        queueDiagnosis: "诊断", queueTraining: "训练", queueExtValidation: "外部验证",
         queueProcessing: "处理中...", queuePosition: "位置 #{pos}",
         queueCancel: "取消", queueCancelConfirm: "取消此作业？",
         queueEnqueued: "诊断已排队，位置 {pos} (作业 #{id})",
+        queueEnqueuedExt: "外部验证已排队，作业 #{id}",
+        queueEnqueuedExtDone: "外部验证已完成",
         queueRunning: "处理诊断中...",
         queueCompleted: "诊断完成",
         queueError: "错误: {msg}",
@@ -345,6 +369,12 @@ const dict = {
         trainExternalValidation: "बाहरी सत्यापन",
         trainGeneratePdf: "PDF रिपोर्ट बनाएं",
         trainRecalculateWilcoxon: "Wilcoxon पुनर्गणना",
+        wilcoxonStarted: "Wilcoxon पुनर्गणना शुरू हुई",
+        xaiStarted: "XAI और मीट्रिक जनरेशन शुरू हुआ",
+        xaiCompleted: "XAI और मीट्रिक जनरेशन पूर्ण",
+        xaiError: "XAI और मीट्रिक जनरेशन में त्रुटि",
+        wilcoxonCompleted: "Wilcoxon पुनर्गणना पूर्ण",
+        wilcoxonError: "Wilcoxon पुनर्गणना में त्रुटि",
         trainPos: "स्थान", trainModel: "मॉडल", trainMeanAuc: "औसत AUC",
         trainStdDev: "मानक विचलन", trainNoSessions: "कोई सत्र नहीं",
         trainThinking: "सोच रहा...", trainConnectionError: "कनेक्शन त्रुटि।",
@@ -360,10 +390,12 @@ const dict = {
         trainGenerating: "जनरेट हो रहा...",
         trainLogWaiting: "प्रतीक्षा...",
         queueTitle: "कार्य कतार", queueEmpty: "कोई लंबित कार्य नहीं",
-        queueDiagnosis: "निदान", queueTraining: "प्रशिक्षण",
+        queueDiagnosis: "निदान", queueTraining: "प्रशिक्षण", queueExtValidation: "बाहरी सत्यापन",
         queueProcessing: "प्रक्रिया...", queuePosition: "स्थान #{pos}",
         queueCancel: "रद्द करें", queueCancelConfirm: "यह कार्य रद्द करें?",
         queueEnqueued: "निदान कतार में स्थान {pos} (कार्य #{id})",
+        queueEnqueuedExt: "बाहरी सत्यापन कतार में कार्य #{id}",
+        queueEnqueuedExtDone: "बाहरी सत्यापन पूर्ण",
         queueRunning: "निदान प्रक्रिया...",
         queueCompleted: "निदान पूर्ण",
         queueError: "त्रुटि: {msg}",
@@ -477,4 +509,24 @@ function changeLanguage() {
         const key = el.getAttribute('data-i18n-label');
         el.setAttribute('label', t(key));
     });
+}
+
+function showToast(message, type) {
+    var toast = document.createElement('div');
+    var isDark = document.documentElement.classList.contains('dark');
+    var bgColor = type === 'error' ? (isDark ? '#7f1d1d' : '#fef2f2') : (isDark ? '#065f46' : '#f0fdf4');
+    var textColor = type === 'error' ? (isDark ? '#fca5a5' : '#991b1b') : (isDark ? '#6ee7b7' : '#065f46');
+    var borderColor = type === 'error' ? (isDark ? '#991b1b' : '#fecaca') : (isDark ? '#047857' : '#bbf7d0');
+    toast.setAttribute('style', 'position:fixed;bottom:24px;right:24px;z-index:99999;background:' + bgColor + ';color:' + textColor + ';border:1px solid ' + borderColor + ';border-radius:12px;padding:12px 20px;font-size:14px;font-weight:600;box-shadow:0 10px 25px rgba(0,0,0,0.15);display:flex;align-items:center;gap:10px;max-width:400px;transition:opacity 0.3s,transform 0.3s;transform:translateY(20px);opacity:0');
+    toast.innerHTML = '<i class="fa-solid ' + (type === 'error' ? 'fa-circle-exclamation' : 'fa-check-circle') + '"></i> ' + message;
+    document.body.appendChild(toast);
+    requestAnimationFrame(function() {
+        toast.style.transform = 'translateY(0)';
+        toast.style.opacity = '1';
+    });
+    setTimeout(function() {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(20px)';
+        setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+    }, 4000);
 }

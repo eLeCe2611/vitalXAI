@@ -157,49 +157,49 @@
             class="hidden flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
             <div class="max-w-4xl mx-auto">
                 <button onclick="window.closeConsultationDetail()" class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 mb-4 flex items-center gap-1 transition-colors">
-                    <i class="fa-solid fa-arrow-left"></i> <span id="ui-back">Volver</span>
+                    <i class="fa-solid fa-arrow-left"></i> <span id="ui-back" data-i18n="back">Volver</span>
                 </button>
                 <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div class="p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-between items-center">
                         <div>
-                            <h3 class="text-lg font-bold text-gray-800 dark:text-white" id="cd-title">Detalle de Consulta</h3>
+                            <h3 class="text-lg font-bold text-gray-800 dark:text-white" id="cd-title" data-i18n="cdTitle">Detalle de Consulta</h3>
                             <p class="text-xs text-gray-500 dark:text-gray-400" id="cd-timestamp"></p>
                         </div>
                         <div class="flex gap-2">
                             <button onclick="window.adminShowRenamePrompt(window._cdId, window._cdPatient)" class="bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 px-3 py-2 rounded-xl font-bold text-xs transition-colors flex items-center gap-1">
-                                <i class="fa-solid fa-pen"></i> <span id="ui-cd-rename">Renombrar</span>
+                                <i class="fa-solid fa-pen"></i> <span id="ui-cd-rename" data-i18n="cdRename">Renombrar</span>
                             </button>
                             <button onclick="window.adminDeleteConsultation(window._cdId)" class="bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 px-3 py-2 rounded-xl font-bold text-xs transition-colors flex items-center gap-1">
-                                <i class="fa-solid fa-trash-can"></i> <span id="ui-cd-delete">Eliminar</span>
+                                <i class="fa-solid fa-trash-can"></i> <span id="ui-cd-delete" data-i18n="cdDelete">Eliminar</span>
                             </button>
                         </div>
                     </div>
                     <div class="p-5 space-y-5">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-original-label">Radiograf\u00eda Original</span></p>
+                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-original-label" data-i18n="cdOrigLabel">Radiograf\u00eda Original</span></p>
                                 <img id="cd-original" src="" class="w-full rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="window.openImageModal(this.src)">
                             </div>
                             <div>
-                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-xai-label">Mapas de Calor XAI</span></p>
+                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-xai-label" data-i18n="cdXaiLabel">Mapas de Calor XAI</span></p>
                                 <img id="cd-xai" src="" class="w-full rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="window.openImageModal(this.src)">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t border-gray-100 dark:border-gray-700">
                             <div>
-                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-diagnosis-label">Diagn\u00f3stico</span></p>
+                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-diagnosis-label" data-i18n="cdDiagLabel">Diagn\u00f3stico</span></p>
                                 <p id="cd-label" class="text-sm font-black"></p>
                             </div>
                             <div>
-                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-confidence-label">Confianza</span></p>
+                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-confidence-label" data-i18n="cdConfLabel">Confianza</span></p>
                                 <p id="cd-confidence" class="text-sm font-black text-blue-600 dark:text-blue-400"></p>
                             </div>
                             <div>
-                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-model-label">Modelo</span></p>
+                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-model-label" data-i18n="cdModelLabel">Modelo</span></p>
                                 <p id="cd-model" class="text-sm font-semibold text-gray-700 dark:text-gray-300"></p>
                             </div>
                             <div>
-                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-patient-label">Paciente</span></p>
+                                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span id="ui-cd-patient-label" data-i18n="cdPatient">Paciente</span></p>
                                 <p id="cd-patient" class="text-sm font-semibold text-gray-700 dark:text-gray-300"></p>
                             </div>
                         </div>

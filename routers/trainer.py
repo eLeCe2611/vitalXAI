@@ -176,6 +176,16 @@ async def compare_session_models(request: Request, background_tasks: BackgroundT
     return JSONResponse(content={"status": "success", "message": get_text("recalculo_iniciado")})
 
 
+@router.get("/api/train/session/{session_id}/recalc_status")
+async def get_recalc_status(request: Request, session_id: str):
+    user_id = _require_auth(request)
+    if not user_id:
+        return JSONResponse(status_code=401, content={"error": get_text("no_autenticado")})
+    if not _require_ownership(session_id, user_id, request):
+        return JSONResponse(status_code=403, content={"error": get_text("no_permiso_sesion")})
+    return JSONResponse(content={"status": mlops_engine.get_recalc_status(session_id)})
+
+
 @router.get("/api/train/session/{session_id}/ranking")
 async def get_session_ranking(request: Request, session_id: str):
     user_id = _require_auth(request)
@@ -190,7 +200,7 @@ async def get_session_ranking(request: Request, session_id: str):
 
 
 @router.post("/api/train/session/external_validation")
-async def run_external_validation(request: Request, background_tasks: BackgroundTasks, session_id: str = Form(...), dataset_path: str = Form(...)):
+async def run_external_validation(request: Request, session_id: str = Form(...), dataset_path: str = Form(...)):
     user_id = _require_auth(request)
     if not user_id:
         return JSONResponse(status_code=401, content={"error": get_text("no_autenticado")})
@@ -198,8 +208,22 @@ async def run_external_validation(request: Request, background_tasks: Background
         return JSONResponse(status_code=403, content={"error": get_text("no_permiso_sesion")})
     if not dataset_path or not os.path.exists(dataset_path):
         return JSONResponse(status_code=400, content={"status": "error", "message": get_text("ruta_externa_invalida")})
-    background_tasks.add_task(mlops_engine.run_external_validation, session_id, dataset_path)
-    return JSONResponse(content={"status": "success", "message": get_text("validacion_externa_iniciada")})
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO job_queue (user_id, job_type, payload) VALUES (%s, %s, %s)",
+        (user_id, "external_validation", json.dumps({
+            "session_id": session_id,
+            "dataset_path": dataset_path,
+        }))
+    )
+    conn.commit()
+    job_id = cursor.lastrowid
+    conn.close()
+
+    return JSONResponse(content={"status": "queued", "job_id": job_id,
+                                  "message": get_text("validacion_externa_encolada").format(job_id=job_id)})
 
 
 @router.get("/api/train/session/{session_id}/external_results")

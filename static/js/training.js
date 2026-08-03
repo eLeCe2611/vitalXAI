@@ -229,9 +229,44 @@ async function deleteSession(event, sessionId) {
 }
 
 async function recalculateComparison(sessionId) {
-    document.getElementById('session-results-panel').classList.add('hidden'); document.getElementById('config-panel').classList.remove('hidden'); document.getElementById('training-console').classList.remove('hidden'); document.getElementById('loading-spinner').classList.remove('hidden');
-    const formData = new FormData(); formData.append('session_id', sessionId);
-    try { await fetch('/api/train/session/compare', { method: 'POST', body: formData }); currentViewingSession = sessionId; if(logInterval) clearInterval(logInterval); logInterval = setInterval(fetchLogs, 2000); } catch(e) {}
+    const t_ = window.t || (k=>k);
+    const formData = new FormData();
+    formData.append('session_id', sessionId);
+    showToast(t_('wilcoxonStarted'), 'success');
+    try {
+        const res = await fetch('/api/train/session/compare', { method: 'POST', body: formData });
+        if (res.ok) {
+            pollWilcoxonCompletion(sessionId);
+        } else {
+            const data = await res.json();
+            showToast(data.message || t_('wilcoxonError'), 'error');
+        }
+    } catch (e) {
+        showToast(t_('wilcoxonError'), 'error');
+    }
+}
+
+function pollWilcoxonCompletion(sessionId) {
+    const t_ = window.t || (k=>k);
+    let pollCount = 0;
+    const pollInterval = setInterval(async function () {
+        pollCount++;
+        try {
+            const response = await fetch('/api/train/session/' + sessionId + '/recalc_status');
+            const data = await response.json();
+            if (data.status === "completed") {
+                clearInterval(pollInterval);
+                showToast(t_('wilcoxonCompleted'), 'success');
+                loadSidebarModels();
+                if (currentViewingSession === sessionId && typeof viewSessionResults === 'function') {
+                    viewSessionResults(sessionId);
+                }
+            }
+        } catch (e) {}
+        if (pollCount > 50) {
+            clearInterval(pollInterval);
+        }
+    }, 2000);
 }
 
 function cloneSessionConfig() {
@@ -269,12 +304,18 @@ async function launchExternalValidation() {
         const response = await fetch('/api/train/browse');
         const data = await response.json();
         if(data.path) {
-            document.getElementById('session-results-panel').classList.add('hidden'); document.getElementById('training-console').classList.remove('hidden'); document.getElementById('loading-spinner').classList.remove('hidden');
-            const formData = new FormData(); formData.append('session_id', currentViewingSession); formData.append('dataset_path', data.path);
-            await fetch('/api/train/session/external_validation', { method: 'POST', body: formData });
-            if(logInterval) clearInterval(logInterval); logInterval = setInterval(fetchLogs, 2000);
+            const formData = new FormData();
+            formData.append('session_id', currentViewingSession);
+            formData.append('dataset_path', data.path);
+            const res = await fetch('/api/train/session/external_validation', { method: 'POST', body: formData });
+            const result = await res.json();
+            if (res.ok && result.status === "queued") {
+                showToast(t_('queueEnqueuedExt').replace('{id}', result.job_id), 'success');
+            } else {
+                showToast(result.message || t_('trainFolderError'), 'error');
+            }
         }
-    } catch (error) { alert(t_('trainFolderError')); }
+    } catch (error) { showToast(t_('trainFolderError'), 'error'); }
 }
 
 async function viewSessionResults(sessionId) {
@@ -359,33 +400,24 @@ async function viewResults(sessionId, modelName) {
 }
 
 async function generateXAI() {
-    document.getElementById('results-panel').classList.add('hidden');
-    document.getElementById('config-panel').classList.remove('hidden');
-    document.getElementById('training-console').classList.remove('hidden');
-    document.getElementById('loading-spinner').classList.remove('hidden');
-
+    const t_ = window.t || (k=>k);
     const formData = new FormData();
     formData.append('session_id', currentViewingSession);
     formData.append('model_name', currentViewingModel);
 
-    if(logInterval) clearInterval(logInterval);
-    logInterval = setInterval(fetchLogs, 2000);
-
+    showToast(t_('xaiStarted'), 'success');
     try {
         const res = await fetch('/api/train/run_eval', { method: 'POST', body: formData });
         const result = await res.json();
-
-        clearInterval(logInterval);
-        document.getElementById('loading-spinner').classList.add('hidden');
-
         if (res.ok && result.status === "success") {
+            showToast(t_('xaiCompleted'), 'success');
+            loadSidebarModels();
             viewResults(currentViewingSession, currentViewingModel);
         } else {
-            alert("❌ " + result.message);
+            showToast(result.message || t_('xaiError'), 'error');
         }
-    } catch(e) {
-        clearInterval(logInterval);
-        document.getElementById('loading-spinner').classList.add('hidden');
+    } catch (e) {
+        showToast(t_('xaiError'), 'error');
     }
 }
 

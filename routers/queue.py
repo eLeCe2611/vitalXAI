@@ -1,5 +1,6 @@
 
 import json
+import os
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
@@ -17,9 +18,9 @@ def _get_queue_position(job_id: int, job_type: str) -> int:
         SELECT COUNT(*) AS pos FROM job_queue
         WHERE status = 'queued'
           AND (
-            CASE job_type WHEN 'diagnosis' THEN 0 ELSE 1 END < CASE %s WHEN 'diagnosis' THEN 0 ELSE 1 END
+            CASE job_type WHEN 'training' THEN 1 ELSE 0 END < CASE %s WHEN 'training' THEN 1 ELSE 0 END
             OR (
-              CASE job_type WHEN 'diagnosis' THEN 0 ELSE 1 END = CASE %s WHEN 'diagnosis' THEN 0 ELSE 1 END
+              CASE job_type WHEN 'training' THEN 1 ELSE 0 END = CASE %s WHEN 'training' THEN 1 ELSE 0 END
               AND id < %s
             )
           )
@@ -73,7 +74,25 @@ async def queue_status(request: Request):
                     p = {}
             j["session_id"] = p.get("session_id", "?")
             models = p.get("models", [])
-            j["model_name"] = models[0] + "..." if models else "?"
+            j["model_name"] = ", ".join(models) if models else "?"
+        elif j["job_type"] == "external_validation":
+            p = j["payload"]
+            if isinstance(p, str):
+                try:
+                    p = json.loads(p)
+                except Exception:
+                    p = {}
+            j["session_id"] = p.get("session_id", "?")
+            session_models = []
+            config_path = os.path.join("training_results", j["session_id"], "config.json")
+            if os.path.exists(config_path):
+                try:
+                    with open(config_path, encoding="utf-8") as f:
+                        cfg = json.load(f)
+                    session_models = cfg.get("models", [])
+                except (json.JSONDecodeError, OSError):
+                    session_models = []
+            j["model_name"] = ", ".join(session_models) if session_models else "Todos los modelos"
         del j["payload"]
 
     return JSONResponse(content={
