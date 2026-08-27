@@ -71,7 +71,7 @@ python main.py
 
 ## Pipeline MLOps
 
-1. El chatbot (Groq/Llama 3) conversa con el usuario para capturar configuración
+1. El chatbot de Groq (`openai/gpt-oss-120b`) conversa con el usuario para capturar configuración
 2. Se ejecutan los scripts `1_train_kfold.py` o `2_train_transformer_kfold.py` según el modelo
 3. Se genera automáticamente XAI cualitativo (script 6) y cuantitativo (script 7)
 4. Al finalizar todos los modelos, se ejecuta `3_evaluate_statistics.py` (ranking + Wilcoxon)

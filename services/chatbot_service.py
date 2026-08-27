@@ -147,7 +147,7 @@ async def chat_endpoint(session_id: str, message: str, request=None):
             chat_sessions[session_id] = [{"role": "system", "content": system_prompt}]
         chat_sessions[session_id].append({"role": "user", "content": message})
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             messages=chat_sessions[session_id],
             temperature=0.7,
             max_tokens=1024,

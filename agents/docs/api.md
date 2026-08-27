@@ -53,7 +53,7 @@
 ### Training / MLOps
 | Method | Path | Request | Response | Auth | Notes |
 |---|---|---|---|---|---|
-| POST | `/api/chat` | Form: session_id, message | `{"response": "<bot_message>"}` | JWT required | Groq/Llama 3.3-70B chatbot |
+| POST | `/api/chat` | Form: session_id, message | `{"response": "<bot_message>"}` | JWT required | Groq chatbot (`openai/gpt-oss-120b`) |
 | GET | `/api/train/browse` | Query opcional `for_external=true` | `{"path": "<selected_folder>"}` | JWT required | Devuelve la ruta preconfigurada por entorno (`TFG_DEMO_DATASET`, o `TFG_DEMO_EXTERNAL_DATASET` si `for_external=true`) cuando está definida; si no, abre el diálogo Tkinter en la máquina servidora. |
 | POST | `/api/train/start` | Form: model_names, dataset_path, epochs, batch_size, learning_rate | `{"status": "success", "message": "...", "session_id": "..."}` | JWT required | Session linked to creator's user_id. Launches background training queue. |
 | GET | `/api/train/logs` | — | `{"logs": "<last 60 lines>"}` | JWT required | |
