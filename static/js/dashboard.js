@@ -129,7 +129,7 @@ async function loadHistory() {
                     if (currentLang === 'en') lbl = lbl === "Neumonía" ? "Pneumonia" : "Normal";
                     const p = item.original_image_path.replace(/\\/g, '/');
                     const x = item.xai_image_path.replace(/\\/g, '/');
-                    html += `<div class="bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="window.openConsultationDetail(${item.id},'${p}','${x}','${item.prediction_label}',${item.confidence_score},'${model}','${(item.patient_name || '').replace(/'/g, "\\'")}','${item.timestamp}')"><div class="flex gap-3"><img src="/${p}" class="w-10 h-10 object-cover rounded"><div class="flex-1"><p class="text-[10px] text-gray-500">${item.timestamp}</p><p class="text-[11px] font-black ${item.prediction_label === "Neumonía" ? 'text-red-500' : 'text-green-500'}">${lbl}</p></div></div></div>`;
+                    html += `<div class="bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer" onclick="window.openConsultationDetail(${item.id},'${p}','${x}','${item.prediction_label}',${item.confidence_score},'${model}','${(item.patient_name || '').replace(/'/g, "\\'")}','${item.timestamp}')"><div class="flex gap-3"><img src="/${p}" class="w-10 h-10 object-cover rounded"><div class="flex-1"><p class="text-[10px] text-gray-500">${item.timestamp}</p><p class="text-[11px] font-black ${item.prediction_label === "Neumonía" ? 'text-red-500' : 'text-green-500'}">${lbl}</p><p class="text-[10px] text-gray-400">${item.patient_name || ''}</p></div></div></div>`;
                 });
                 historyList.innerHTML += html + `</div></div>`;
             }
