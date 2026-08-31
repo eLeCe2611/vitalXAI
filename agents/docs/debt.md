@@ -24,6 +24,16 @@ Recommendation: What to do to resolve it.
 
 ## Log
 
+## DBT-009: main.py crashea con UnicodeEncodeError al redirigir la salida
+Date: 2026-08-03
+Status: open
+Risk: low
+Impact: medium
+Suggested priority: low
+Evidence: `main.py:27,30` — `print("\u2705 ...")` y `print("\u274c ...")` en el lifespan. El arranque falla con `UnicodeEncodeError: 'charmap' codec can't encode character` cuando stdout no es una terminal (p. ej. redirigido a un log o consola cp1252).
+Description: Los emojis ✅/❌ en los prints del lifespan rompen el arranque de uvicorn cuando la salida se redirige a un archivo (como hace `scripts/demo_start.ps1`). En la demo quedó mitigado forzando `PYTHONIOENCODING=utf-8` en el script, pero es un bug latente en `main.py`.
+Recommendation: Sustituir los emojis por texto ASCII en los prints de `main.py` (o configurar `PYTHONIOENCODING` de forma robusta).
+
 ## DBT-001: Contraseñas en texto plano (auth.py)
 Date: 2026-07-23
 Status: resolved (TASK-002)

@@ -301,7 +301,7 @@ function cloneSessionConfig() {
 async function launchExternalValidation() {
     const t_ = window.t || (k=>k);
     try {
-        const response = await fetch('/api/train/browse');
+        const response = await fetch('/api/train/browse?for_external=true');
         const data = await response.json();
         if(data.path) {
             const formData = new FormData();

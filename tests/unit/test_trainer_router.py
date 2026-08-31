@@ -87,13 +87,39 @@ class TestChat:
 
 
 class TestBrowseFolder:
-    def test_returns_selected_path(self, client):
+    def test_returns_selected_path(self, client, monkeypatch):
+        monkeypatch.delenv("TFG_DEMO_DATASET", raising=False)
+        monkeypatch.delenv("TFG_DEMO_EXTERNAL_DATASET", raising=False)
         _auth(client)
         with patch("services.mlops_engine.tk.Tk") as mock_tk, \
              patch("services.mlops_engine.filedialog.askdirectory", return_value="C:/dataset"):
             response = client.get("/api/train/browse")
             assert response.status_code == 200
             assert response.json()["path"] == "C:/dataset"
+
+    def test_for_external_true_propagates_to_engine(self, client):
+        _auth(client)
+        captured = {}
+        def fake_browse(for_external=False):
+            captured["for_external"] = for_external
+            return {"path": "C:/external"}
+        with patch("services.mlops_engine.browse_folder", side_effect=fake_browse):
+            response = client.get("/api/train/browse?for_external=true")
+            assert response.status_code == 200
+            assert captured["for_external"] is True
+            assert response.json()["path"] == "C:/external"
+
+    def test_defaults_to_training_browse(self, client):
+        _auth(client)
+        captured = {}
+        def fake_browse(for_external=False):
+            captured["for_external"] = for_external
+            return {"path": "C:/training"}
+        with patch("services.mlops_engine.browse_folder", side_effect=fake_browse):
+            response = client.get("/api/train/browse")
+            assert response.status_code == 200
+            assert captured["for_external"] is False
+
 
 
 class TestStartTraining:

@@ -38,7 +38,7 @@ RefreshToken N──1 User  : each refresh token belongs to one user (FK, CASCAD
 - All consultations are saved to history, grouped by model.
 
 ### MLOps Training
-- User configures training via chatbot (Groq/Llama 3.3-70B) or direct form.
+- User configures training via chatbot (Groq/`openai/gpt-oss-120b`) or direct form.
 - Training runs as background subprocess executing external scripts (pneumoniacnn-main/).
 - Each model goes through: train → XAI qualitative → XAI quantitative.
 - After all models, run ranking (Wilcoxon statistical comparison).
