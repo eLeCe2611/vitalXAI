@@ -4,6 +4,8 @@ La ejecución asíncrona constituye el soporte del procesamiento en segundo plan
 
 La implementación de la ejecución asíncrona se apoya en la persistencia relacional descrita en el capítulo 28: la cola se materializa en la tabla `job_queue` de MySQL, que conserva los trabajos con su estado, su payload serializable, su resultado y su error, y el worker comparte esa persistencia con los routers, pero no comparte el ciclo de petición. Esta frontera, ya declarada en el diseño del subsistema SD-006, se implementa en el módulo `services/queue_worker.py`, que contiene el bucle del worker y las operaciones de transición de estado, y en el router `routers/queue.py`, que expone la consulta del estado y la cancelación de los trabajos.
 
+El código completo de la cola, el worker y sus pruebas se encuentra en el repositorio del proyecto: [github.com/eLeCe2611/vitalXAI](https://github.com/eLeCe2611/vitalXAI). El contenido de este capítulo corresponde principalmente a `services/queue_worker.py`, `routers/queue.py`, la tabla `job_queue` definida en `database.py` y las pruebas de `tests/unit/test_queue_worker.py` y `tests/unit/test_queue_router.py`. En este capítulo se reproducen únicamente los fragmentos que explican la máquina de estados, la reclamación, el despacho y la recuperación de trabajos.
+
 ## 29.1 La cola de trabajos y su máquina de estados
 
 La cola de trabajos se implementa en la tabla `job_queue`, cuyas filas representan los trabajos asíncronos del sistema. Cada trabajo conserva el usuario propietario, el tipo (`diagnosis`, `training` o `external_validation`), el estado, el payload serializable, el resultado y el mensaje de error, de modo que la tabla materializa la clase `QueueJob` definida en el diseño de clases del capítulo 21 y su máquina de estados, representada en la figura 89. Las transiciones de estado se implementan en el worker mediante operaciones que actualizan la fila del trabajo: la reclamación, la finalización y el fallo. El fragmento siguiente muestra la implementación de estas transiciones.
@@ -49,7 +51,7 @@ La implementación de las transiciones refleja la máquina de estados de la cola
 
 ## 29.2 El bucle del worker
 
-El worker se implementa como un bucle asíncrono que selecciona el siguiente trabajo pendiente, lo reclama, procesa el flujo correspondiente y actualiza su estado, apoyado en el modelo de concurrencia asíncrona de Python (Python Software Foundation, 2024). El bucle se crea en el arranque de la aplicación mediante `start_worker()`, que restablece los trabajos en ejecución y lanza la tarea asíncrona del procesamiento. El fragmento siguiente muestra la implementación del bucle del worker.
+El worker se implementa como un bucle asíncrono que selecciona el siguiente trabajo pendiente, lo reclama, procesa el flujo correspondiente y actualiza su estado mediante las primitivas de `asyncio` (Python Software Foundation, 2024b). El bucle se crea en el arranque de la aplicación mediante `start_worker()`, que restablece los trabajos en ejecución y lanza la tarea asíncrona del procesamiento. El fragmento siguiente muestra la implementación del bucle del worker.
 
 ```python
 async def worker_loop():
@@ -85,7 +87,7 @@ La implementación del bucle refleja las decisiones de diseño del procesamiento
 
 ## 29.3 Reclamación, despacho y procesamiento de los trabajos
 
-El procesamiento de cada trabajo se resuelve mediante el despacho por tipo, que selecciona el flujo correspondiente según el tipo del trabajo. La reclamación condicionada, descrita en el apartado 29.1, garantiza que el despacho solo se ejecuta sobre trabajos que el worker ha adquirido. El fragmento siguiente muestra la implementación del despacho y del procesamiento de un diagnóstico.
+El procesamiento de cada trabajo se resuelve mediante el despacho por tipo, que selecciona el flujo correspondiente según el tipo del trabajo. La reclamación condicionada, descrita en el apartado 29.1, hace que el despacho solo continúe cuando el worker ha adquirido el trabajo. El fragmento siguiente muestra la implementación del despacho y del procesamiento de un diagnóstico.
 
 ```python
 def _execute_job(job):
@@ -121,11 +123,11 @@ def _process_diagnosis(job):
 
 *Código 29.3 - Despacho por tipo y procesamiento de un diagnóstico (`services/queue_worker.py`)*
 
-La implementación del procesamiento de un diagnóstico refleja el flujo asíncrono definido en el diseño del subsistema SD-002. El worker deserializa el payload del trabajo, invoca el motor de predicción, genera el mapa de explicabilidad y construye el informe PDF, y persiste la consulta en la tabla `consultations` con las rutas de los artefactos y el resultado. El procesamiento se ejecuta en el executor, de modo que la predicción y la generación de los artefactos no bloquean la interfaz. Los procesamientos de los entrenamientos y de las validaciones externas siguen el mismo patrón y delegan en el motor del laboratorio MLOps, que se describe en el capítulo 31. El resultado devuelto se conserva en el campo `result` del trabajo completado.
+La implementación del procesamiento de un diagnóstico refleja el flujo asíncrono definido en el diseño del subsistema SD-002. El worker deserializa el payload del trabajo, invoca el motor de predicción, genera el mapa de explicabilidad y construye el informe PDF, y persiste la consulta en la tabla `consultations` con las rutas de los artefactos y el resultado. El procesamiento se ejecuta en el executor, de modo que la predicción y la generación de los artefactos no bloquean la interfaz. El fragmento omite el cálculo del nombre por defecto de la consulta, realizado antes de la inserción. Los entrenamientos y las validaciones externas siguen el mismo patrón de despacho y delegan en el motor del laboratorio MLOps, que se describe en el capítulo 31. El resultado devuelto se conserva en el campo `result` del trabajo completado.
 
 ## 29.4 Tolerancia a fallos y recuperación
 
-La ejecución asíncrona incorpora mecanismos de tolerancia a fallos y de recuperación que garantizan la coherencia del sistema ante errores y reinicios. Ante un fallo del procesamiento, el worker captura la excepción y marca el trabajo como fallido con el mensaje de error, de modo que un fallo del motor, de la imagen o del informe no se transforma en una consulta completada con datos ambiguos. Ante el reinicio de la aplicación, los trabajos que quedaron en estado `running` se restablecen a `queued`, de modo que el procesamiento interrumpido vuelve a la cola y puede ser retomado. El fragmento siguiente muestra la implementación del restablecimiento de los trabajos en ejecución.
+La ejecución asíncrona incorpora mecanismos de tolerancia a fallos y de recuperación para mantener el estado de la cola identificable ante errores y reinicios. Ante un fallo del procesamiento, el worker captura la excepción y marca el trabajo como fallido con el mensaje de error, de modo que un fallo del motor, de la imagen o del informe no se transforma en una consulta completada con datos ambiguos. Ante el reinicio de la aplicación, los trabajos que quedaron en estado `running` se restablecen a `queued`, de modo que el procesamiento interrumpido puede volver a intentarse. El fragmento siguiente muestra la implementación del restablecimiento de los trabajos en ejecución.
 
 ```python
 def _reset_running_jobs():
@@ -138,7 +140,7 @@ def _reset_running_jobs():
 
 *Código 29.4 - Restablecimiento de los trabajos en ejecución (`services/queue_worker.py`)*
 
-La implementación del restablecimiento refleja la decisión de recuperación del diseño. Al arrancar la aplicación, `start_worker()` ejecuta `_reset_running_jobs()`, que devuelve a la cola los trabajos que quedaron en `running` cuando el proceso anterior se detuvo, con su fecha de inicio restablecida; la reclamación condicionada evita que esos trabajos se procesen dos veces, porque solo un consumidor puede adquirir cada trabajo. Esta técnica, junto con la captura de excepciones del bucle, garantiza que el estado persistido de la cola permanece coherente con la ejecución real, incluso ante fallos del proceso o de los componentes.
+La implementación del restablecimiento refleja la decisión de recuperación del diseño. Al arrancar la aplicación, `start_worker()` ejecuta `_reset_running_jobs()`, que devuelve a la cola los trabajos que quedaron en `running` cuando el proceso anterior se detuvo, con su fecha de inicio restablecida. La reclamación condicionada evita que dos consumidores adquieran el mismo registro en una misma carrera, pero no permite reconstruir el punto intermedio del cálculo ni elimina los artefactos parciales. Esta técnica, junto con la captura de excepciones del bucle, permite reintentar trabajos sin dejar su estado operativo oculto, aunque la idempotencia completa requiere controles adicionales.
 
 ## 29.5 La cola desde la API
 
@@ -170,4 +172,4 @@ async def cancel_job(request: Request, job_id: int):
 
 La implementación de la cancelación refleja la restricción del diseño: solo un trabajo en estado `queued` y perteneciente al usuario puede cancelarse. La actualización condicionada a esos tres criterios afecta a una fila únicamente cuando el trabajo sigue pendiente; si el worker ya lo reclamó o el trabajo finalizó, la actualización no afecta a ninguna fila y el router responde HTTP 404 informando de que el trabajo no está en cola. De este modo, un trabajo en ejecución no se interrumpe de forma abrupta, en coherencia con la máquina de estados de la cola. La consulta del estado, por su parte, interpreta el payload de cada tipo de trabajo para mostrar el nombre del modelo o de la sesión sin exponer el contenido interno completo del payload.
 
-La ejecución asíncrona de vitalXAI queda así codificada de forma completa: la cola persistente materializa la máquina de estados de los trabajos, el worker reclama y procesa los trabajos fuera del ciclo de petición, el despacho por tipo orquesta los flujos de los subsistemas, los mecanismos de tolerancia a fallos y de recuperación mantienen la coherencia del estado, y la API expone la consulta y la cancelación a los usuarios. La implementación de los motores que el worker invoca —la predicción y la explicabilidad del diagnóstico y el laboratorio MLOps— se describe en los capítulos siguientes.
+La ejecución asíncrona de vitalXAI queda descrita en sus elementos principales: la cola persistente materializa la máquina de estados de los trabajos, el worker reclama y procesa los trabajos fuera del ciclo de petición, el despacho por tipo orquesta los flujos de los subsistemas, la recuperación permite reintentar trabajos tras un reinicio y la API expone la consulta y la cancelación a los usuarios. La implementación de los motores que el worker invoca, la predicción y la explicabilidad del diagnóstico y el laboratorio MLOps, se describe en los capítulos siguientes.

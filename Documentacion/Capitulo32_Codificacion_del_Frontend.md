@@ -1,8 +1,10 @@
 # Capítulo 32: Codificación del frontend
 
-El frontend de vitalXAI materializa la presentación del sistema: las ventanas descritas en el diseño de interfaces del capítulo 22, que permiten al profesional sanitario y al investigador interactuar con las capacidades del backend. El frontend se construye con las plantillas Jinja2 servidas por el backend y con los recursos JavaScript del navegador, sin un framework de componentes independiente, en coherencia con la decisión tecnológica adoptada en el análisis. Este capítulo describe la codificación del frontend, organizada en cuatro apartados: las plantillas de presentación, los recursos JavaScript por ámbito, la comunicación asíncrona con la API y la internacionalización con el tema visual.
+Este capítulo explica cómo se implementa la parte de interfaz de vitalXAI. Las plantillas Jinja2 sirven las vistas definidas en el capítulo 22 y los scripts JavaScript permiten al profesional sanitario y al investigador interactuar con el backend. La aplicación no utiliza un framework de componentes independiente. El contenido se organiza en cuatro apartados: plantillas de presentación, scripts por ámbito, comunicación asíncrona con la API e internacionalización y tema visual.
 
-La presentación se resuelve con las plantillas Jinja2 del directorio `templates/`, que componen las páginas en el servidor, y con los recursos estáticos del directorio `static/`, que incluyen los scripts JavaScript y los estilos. La interactividad se implementa en JavaScript nativo, con módulos por ámbito funcional, y la comunicación con la API se realiza mediante la interfaz de fetch del navegador, con la protección CSRF y la renovación automática de la sesión (MDN Web Docs, 2024). El estilo visual se apoya en la utilidades de Tailwind CSS, cargadas mediante CDN y configuradas con el modo oscuro mediante clase (Tailwind CSS, 2024).
+La presentación se resuelve con las plantillas Jinja2 del directorio `templates/`, que componen las páginas en el servidor, y con los recursos estáticos del directorio `static/`, que incluyen los scripts JavaScript y los estilos. La interactividad se implementa en JavaScript nativo, con módulos por ámbito funcional, y la comunicación con la API se realiza mediante la interfaz de fetch del navegador, con la protección CSRF y la renovación automática de la sesión en las vistas privadas (MDN Web Docs, 2024). El estilo visual se apoya en las utilidades de Tailwind CSS, cargadas mediante CDN y configuradas con el modo oscuro mediante clase (Tailwind CSS, 2024).
+
+La implementación completa de las plantillas, los scripts y los recursos estáticos está disponible en [github.com/eLeCe2611/vitalXAI](https://github.com/eLeCe2611/vitalXAI), en los directorios `templates/` y `static/`. Este capítulo utiliza fragmentos representativos para explicar la estructura de la interfaz y su comunicación con el backend; el repositorio contiene el código completo y su evolución.
 
 ## 32.1 Las plantillas de presentación
 
@@ -73,6 +75,8 @@ La comunicación con la API se realiza mediante la interfaz de fetch del navegad
                 }
             } catch (e) {
                 window.location.href = '/';
+            } finally {
+                _isRefreshing = false;
             }
         }
         return response;
@@ -82,11 +86,11 @@ La comunicación con la API se realiza mediante la interfaz de fetch del navegad
 
 *Código 32.2 - Interceptor global de peticiones con CSRF y renovación de sesión (`static/js/admin.js`)*
 
-La implementación de la comunicación asíncrona refleja las decisiones de seguridad y de experiencia del sistema. El interceptor reemplaza la función `fetch` global: añade la cabecera `X-CSRF-Token` con el token de la cookie a todas las peticiones que modifican el estado, en correspondencia con la protección CSRF del backend descrita en el capítulo 28, y ante una respuesta de no autenticado intenta renovar la sesión mediante el endpoint de refresco, reintentando la petición original si la renovación tiene éxito o redirigiendo al inicio de sesión en caso contrario. Este mecanismo, aplicado de forma transversal, mantiene la sesión del usuario sin interrupciones y evita duplicar la gestión de la autenticación en cada módulo.
+La implementación de la comunicación asíncrona refleja las decisiones de seguridad y de experiencia del sistema. El interceptor reemplaza la función `fetch` global en las vistas que cargan `admin.js`: añade la cabecera `X-CSRF-Token` con el token de la cookie a las peticiones que modifican el estado, en correspondencia con la protección CSRF del backend descrita en el capítulo 28, y ante una respuesta de no autenticado intenta renovar la sesión mediante el endpoint de refresco. Si la renovación tiene éxito reintenta la petición original; en caso contrario redirige a la página de inicio. El mecanismo centraliza esta gestión, aunque no constituye una garantía de disponibilidad continua de la sesión.
 
 ## 32.4 Internacionalización y tema visual
 
-La internacionalización y el tema visual se implementan en el módulo `i18n.js`, compartido por todas las páginas. La internacionalización mantiene un diccionario de traducciones en el navegador para los cuatro idiomas soportados, aplica los textos a los elementos `data-i18n` y persiste la preferencia del idioma en el almacenamiento local; el tema visual alterna entre el tema claro y el oscuro aplicando la clase correspondiente en el elemento raíz y respeta la preferencia del sistema cuando no hay una guardada. El fragmento siguiente muestra la implementación de la traducción y del cambio de idioma.
+La internacionalización y el tema visual se implementan en el módulo `i18n.js`, compartido por todas las páginas. La internacionalización mantiene un diccionario de traducciones en el navegador para los cuatro idiomas soportados, aplica los textos a los elementos `data-i18n` y persiste la preferencia del idioma en el almacenamiento local. El tema visual alterna entre los modos claro y oscuro mediante la clase del elemento raíz y, cuando no existe una preferencia guardada, consulta la preferencia del sistema mediante `matchMedia`; estas APIs de almacenamiento y consulta del entorno pertenecen a la plataforma web del navegador (MDN Web Docs, 2024). El fragmento siguiente muestra la implementación de la traducción y del cambio de idioma.
 
 ```javascript
 function t(key) {
@@ -121,4 +125,4 @@ function toggleTheme() {
 
 La implementación de la internacionalización refleja las decisiones del diseño del CU-004: el selector de idioma actualiza la preferencia en el almacenamiento local y traduce de forma inmediata los textos de la interfaz marcados con `data-i18n`, sin recargar la página, con el español como valor por defecto. El tema visual alterna la clase del modo oscuro en el elemento raíz, de modo que el cambio se propaga a toda la interfaz, y persiste la preferencia en el almacenamiento local; al cargar la página, se restaura la preferencia guardada y, en ausencia de esta, se respeta la preferencia de color del sistema. Los módulos de las ventanas complementan la traducción re-renderizando las vistas dinámicas, como el historial o los resultados del laboratorio, en el idioma seleccionado.
 
-El frontend de vitalXAI queda así codificado de forma completa: las plantillas Jinja2 componen las ventanas en el servidor, los recursos JavaScript por ámbito gestionan la interacción de cada vista, la comunicación asíncrona se protege con el interceptor CSRF y la renovación de sesión, y la internacionalización con el tema visual se aplican de forma transversal. Con la codificación del backend, de la ejecución asíncrona, de los motores y del frontend, la Parte de Codificación de la memoria queda completada, describiendo la implementación integral del sistema vitalXAI.
+El frontend de vitalXAI queda descrito en sus elementos principales: las plantillas Jinja2 componen las ventanas en el servidor, los recursos JavaScript por ámbito gestionan la interacción de cada vista, la comunicación asíncrona se protege con el interceptor CSRF y la renovación de sesión, y la internacionalización con el tema visual se aplican de forma transversal. Junto con la codificación del backend, de la ejecución asíncrona y de los motores, este capítulo completa la descripción de la implementación del sistema vitalXAI.

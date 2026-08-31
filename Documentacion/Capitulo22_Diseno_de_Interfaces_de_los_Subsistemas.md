@@ -1,14 +1,14 @@
 # Capítulo 22: Diseño de interfaces de los subsistemas
 
-El diseño de interfaces constituye la etapa del diseño que concreta las ventanas del sistema y la navegación entre ellas, refinando la estructura de interfaz definida en el análisis. Mientras que el capítulo 20 determinó el comportamiento de los casos de uso y el capítulo 21 la estructura de las clases, este capítulo establece cómo se presenta esa funcionalidad al usuario: qué ventanas componen la aplicación, qué campos y acciones contiene cada una, cómo se navega entre ellas y qué informes se generan (Sharp, Rogers, & Preece, 2019). El diseño de interfaces aplica los principios de usabilidad que orientan la interacción del profesional sanitario con la plataforma: la claridad de las acciones, la consistencia entre ventanas y la adecuación de los mensajes de error al contexto (Nielsen, 1994).
+Este capítulo traduce los casos de uso y las clases de los capítulos 20 y 21 a la interfaz que utiliza el usuario. Se describen las ventanas, las vistas integradas, los campos y las acciones disponibles, junto con las rutas de navegación y los informes que genera cada subsistema. La organización sigue criterios de usabilidad relacionados con la claridad de las acciones, la consistencia visual y la presentación comprensible de los errores (Sharp, Rogers, & Preece, 2019; Nielsen, 1994). Las descripciones se han contrastado con las plantillas HTML y los scripts JavaScript del proyecto.
 
-El capítulo se organiza siguiendo la misma estructura de subsistemas de diseño del capítulo 17: cada apartado corresponde a un subsistema (SD-001 a SD-006) y describe las interfaces que materializan su responsabilidad. Para cada subsistema se presentan tres elementos, conforme a la guía de diseño de la memoria (punto 6): el flujo de navegación, que define la navegación definitiva entre las ventanas del subsistema; la especificación de las interfaces, que documenta cada ventana mediante la ficha formal de interfaz IU-NNNN con sus campos, sus botones y sus enlaces; y los informes del subsistema, que describen cada documento generado mediante la ficha formal IF-NNNN con sus datos y sus agrupaciones. Las ventanas de la aplicación corresponden a las plantillas reales del sistema: la página de inicio de sesión, el registro, el panel de diagnóstico y el laboratorio de entrenamiento, junto con las vistas que se integran en ellas.
+El capítulo se organiza siguiendo la misma estructura de subsistemas de diseño del capítulo 17: cada apartado corresponde a un subsistema (SD-001 a SD-006) y describe las interfaces que materializan su responsabilidad. Para cada subsistema se presentan tres elementos: el flujo de navegación, que define la navegación entre las ventanas del subsistema; la especificación de las interfaces, que documenta cada ventana mediante la ficha formal IU-NNNN con sus campos, sus botones y sus enlaces; y los informes del subsistema, que describen cada documento generado mediante la ficha formal IF-NNNN con sus datos y sus agrupaciones. Las ventanas de la aplicación corresponden a las plantillas reales del sistema: la página de inicio de sesión, el registro, el panel de diagnóstico y el laboratorio de entrenamiento, junto con las vistas que se integran en ellas.
 
 El diagrama de la figura 90 representa la navegación global de la aplicación. El visitante entra por la página de inicio de sesión (IU-0001), desde la que accede al registro (IU-0002); una vez autenticado o registrado, el sistema conduce al panel de diagnóstico (IU-0003), que constituye el centro de la aplicación. Desde el panel se alcanzan las vistas integradas del historial y el detalle (IU-0004), la administración (IU-0006, solo para el rol administrador), la cola de trabajos (IU-0007) y el laboratorio de entrenamiento (IU-0005); desde el laboratorio también se alcanza la cola de trabajos.
 
 ```mermaid
 flowchart LR
-    L["IU-0001 Inicio de sesión<br/>(/login)"] -->|"Regístrate aquí"| R["IU-0002 Registro<br/>(/register)"]
+    L["IU-0001 Inicio de sesión<br/>(/)"] -->|"Regístrate aquí"| R["IU-0002 Registro<br/>(/register)"]
     L -->|"Iniciar sesión"| D["IU-0003 Panel de diagnóstico<br/>(/dashboard)"]
     R -->|"Registro correcto"| D
     D -->|"Abrir laboratorio"| T["IU-0005 Laboratorio MLOps<br/>(/training)"]
@@ -46,7 +46,7 @@ El flujo no presenta rutas de navegación a otras ventanas del subsistema: las d
 
 ### 22.1.2 Especificación de las interfaces
 
-La especificación de las interfaces documenta cada ventana del subsistema mediante la ficha formal de interfaz de la guía de diseño de la memoria (punto 6). Cada ficha reproduce los campos de la plantilla —descripción, campos y botones y enlaces—, de modo que el contenido de cada parte queda identificado y verificable. A continuación se especifican las dos interfaces propias de SD-001.
+La especificación de las interfaces documenta cada ventana del subsistema mediante una ficha formal que recoge su descripción, campos, botones y enlaces. A continuación se especifican las dos interfaces propias de SD-001.
 
 #### IU-0001 Inicio de sesión
 
@@ -78,7 +78,7 @@ La página constituye la puerta de entrada del sistema: todos los flujos privado
 
 | Campo | Contenido |
 |---|---|
-| **Descripción** | Ventana de creación de cuenta, correspondiente a la plantilla `register.html` (ruta `/register`). Presenta el formulario de registro con el nombre, el apellido, la especialidad, el nombre de usuario y la contraseña, junto con el selector de idioma y el cambio del tema visual. Envía los datos al endpoint de registro de forma asíncrona; ante un registro correcto muestra la confirmación y conduce al panel de diagnóstico, y ante un error muestra el mensaje correspondiente. |
+| **Descripción** | Ventana de creación de cuenta, correspondiente a la plantilla `register.html` (ruta `/register`). Presenta el formulario de registro con el nombre, el apellido, el perfil profesional, el nombre de usuario y la contraseña, junto con el selector de idioma y el cambio del tema visual. Envía los datos al endpoint de registro de forma asíncrona; ante un registro correcto muestra la confirmación y conduce al panel de diagnóstico, y ante un error muestra el mensaje correspondiente. |
 
 **Campos**
 
@@ -86,7 +86,7 @@ La página constituye la puerta de entrada del sistema: todos los flujos privado
 |---|---|---|---|---|
 | `first_name` | Texto | Editable | Sí | Nombre del profesional. |
 | `last_name` | Texto | Editable | Sí | Apellido del profesional. |
-| `role` | Lista de selección | Editable | Sí | Especialidad del profesional: Médico Residente, Radiólogo Especialista, Médico de Familia o Neumólogo. |
+| `role` | Lista de selección | Editable | Sí | Perfil profesional mostrado en la interfaz: Médico Residente, Radiólogo Especialista, Médico de Familia o Neumólogo. La interfaz no ofrece el rol administrativo. |
 | `username` | Texto | Editable | Sí | Nombre de usuario o correo electrónico con el que se identificará la cuenta. |
 | `password` | Contraseña | Editable | Sí | Contraseña de la cuenta; el servidor exige una longitud mínima de ocho caracteres. |
 
@@ -94,14 +94,14 @@ La página constituye la puerta de entrada del sistema: todos los flujos privado
 
 | Nombre | Tipo | Acción |
 |---|---|---|
-| Registrarme | Botón | Envía el formulario al endpoint `POST /api/register` de forma asíncrona; ante un registro correcto muestra la confirmación y redirige al panel de diagnóstico, y ante un error muestra el mensaje del campo afectado o de la duplicidad. |
+| Registrarme | Botón | Envía el formulario al endpoint `POST /api/register` de forma asíncrona; ante un registro correcto muestra la confirmación y redirige al panel de diagnóstico, y ante un error muestra un mensaje genérico o de usuario duplicado. |
 | Inicia Sesión | Enlace | Navega a la página de inicio de sesión (`/`). |
 | Selector de idioma | Selector | Cambia el idioma de la interfaz, materializando el CU-004. |
 | Botón de tema | Botón | Alterna el tema claro y oscuro de la interfaz, materializando el CU-036 de SD-006. |
 
 **Comentarios**
 
-La ventana mantiene la puerta de entrada autónoma del análisis: el alta no requiere la intervención de un administrador. La validación del formato del correo, de la longitud de la contraseña y de la unicidad del usuario se resuelve en el servidor, y la interfaz muestra los errores devueltos sin interrumpir la sesión de navegación. Tras el registro correcto, el sistema establece las cookies de sesión y el visitante queda autenticado, en coherencia con el CU-001 y con la decisión de diseño del capítulo 20.
+La ventana mantiene la puerta de entrada autónoma del análisis: el alta no requiere la intervención de un administrador. La validación del formato del correo, de la longitud de la contraseña y de la unicidad del usuario se resuelve en el servidor, y la interfaz muestra una confirmación o un error sin interrumpir la sesión de navegación. El servidor recibe también el campo `role`, por lo que la restricción del rol inicial debe comprobarse en el servidor y no solo en las opciones visibles del selector. Tras el registro correcto, el sistema establece las cookies de sesión y el visitante queda autenticado, en coherencia con el CU-001 y con la decisión de diseño del capítulo 20.
 
 ### 22.1.3 Informes del subsistema
 
@@ -131,7 +131,7 @@ El flujo refleja la naturaleza central del panel de diagnóstico: el ciclo clín
 
 ### 22.2.2 Especificación de las interfaces
 
-La especificación de las interfaces documenta la ventana del subsistema mediante la ficha formal de interfaz de la guía de diseño de la memoria (punto 6), con los mismos campos de la plantilla utilizados en el apartado anterior. A continuación se especifica la interfaz propia de SD-002, centrada en las funciones de diagnóstico; las vistas integradas del historial, la cola y la administración se especifican en los apartados de sus subsistemas.
+La especificación de las interfaces documenta la ventana del subsistema mediante la misma ficha formal utilizada en el apartado anterior. A continuación se especifica la interfaz propia de SD-002, centrada en las funciones de diagnóstico; las vistas integradas del historial, la cola y la administración se especifican en los apartados de sus subsistemas.
 
 #### IU-0003 Panel de diagnóstico
 
@@ -145,7 +145,7 @@ La especificación de las interfaces documenta la ventana del subsistema mediant
 |---|---|---|---|---|
 | `model-selector` | Lista de selección | Editable | Sí | Arquitectura de inteligencia artificial para el diagnóstico, entre las CNN Clásicas disponibles (DenseNet121, ResNet50, MobileNetV2, EfficientNetB0 y ConvNeXtTiny). |
 | `file-input` | Archivo | Editable | Sí | Radiografía de tórax en formato JPEG o PNG, de hasta 10 MB, que se adjunta mediante la zona de carga. |
-| Área de resultado | Contenido | Consulta | — | Zona de la ventana que muestra la imagen enviada, el resultado del diagnóstico (etiqueta y confianza), el modelo empleado y el mapa de explicabilidad generado. |
+| Área de resultado | Contenido | Consulta | N/A | Zona de la ventana que muestra la imagen enviada, el resultado del diagnóstico (etiqueta y confianza), el modelo empleado y el mapa de explicabilidad generado. |
 
 **Botones/Enlaces**
 
@@ -166,35 +166,35 @@ La ventana constituye el entorno de trabajo del profesional sanitario: el diagn�
 
 ### 22.2.3 Informes del subsistema
 
-La especificación de los informes documenta cada documento generado por el subsistema mediante la ficha formal de informe de la guía de diseño de la memoria (punto 6). Cada ficha reproduce los campos de la plantilla —descripción, módulo de interfaz, datos y resumen—, de modo que el contenido de cada parte queda identificado y verificable. A continuación se especifica el informe propio de SD-002.
+La especificación de los informes documenta cada documento generado por el subsistema mediante una ficha formal que recoge su descripción, módulo de interfaz, datos y resumen. A continuación se especifica el informe propio de SD-002.
 
 #### IF-0001 Informe del diagnóstico
 
 | Campo | Contenido |
 |---|---|
-| **Descripción** | Informe PDF de una consulta de diagnóstico, generado durante el procesamiento de la consulta mediante `services/pdf_generator.py`. Recoge la identificación de la consulta con la fecha y el modelo empleado, el diagnóstico con su nivel de confianza, la radiografía original y el mapa de explicabilidad, y se entrega como documento descargable desde el detalle de la consulta. |
+| **Descripción** | Informe PDF de una consulta de diagnóstico, generado durante el procesamiento de la consulta mediante `services/pdf_generator.py`. Recoge la fecha, el modelo empleado, el diagnóstico con su nivel de confianza, la radiografía original y el mapa de explicabilidad. La ruta del documento se conserva en la consulta, aunque el detalle actual del panel no incluye un control visible para descargarlo. |
 | **Módulo de interfaz** | IU-0003 Panel de diagnóstico. |
 
 **Datos**
 
 | Campo | Ordenación | Tipo de datos | Descripción |
 |---|---|---|---|
-| Fecha | — | Fecha/hora | Fecha y hora de la consulta. |
-| Modelo | — | Texto | Arquitectura de inteligencia artificial empleada en el diagnóstico. |
-| Diagnóstico | — | Texto | Etiqueta de la predicción (Neumonía o Normal), con el color de diagnóstico acorde con el resultado. |
-| Confianza | — | Numérico | Nivel de confianza de la predicción. |
-| Radiografía original | — | Imagen | Radiografía de tórax enviada por el usuario. |
-| Mapa de explicabilidad | — | Imagen | Mapa de calor XAI que justifica la predicción. |
+| Fecha | N/A | Fecha/hora | Fecha y hora de la consulta. |
+| Modelo | N/A | Texto | Arquitectura de inteligencia artificial empleada en el diagnóstico. |
+| Diagnóstico | N/A | Texto | Etiqueta de la predicción (Neumonía o Normal), con el color de diagnóstico acorde con el resultado. |
+| Confianza | N/A | Numérico | Nivel de confianza de la predicción. |
+| Radiografía original | N/A | Imagen | Radiografía de tórax enviada por el usuario. |
+| Mapa de explicabilidad | N/A | Imagen | Mapa de calor XAI que justifica la predicción. |
 
 **Resumen/Acumulado**
 
 | Resumen | Campos del resumen | Descripción |
 |---|---|---|
-| — | — | No aplica: el informe corresponde a una consulta individual y no agrupa ni acumula datos de varias consultas. |
+| N/A | N/A | No aplica: el informe corresponde a una consulta individual y no agrupa ni acumula datos de varias consultas. |
 
 **Comentarios**
 
-El informe se trata como parte de la información protegida de la consulta: se genera exclusivamente a partir de los datos del usuario propietario y su acceso queda sujeto al control de propiedad del historial. La generación del documento se adelanta al momento del diagnóstico, de modo que la descarga posterior no depende de una nueva operación del sistema.
+El informe se genera durante el procesamiento del diagnóstico y su ruta se almacena junto con la consulta. Sin embargo, el detalle de la consulta no muestra actualmente un botón de descarga, y el fichero se encuentra bajo una ruta estática que no aplica una comprobación de propiedad equivalente a la del historial. Por tanto, la protección efectiva del documento requiere una ruta de descarga autorizada antes de utilizar datos sensibles fuera del entorno de demostración.
 
 ## 22.3 Subsistema SD-003: Historial y gestión de consultas
 
@@ -221,7 +221,7 @@ El flujo refleja la progresión del usuario por el historial: el listado conduce
 
 ### 22.3.2 Especificación de las interfaces
 
-La especificación de las interfaces documenta la vista del subsistema mediante la ficha formal de interfaz de la guía de diseño de la memoria (punto 6), con los mismos campos de la plantilla utilizados en los apartados anteriores. A continuación se especifica la interfaz propia de SD-003.
+La especificación de las interfaces documenta la vista del subsistema mediante la misma ficha formal utilizada en los apartados anteriores. A continuación se especifica la interfaz propia de SD-003.
 
 #### IU-0004 Historial y detalle
 
@@ -233,14 +233,14 @@ La especificación de las interfaces documenta la vista del subsistema mediante 
 
 | Nombre | Tipo de datos | Editable/Consulta | Oblig. | Descripción |
 |---|---|---|---|---|
-| Listado de consultas | Contenido | Consulta | — | Listado de las consultas del usuario, agrupado por modelo, con la imagen, la fecha, la etiqueta y la confianza de cada consulta. |
-| `cd-original` | Imagen | Consulta | — | Radiografía original de la consulta seleccionada. |
-| `cd-xai` | Imagen | Consulta | — | Mapa de explicabilidad XAI de la consulta seleccionada. |
-| `cd-label` | Texto | Consulta | — | Etiqueta de la predicción (Neumonía o Normal) de la consulta. |
-| `cd-confidence` | Numérico | Consulta | — | Nivel de confianza de la predicción. |
-| `cd-model` | Texto | Consulta | — | Arquitectura del modelo empleado en la consulta. |
-| `cd-patient` | Texto | Consulta | — | Nombre visible de la consulta, que funciona como etiqueta de organización y no como identificación clínica. |
-| `cd-timestamp` | Fecha/hora | Consulta | — | Fecha de la consulta. |
+| Listado de consultas | Contenido | Consulta | N/A | Listado de las consultas del usuario, agrupado por modelo, con la imagen, la fecha, la etiqueta y la confianza de cada consulta. |
+| `cd-original` | Imagen | Consulta | N/A | Radiografía original de la consulta seleccionada. |
+| `cd-xai` | Imagen | Consulta | N/A | Mapa de explicabilidad XAI de la consulta seleccionada. |
+| `cd-label` | Texto | Consulta | N/A | Etiqueta de la predicción (Neumonía o Normal) de la consulta. |
+| `cd-confidence` | Numérico | Consulta | N/A | Nivel de confianza de la predicción. |
+| `cd-model` | Texto | Consulta | N/A | Arquitectura del modelo empleado en la consulta. |
+| `cd-patient` | Texto | Consulta | N/A | Nombre visible de la consulta, que funciona como etiqueta de organización y no como identificación clínica. |
+| `cd-timestamp` | Fecha/hora | Consulta | N/A | Fecha de la consulta. |
 
 **Botones/Enlaces**
 
@@ -249,11 +249,11 @@ La especificación de las interfaces documenta la vista del subsistema mediante 
 | Tarjeta del historial | Enlace | Abre el detalle de la consulta seleccionada, materializando el CU-012. |
 | Volver | Botón | Cierra el detalle y regresa al listado del historial. |
 | Renombrar | Botón | Abre el diálogo para indicar el nuevo nombre visible de la consulta y lo actualiza, materializando el CU-013. |
-| Eliminar | Botón | Solicita la confirmación de la eliminación y, si se confirma, elimina la consulta y sus artefactos, materializando el CU-014. |
+| Eliminar | Botón | Solicita la confirmación de la eliminación y, si se confirma, elimina la fila de la consulta, materializando el CU-014. Los ficheros asociados no se eliminan explícitamente en la implementación actual. |
 
 **Comentarios**
 
-La vista del historial solo muestra las consultas del usuario propietario, de modo que el acceso al detalle y a sus artefactos queda restringido al propietario mediante la cadena de datos del listado. La vista del detalle no requiere una petición adicional al servidor: se construye con los datos recibidos en el listado y las imágenes se sirven desde el almacenamiento estático. El informe del diagnóstico se descarga desde el detalle, aunque la generación del documento pertenece a SD-002.
+La vista del historial solo muestra las consultas del usuario propietario, de modo que el acceso al detalle se restringe mediante el filtro del listado. La vista del detalle no requiere una petición adicional al servidor: se construye con los datos recibidos en el listado y las imágenes se sirven desde el almacenamiento estático. Esta última ruta no aplica una comprobación de propiedad equivalente. El informe del diagnóstico se genera en SD-002 y su ruta se conserva en la consulta, pero el detalle actual no incluye un control visible para descargarlo.
 
 ### 22.3.3 Informes del subsistema
 
@@ -261,7 +261,7 @@ El subsistema SD-003 no genera informes propios: su responsabilidad es la recupe
 
 ## 22.4 Subsistema SD-004: Laboratorio de experimentación MLOps
 
-El subsistema SD-004 materializa la interfaz del laboratorio de experimentación, correspondiente a la plantilla `training.html` (ruta `/training`). La ventana integra el asistente de configuración conversacional, la exploración de la carpeta del dataset, el listado de los experimentos guardados, la consola de entrenamiento, la vista de resultados de la sesión —con el ranking, la matriz de Wilcoxon y la validación externa— y la vista de resultados de un modelo, con las métricas de validación cruzada, la calibración y las métricas XAI. La ventana integra además la cola de trabajos y el acceso a la administración, pertenecientes a SD-006 y SD-005. El subsistema genera el informe consolidado de la sesión (IF-0002).
+El subsistema SD-004 materializa la interfaz del laboratorio de experimentación, correspondiente a la plantilla `training.html` (ruta `/training`). La ventana integra el asistente de configuración conversacional, la exploración de la carpeta del dataset, el listado de los experimentos guardados, la consola de entrenamiento, la vista de resultados de la sesión, con el ranking, la matriz de Wilcoxon y la validación externa, y la vista de resultados de un modelo, con las métricas de validación cruzada, la calibración y las métricas XAI. La ventana integra además la cola de trabajos y el acceso a la administración, pertenecientes a SD-006 y SD-005. El subsistema genera el informe consolidado de la sesión (IF-0002).
 
 ### 22.4.1 Flujo de navegación
 
@@ -286,7 +286,7 @@ El flujo refleja la progresión del investigador por el laboratorio: desde el as
 
 ### 22.4.2 Especificación de las interfaces
 
-La especificación de las interfaces documenta la ventana del subsistema mediante la ficha formal de interfaz de la guía de diseño de la memoria (punto 6), con los mismos campos de la plantilla utilizados en los apartados anteriores. A continuación se especifica la interfaz propia de SD-004.
+La especificación de las interfaces documenta la ventana del subsistema mediante la misma ficha formal utilizada en los apartados anteriores. A continuación se especifica la interfaz propia de SD-004.
 
 #### IU-0005 Laboratorio de entrenamiento
 
@@ -299,21 +299,21 @@ La especificación de las interfaces documenta la ventana del subsistema mediant
 | Nombre | Tipo de datos | Editable/Consulta | Oblig. | Descripción |
 |---|---|---|---|---|
 | `chat-input` | Texto | Editable | Sí | Mensaje en lenguaje natural dirigido al asistente de configuración del experimento. |
-| Listado de experimentos | Contenido | Consulta | — | Listado de las sesiones de entrenamiento del usuario, con sus modelos, en la barra lateral. |
-| `session-ranking-table` | Tabla | Consulta | — | Ranking de los modelos de la sesión por la media del AUC de la validación cruzada, con su desviación. |
-| `session-heatmap-img` | Imagen | Consulta | — | Matriz de significancia estadística del test de Wilcoxon. |
-| `external-ranking-table` | Tabla | Consulta | — | Rendimiento de la validación externa por modelo: exactitud, F1 y AUC. |
-| `external-roc-img` | Imagen | Consulta | — | Curvas ROC de la validación externa. |
-| `external-delong-img` | Imagen | Consulta | — | Matriz de significancia de DeLong. |
-| `res-table-body` | Tabla | Consulta | — | Resultados de la validación cruzada K-fold de un modelo (exactitud, precisión, sensibilidad, F1 y AUC por pliegue). |
-| `res-xai-table` | Tabla | Consulta | — | Métricas cuantitativas de explicabilidad del modelo (deletion, insertion, sparsity, entropy y stability por método). |
-| `console-logs` | Contenido | Consulta | — | Registro de la ejecución del entrenamiento, actualizado durante el procesamiento. |
+| Listado de experimentos | Contenido | Consulta | N/A | Listado de las sesiones de entrenamiento del usuario, con sus modelos, en la barra lateral. |
+| `session-ranking-table` | Tabla | Consulta | N/A | Ranking de los modelos de la sesión por la media del AUC de la validación cruzada, con su desviación. |
+| `session-heatmap-img` | Imagen | Consulta | N/A | Matriz de significancia estadística del test de Wilcoxon. |
+| `external-ranking-table` | Tabla | Consulta | N/A | Rendimiento de la validación externa por modelo: exactitud, F1 y AUC. |
+| `external-roc-img` | Imagen | Consulta | N/A | Curvas ROC de la validación externa. |
+| `external-delong-img` | Imagen | Consulta | N/A | Matriz de significancia de DeLong. |
+| `res-table-body` | Tabla | Consulta | N/A | Resultados de la validación cruzada K-fold de un modelo (exactitud, precisión, sensibilidad, F1 y AUC por pliegue). |
+| `res-xai-table` | Tabla | Consulta | N/A | Métricas cuantitativas de explicabilidad del modelo (deletion, insertion, sparsity, entropy y stability por método). |
+| `console-logs` | Contenido | Consulta | N/A | Registro de la ejecución del entrenamiento, actualizado durante el procesamiento. |
 
 **Botones/Enlaces**
 
 | Nombre | Tipo | Acción |
 |---|---|---|
-| Explorar Carpeta | Botón | Abre el explorador del dataset y inserta la ruta seleccionada en la conversación, materializando el CU-017. |
+| Explorar Carpeta | Botón | Abre el explorador del dataset e inserta la ruta seleccionada en la conversación, materializando el CU-017. |
 | Enviar | Botón | Envía el mensaje al asistente de configuración, materializando el CU-016; si la configuración está completa, lanza el entrenamiento (CU-018). |
 | Actualizar | Botón | Refresca el listado de experimentos guardados. |
 | Volver al Asistente | Botón | Oculta la vista de resultados de la sesión y regresa al asistente de configuración. |
@@ -335,7 +335,7 @@ La ventana constituye el entorno de experimentación del investigador: la config
 
 ### 22.4.3 Informes del subsistema
 
-La especificación de los informes documenta el documento generado por el subsistema mediante la ficha formal de informe de la guía de diseño de la memoria (punto 6), con los mismos campos de la plantilla utilizados en el apartado de SD-002. A continuación se especifica el informe propio de SD-004.
+La especificación de los informes documenta el documento generado por el subsistema mediante la misma ficha formal utilizada en el apartado de SD-002. A continuación se especifica el informe propio de SD-004.
 
 #### IF-0002 Informe de la sesión de entrenamiento
 
@@ -348,18 +348,18 @@ La especificación de los informes documenta el documento generado por el subsis
 
 | Campo | Ordenación | Tipo de datos | Descripción |
 |---|---|---|---|
-| ID de sesión | — | Texto | Identificador de la sesión de entrenamiento. |
-| Fecha | — | Fecha/hora | Fecha de generación del informe. |
-| Dataset | — | Texto | Ruta del dataset de entrenamiento de la sesión. |
-| Modelos | — | Texto | Arquitecturas entrenadas en la sesión. |
-| Hiperparámetros | — | Texto | Épocas, tamaño de lote y tasa de aprendizaje de la sesión. |
+| ID de sesión | N/A | Texto | Identificador de la sesión de entrenamiento. |
+| Fecha | N/A | Fecha/hora | Fecha de generación del informe. |
+| Dataset | N/A | Texto | Ruta del dataset de entrenamiento de la sesión. |
+| Modelos | N/A | Texto | Arquitecturas entrenadas en la sesión. |
+| Hiperparámetros | N/A | Texto | Épocas, tamaño de lote y tasa de aprendizaje de la sesión. |
 | Ranking | 1 | Tabla | Modelos ordenados por la media del AUC de la validación cruzada, con su desviación típica. |
-| Matriz de Wilcoxon | — | Imagen | Matriz de significancia estadística entre los modelos. |
-| Validación externa | — | Tabla | Exactitud, F1 y AUC de cada modelo sobre la cohorte externa. |
-| Curvas ROC | — | Imagen | Curvas ROC de la validación externa. |
-| Matriz de DeLong | — | Imagen | Matriz de comparación estadística de las curvas ROC. |
-| Métricas XAI | — | Tabla | Métricas de fidelidad de la explicabilidad por modelo y método. |
-| Mapas de calor XAI | — | Imagen | Mapas de explicabilidad de cada modelo sobre imágenes de ejemplo. |
+| Matriz de Wilcoxon | N/A | Imagen | Matriz de significancia estadística entre los modelos. |
+| Validación externa | N/A | Tabla | Exactitud, F1 y AUC de cada modelo sobre la cohorte externa. |
+| Curvas ROC | N/A | Imagen | Curvas ROC de la validación externa. |
+| Matriz de DeLong | N/A | Imagen | Matriz de comparación estadística de las curvas ROC. |
+| Métricas XAI | N/A | Tabla | Métricas de fidelidad de la explicabilidad por modelo y método. |
+| Mapas de calor XAI | N/A | Imagen | Mapas de explicabilidad de cada modelo sobre imágenes de ejemplo. |
 
 **Resumen/Acumulado**
 
@@ -373,7 +373,7 @@ El informe se genera bajo demanda, cuando la sesión dispone de los datos necesa
 
 ## 22.5 Subsistema SD-005: Supervisión y administración
 
-El subsistema SD-005 materializa la interfaz de administración, integrada en las ventanas del panel de diagnóstico y del laboratorio de entrenamiento mediante los diálogos de administración de las plantillas `dashboard.html` y `training.html`. La vista de administración es accesible únicamente para el usuario con rol de administrador y presenta el listado de usuarios con sus recuentos de actividad, las consultas de un usuario concreto junto con sus sesiones del laboratorio, y el detalle de una consulta seleccionada. Constituye la interfaz IU-0006 y materializa los casos de uso CU-031 a CU-033.
+El subsistema SD-005 materializa la interfaz de administración, integrada en las ventanas del panel de diagnóstico y del laboratorio de entrenamiento mediante los diálogos de administración de las plantillas `dashboard.html` y `training.html`. La vista de administración es accesible únicamente para el usuario con rol de administrador y presenta el listado de usuarios con sus recuentos de actividad, las consultas de un usuario concreto junto con sus sesiones del laboratorio, y el detalle de una consulta seleccionada. Constituye la interfaz IU-0006 y materializa los casos de uso CU-031 a CU-033. La gestión de cuentas de CU-038 está prevista, pero no dispone de controles implementados en estas plantillas.
 
 ### 22.5.1 Flujo de navegación
 
@@ -397,7 +397,7 @@ El flujo refleja la cadena de navegación de la supervisión: el listado de usua
 
 ### 22.5.2 Especificación de las interfaces
 
-La especificación de las interfaces documenta la vista del subsistema mediante la ficha formal de interfaz de la guía de diseño de la memoria (punto 6), con los mismos campos de la plantilla utilizados en los apartados anteriores. A continuación se especifica la interfaz propia de SD-005.
+La especificación de las interfaces documenta la vista del subsistema mediante la misma ficha formal utilizada en los apartados anteriores. A continuación se especifica la interfaz propia de SD-005.
 
 #### IU-0006 Administración
 
@@ -409,9 +409,9 @@ La especificación de las interfaces documenta la vista del subsistema mediante 
 
 | Nombre | Tipo de datos | Editable/Consulta | Oblig. | Descripción |
 |---|---|---|---|---|
-| `admin-users-list` | Contenido | Consulta | — | Listado de usuarios registrados con el número de diagnósticos y de sesiones del laboratorio de cada uno. |
-| `admin-user-consultations-list` | Contenido | Consulta | — | Consultas de diagnóstico del usuario seleccionado, con sus sesiones de entrenamiento del laboratorio. |
-| Detalle de consulta | Contenido | Consulta | — | Detalle completo de la consulta seleccionada: radiografía original, mapa de explicabilidad, diagnóstico, confianza, modelo, nombre y fecha. |
+| `admin-users-list` | Contenido | Consulta | N/A | Listado de usuarios registrados con el número de diagnósticos y de sesiones del laboratorio de cada uno. |
+| `admin-user-consultations-list` | Contenido | Consulta | N/A | Consultas de diagnóstico del usuario seleccionado, con sus sesiones de entrenamiento del laboratorio. |
+| Detalle de consulta | Contenido | Consulta | N/A | Detalle completo de la consulta seleccionada: radiografía original, mapa de explicabilidad, diagnóstico, confianza, modelo, nombre y fecha. |
 
 **Botones/Enlaces**
 
@@ -432,11 +432,11 @@ El subsistema SD-005 no genera informes: su responsabilidad es la consulta y la 
 
 ## 22.6 Subsistema SD-006: Cola de trabajos y capacidades transversales
 
-El subsistema SD-006 materializa la interfaz de la cola de trabajos, integrada como panel lateral en las ventanas del panel de diagnóstico y del laboratorio de entrenamiento. La vista de la cola muestra los trabajos asíncronos del usuario —diagnósticos, entrenamientos y validaciones externas— con su tipo, su estado y su posición, y permite cancelar los trabajos pendientes, materializando los casos de uso CU-034 y CU-035. Además del panel de la cola, el subsistema comprende los mecanismos transversales de presentación de la interfaz: el selector de idioma y el cambio del tema visual, que ya se describieron como acciones comunes en las fichas de interfaz de los subsistemas anteriores.
+El subsistema SD-006 materializa la interfaz de la cola de trabajos, integrada como panel lateral en las ventanas del panel de diagnóstico y del laboratorio de entrenamiento. El panel muestra los trabajos asíncronos del usuario, ya sean diagnósticos, entrenamientos o validaciones externas, mientras permanecen encolados o en ejecución, e indica su tipo, su estado y su posición. También permite cancelar los trabajos pendientes, materializando los casos de uso CU-034 y CU-035. Además del panel de la cola, el subsistema comprende los mecanismos transversales de presentación de la interfaz: el selector de idioma y el cambio del tema visual, que ya se describieron como acciones comunes en las fichas de interfaz de los subsistemas anteriores.
 
 ### 22.6.1 Flujo de navegación
 
-El flujo de navegación del subsistema SD-006, representado en la figura 96, refleja el carácter transversal de la cola de trabajos: el panel se integra en el panel de diagnóstico y en el laboratorio de entrenamiento, de modo que el usuario puede consultar el estado de sus trabajos desde cualquiera de los dos núcleos funcionales sin abandonar su ventana. Desde el panel de la cola se ejecuta la cancelación de un trabajo pendiente, que elimina el trabajo del estado encolado.
+El flujo de navegación del subsistema SD-006, representado en la figura 96, refleja el carácter transversal de la cola de trabajos: el panel se integra en el panel de diagnóstico y en el laboratorio de entrenamiento, de modo que el usuario puede consultar el estado de sus trabajos desde cualquiera de los dos núcleos funcionales sin abandonar su ventana. Desde el panel de la cola se ejecuta la cancelación de un trabajo pendiente, que lo marca como `cancelled`.
 
 ```mermaid
 flowchart LR
@@ -453,20 +453,20 @@ El flujo refleja la integración transversal del panel de la cola: no constituye
 
 ### 22.6.2 Especificación de las interfaces
 
-La especificación de las interfaces documenta la vista del subsistema mediante la ficha formal de interfaz de la guía de diseño de la memoria (punto 6), con los mismos campos de la plantilla utilizados en los apartados anteriores. A continuación se especifica la interfaz propia de SD-006.
+La especificación de las interfaces documenta la vista del subsistema mediante la misma ficha formal utilizada en los apartados anteriores. A continuación se especifica la interfaz propia de SD-006.
 
 #### IU-0007 Cola de trabajos
 
 | Campo | Contenido |
 |---|---|
-| **Descripción** | Panel lateral de la cola de trabajos, integrado en las ventanas del panel de diagnóstico (`dashboard.html`) y del laboratorio de entrenamiento (`training.html`). Muestra los trabajos asíncronos del usuario con su tipo (diagnóstico, entrenamiento o validación externa), su estado (encolado, en ejecución, completado o fallido) y la posición de los trabajos encolados, y permite cancelar los trabajos pendientes. El panel se actualiza de forma periódica, de modo que refleja la progresión de los trabajos sin recargar la ventana. |
+| **Descripción** | Panel lateral de la cola de trabajos, integrado en las ventanas del panel de diagnóstico (`dashboard.html`) y del laboratorio de entrenamiento (`training.html`). Muestra los trabajos asíncronos del usuario mientras están encolados o en ejecución, con su tipo y la posición de los trabajos encolados, y permite cancelar los trabajos pendientes. El panel se actualiza de forma periódica y permanece oculto cuando no hay trabajos pendientes o en ejecución. Los estados completado y fallido se muestran en el mensaje del diagnóstico o en la consola del laboratorio, no como filas persistentes del panel. |
 
 **Campos**
 
 | Nombre | Tipo de datos | Editable/Consulta | Oblig. | Descripción |
 |---|---|---|---|---|
-| `queue-items` | Contenido | Consulta | — | Listado de los trabajos del usuario con el tipo del trabajo, el estado (encolado, en ejecución, completado o fallido) y la posición de los trabajos encolados. |
-| Estado del trabajo | Texto | Consulta | — | Indicación del estado del trabajo: en ejecución o la posición en la cola para los encolados. |
+| `queue-items` | Contenido | Consulta | N/A | Listado temporal de los trabajos del usuario que están encolados o en ejecución, con su tipo y posición cuando corresponde. |
+| Estado del trabajo | Texto | Consulta | N/A | Indicación de que el trabajo está en ejecución o de su posición cuando permanece encolado. |
 
 **Botones/Enlaces**
 
@@ -481,3 +481,19 @@ El panel de la cola refleja la máquina de estados de los trabajos y solo ofrece
 ### 22.6.3 Informes del subsistema
 
 El subsistema SD-006 no genera informes: su responsabilidad es la ejecución asíncrona de los trabajos y las capacidades transversales de presentación, y no produce documentos descargables. Los informes de la plataforma corresponden a los subsistemas que generan resultados, SD-002 y SD-004, y la cola de trabajos únicamente refleja su estado de procesamiento. Por esta razón, no se definen fichas IF-NNNN para este subsistema.
+
+## 22.7 Criterios transversales de accesibilidad
+
+La accesibilidad afecta a todas las interfaces y no puede quedar limitada a una única ventana. El diseño toma como referencia las pautas WCAG 2.2 en el nivel AA, conforme al requisito RNF-026. La tabla siguiente resume, con redacción propia, los criterios que resultan relevantes para estas vistas y los convierte en comprobaciones aplicables al proyecto. Los umbrales y requisitos normativos proceden de WCAG 2.2 (W3C, 2023).
+
+| Área | Criterio de diseño | Estado de verificación |
+|---|---|---|
+| Navegación por teclado | Todas las acciones disponibles con ratón deben poder ejecutarse mediante teclado, siguiendo un orden lógico y sin trampas de foco. | Pendiente de revisión completa. |
+| Foco visible | Los controles interactivos deben conservar un indicador de foco visible y distinguible sobre fondos claros y oscuros. | Pendiente de revisión homogénea. |
+| Formularios | Cada campo debe tener una etiqueta asociada y los errores deben identificarse mediante texto comprensible y asociado al campo afectado. | Parcialmente presente en las plantillas; pendiente de auditoría global. |
+| Lectores de pantalla | Los botones, enlaces, selectores, diálogos, estados de trabajos e imágenes deben tener un nombre o descripción accesible. Los cambios dinámicos relevantes deben comunicarse sin depender exclusivamente del color. | Pendiente de verificación. |
+| Imágenes y artefactos | Las imágenes informativas deben incluir texto alternativo; las imágenes decorativas deben poder ignorarse; los mapas y resultados deben conservar una alternativa textual cuando aporten información. | Pendiente de revisión de todas las vistas. |
+| Contraste | El texto normal debe alcanzar una relación mínima de 4,5:1 y el texto grande una relación mínima de 3:1. Los componentes gráficos y los indicadores necesarios deben alcanzar una relación mínima de 3:1. | Pendiente de medición sobre la interfaz final. |
+| Tamaño y adaptación | El contenido debe seguir siendo utilizable al ampliar el texto y en las resoluciones de referencia del requisito RNF-025, sin pérdida de información ni desplazamiento horizontal innecesario. | Pendiente de verificación conjunta con RNF-025. |
+
+La implementación actual ya utiliza etiquetas en los formularios y algunos estados de foco y textos alternativos, pero esos indicios no permiten afirmar la conformidad completa con WCAG 2.2 AA. La comprobación deberá realizarse sobre las vistas principales en sus temas claro y oscuro, incluyendo navegación por teclado, revisión de nombres accesibles y medición del contraste. Mientras no se complete esa revisión, RNF-026 debe considerarse diseñado como criterio de calidad, pero pendiente de verificación.

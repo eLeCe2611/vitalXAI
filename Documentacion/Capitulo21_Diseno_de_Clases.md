@@ -1,10 +1,10 @@
 # Capítulo 21: Estructura de clases del diseño
 
-El diseño de clases constituye la etapa del diseño que concreta la estructura estática de los subsistemas definidos en el capítulo 17: determina qué clases forman parte de cada subsistema de diseño, qué responsabilidades asume cada una y cómo colaboran entre sí para materializar los casos de uso reales descritos en el capítulo 20. Mientras que los diagramas de interacción muestran el comportamiento de los objetos en el tiempo, el modelo de clases captura la estructura persistente de ese comportamiento: los atributos que conserva cada componente, las operaciones que ofrece y las asociaciones que lo vinculan con el resto (Larman, 2004). El diseño de clases refina así los componentes identificados en la arquitectura y los presenta con el nivel de detalle necesario para comprender y mantener la implementación.
+Este capítulo traduce la arquitectura de vitalXAI a una vista estática orientada a la implementación. Para cada subsistema se indica qué componentes se han modelado, qué información manejan, qué operaciones ofrecen y con qué otros componentes colaboran. La vista complementa los diagramas de interacción del capítulo 20: aquellos describen el orden temporal de los mensajes, mientras que este capítulo fija la organización de las responsabilidades, los datos y las dependencias. El criterio sigue la separación habitual entre estructura y comportamiento en el modelado UML (Larman, 2004), pero las clases y operaciones descritas a continuación se han derivado de los módulos reales del proyecto.
 
-El capítulo se organiza siguiendo la misma estructura de subsistemas de diseño del capítulo 17: cada apartado corresponde a un subsistema (SD-001 a SD-006) y agrupa las clases que materializan su responsabilidad. Para cada subsistema se presentan dos elementos, conforme a la guía de diseño de la memoria (punto 5): el diagrama de clases, que representa gráficamente las clases del subsistema con sus atributos, sus operaciones y sus relaciones —incluidas las clases abstractas, las herencias y las asociaciones cuando existen—, y la especificación de las clases, que detalla cada clase mediante la ficha formal de clase CL-NNNN con sus atributos, sus operaciones y sus comentarios. Para las clases más complejas se añade, cuando procede, un diagrama de transición de estados que permite comprender la funcionalidad soportada por dicha clase.
+El capítulo se organiza siguiendo la misma estructura de subsistemas de diseño del capítulo 17: cada apartado corresponde a un subsistema (SD-001 a SD-006) y agrupa las clases que materializan su responsabilidad. Para cada subsistema se presentan dos elementos: el diagrama de clases, que representa gráficamente las clases del subsistema con sus atributos, sus operaciones y sus relaciones, incluidas las clases abstractas, las herencias y las asociaciones cuando existen, y la especificación de las clases, que detalla cada clase mediante la ficha formal CL-NNNN con sus atributos, sus operaciones y sus comentarios. Para las clases más complejas se añade, cuando procede, un diagrama de transición de estados que permite comprender la funcionalidad soportada por dicha clase.
 
-Las clases de diseño de vitalXAI se corresponden con los componentes reales del sistema descritos en el capítulo 17. Aunque la implementación está orientada a módulos funcionales —routers, servicios y el worker—, cada módulo se modela aquí como una clase de diseño que agrupa sus responsabilidades, de modo que la notación UML permite expresar de forma homogénea la estructura de todos los subsistemas y su colaboración. La trazabilidad con el diseño de casos de uso se mantiene en cada ficha: las operaciones de cada clase materializan los mensajes que los diagramas de secuencia del capítulo 20 asignaron al componente correspondiente, y las asociaciones del modelo de clases reflejan las dependencias de colaboración entre routers y servicios.
+Las clases de diseño de vitalXAI se corresponden con los componentes reales del sistema descritos en el capítulo 17. Aunque la implementación está orientada a módulos funcionales, routers, servicios y worker, cada módulo se modela aquí como una clase de diseño que agrupa sus responsabilidades. La trazabilidad con el diseño de casos de uso se mantiene en cada ficha: las operaciones de cada clase materializan los mensajes que los diagramas de secuencia del capítulo 20 asignaron al componente correspondiente, y las asociaciones del modelo de clases reflejan las dependencias de colaboración entre routers y servicios.
 
 ## 21.1 Subsistema SD-001: Acceso, identidad y gestión de sesiones
 
@@ -12,7 +12,7 @@ El subsistema SD-001 materializa las responsabilidades de acceso, identidad y ge
 
 ### 21.1.1 Diagrama de clases del subsistema
 
-El modelo de clases de SD-001 se representa en la figura 83. El diagrama muestra las dos clases propias del subsistema con sus atributos y sus operaciones, y la dependencia hacia el servicio de idioma, que se representa como una clase de otro subsistema para reflejar la colaboración sin atribuirle la propiedad. La clase `AuthRouter` presenta atributos de configuración interna —la expresión regular de validación del correo electrónico y el motor de plantillas— y las operaciones que sirven las páginas y procesan los formularios; la clase `AuthService` presenta los parámetros de configuración de las credenciales y las operaciones criptográficas y de gestión de tokens.
+El modelo de clases de SD-001 se representa en la figura 83. El diagrama muestra las dos clases propias del subsistema, sus atributos y operaciones, y la dependencia hacia el servicio de idioma, que se representa como una clase de otro subsistema. La clase `AuthRouter` presenta la expresión regular de validación del correo electrónico, el motor de plantillas y las operaciones que sirven las páginas y procesan los formularios; la clase `AuthService` presenta los parámetros de configuración de las credenciales y las operaciones criptográficas y de gestión de tokens.
 
 ```mermaid
 classDiagram
@@ -57,11 +57,11 @@ classDiagram
 
 El diagrama identifica la asociación principal del subsistema: la dependencia de `AuthRouter` hacia `AuthService`, que materializa la delegación de toda la lógica criptográfica y de tokens del router al servicio. Esta separación de responsabilidades, ya declarada en el capítulo 17, mantiene al router como una fachada ligera que orquesta las peticiones HTTP y delega en el servicio las operaciones que requieren configuración sensible. La dependencia punteada hacia `LangService` refleja que el router consume los mensajes localizados del servicio de idioma sin que este forme parte del subsistema. El modelo no presenta herencias ni clases abstractas: las dos clases son clases concretas de diseño, y la colaboración se expresa exclusivamente mediante asociaciones de dependencia.
 
-Desde el punto de vista de la trazabilidad, las operaciones del modelo de clases se corresponden con los mensajes de los diagramas de secuencia del capítulo 20. Las operaciones `login()`, `process_register()`, `logout()` y `token_refresh()` de `AuthRouter` materializan los puntos de entrada de los CU-001, CU-002, CU-003 y de la renovación de la sesión, y las operaciones de `AuthService` —`hash_password()`, `verify_password()`, `create_access_token()`, `create_refresh_token()`, `verify_refresh_token()`, `revoke_refresh_token()` y `rotate_refresh_token()`— implementan las decisiones criptográficas que los diagramas de secuencia encargaron al servicio.
+Desde el punto de vista de la trazabilidad, las operaciones del modelo de clases se corresponden con los mensajes de los diagramas de secuencia del capítulo 20. Las operaciones `login()`, `process_register()`, `logout()` y `token_refresh()` de `AuthRouter` materializan los puntos de entrada de los CU-001, CU-002, CU-003 y de la renovación de la sesión. Las operaciones de `AuthService`, como `hash_password()`, `verify_password()`, `create_access_token()`, `create_refresh_token()`, `verify_refresh_token()`, `revoke_refresh_token()` y `rotate_refresh_token()`, implementan la gestión de credenciales.
 
 ### 21.1.2 Especificación de las clases
 
-La definición de clases especifica cada clase del subsistema mediante la ficha formal de clase de la guía de diseño de la memoria (punto 5). Cada ficha reproduce los campos de la plantilla —versión, autores, descripción, atributos, operaciones y comentarios—, de modo que el contenido de cada parte queda identificado y verificable. A continuación se definen las dos clases propias de SD-001.
+La definición de clases especifica cada clase del subsistema mediante una ficha formal que recoge su versión, autores, descripción, atributos, operaciones y comentarios. A continuación se definen las dos clases propias de SD-001.
 
 #### CL-0001 AuthRouter
 
@@ -83,7 +83,7 @@ La definición de clases especifica cada clase del subsistema mediante la ficha 
 | Nombre | Descripción |
 |---|---|
 | `login_page(request, error)` | Sirve la página de inicio de sesión, mostrando el error genérico cuando la autenticación previa falló. |
-| `login(request, username, password)` | Procesa el formulario de inicio de sesión: verifica las credenciales mediante `AuthService`, establece las cookies de sesión y redirige al panel, o redirige al inicio con un mensaje genérico si la verificación falla. Aplicada la limitación de cinco peticiones por minuto. |
+| `login(request, username, password)` | Procesa el formulario de inicio de sesión: verifica las credenciales mediante `AuthService`, establece las cookies de sesión y redirige al panel, o redirige al inicio con un mensaje genérico si la verificación falla. Aplica la limitación de cinco peticiones por minuto. |
 | `register_page(request)` | Sirve el formulario de registro de nuevas cuentas. |
 | `process_register(username, password, first_name, last_name, role)` | Procesa el formulario de registro: valida el formato de los campos, comprueba la unicidad del usuario, solicita el hash de la contraseña a `AuthService`, crea la cuenta y establece las cookies de sesión. |
 | `logout(request)` | Cierra la sesión: revoca el token de refresco mediante `AuthService`, elimina las cookies y redirige a la página de inicio de sesión. |
@@ -94,7 +94,7 @@ La definición de clases especifica cada clase del subsistema mediante la ficha 
 
 **Comentarios**
 
-La clase no mantiene estado de sesión propio: las credenciales se conservan en las cookies `HttpOnly` y `SameSite=Lax`, y la identidad se resuelve mediante `AuthService`. La operación `token_refresh()` cubre la renovación de credenciales descrita en el capítulo 17 y materializada en el 20.1.3. El rol de administrador no se valida en esta clase, sino en las operaciones administrativas de SD-005.
+La clase no mantiene estado de sesión propio: las credenciales se conservan en las cookies `HttpOnly` y `SameSite=Lax`, y la identidad se resuelve mediante `AuthService`. La operación `token_refresh()` cubre la renovación de credenciales descrita en el capítulo 17 y materializada en el apartado 20.1. El rol de administrador no se valida en esta clase, sino en las operaciones administrativas de SD-005. El registro actual recibe también un campo `role` desde el cliente, por lo que la asignación inicial del rol requiere una corrección en el servidor.
 
 #### CL-0002 AuthService
 
@@ -133,7 +133,7 @@ La clase no conserva la contraseña original en ningún atributo: una vez comple
 
 ## 21.2 Subsistema SD-002: Diagnóstico asistido y generación de resultados
 
-El subsistema SD-002 materializa el flujo clínico de la plataforma y agrupa cinco clases de diseño propias. La clase `InferenceRouter` se corresponde con el router `routers/inference.py` y actúa como fachada HTTP del diagnóstico: valida la imagen recibida, la conserva en el área de cargas y encola el trabajo de diagnóstico. Las clases `MlEngine`, `XaiGenerator` y `PdfGenerator` se corresponden con los servicios `services/ml_engine.py`, `services/xai_generator.py` y `services/pdf_generator.py`, y concentran respectivamente la predicción, la generación de los mapas de explicabilidad y la construcción del informe PDF. La clase `PDFReport` es la clase concreta del generador de informes que hereda del generador de la librería `fpdf`, lo que introduce la única herencia real del subsistema. El procesamiento de los trabajos encolados no pertenece a SD-002: lo ejecuta el worker de la cola de SD-006, que invoca las clases de predicción, explicabilidad e informe del presente subsistema.
+El subsistema SD-002 materializa el flujo clínico de la plataforma y agrupa cinco clases de diseño propias. La clase `InferenceRouter` se corresponde con el router `routers/inference.py` y actúa como fachada HTTP del diagnóstico: valida la imagen recibida, la conserva en el área de cargas y encola el trabajo de diagnóstico. Las clases `MlEngine`, `XaiGenerator` y `PdfGenerator` se corresponden con los servicios `services/ml_engine.py`, `services/xai_generator.py` y `services/pdf_generator.py`, y concentran respectivamente la predicción, la generación de los mapas de explicabilidad y la construcción del informe PDF. La clase `PDFReport` es la clase concreta del generador de informes y hereda de `FPDF`, la clase de la librería `fpdf`; esta es la única herencia real del subsistema. El procesamiento de los trabajos encolados no pertenece a SD-002: lo ejecuta el worker de la cola de SD-006, que invoca las clases de predicción, explicabilidad e informe del presente subsistema.
 
 ### 21.2.1 Diagrama de clases del subsistema
 
@@ -194,13 +194,13 @@ classDiagram
 
 *Figura 84 - Diagrama de clases del subsistema SD-002*
 
-El diagrama identifica la única herencia del subsistema: la clase `PDFReport` especializa la clase `FPDF` de la librería de generación de documentos, redefiniendo la cabecera y el pie de página del informe médico. La clase `FPDF` se representa como una clase externa de la librería, marcada con el estereotipo de librería y con las operaciones básicas de generación que el informe hereda y utiliza —añadir página, configurar la fuente y el color, escribir celdas, insertar imágenes y producir el documento—, sin documentar su implementación interna por ser responsabilidad de la dependencia externa. El resto de las relaciones son asociaciones de dependencia. La dependencia de `XaiGenerator` hacia `MlEngine` refleja que la generación de los mapas de explicabilidad requiere el modelo cargado por el motor; las dependencias hacia `LangService` reflejan la localización de las etiquetas, los títulos y los mensajes; y la dependencia de `PdfGenerator` hacia `PDFReport` materializa la construcción del documento concreto. La clase `InferenceRouter` no presenta dependencias con el resto de las clases del subsistema porque su colaboración se limita al encolado del trabajo: el procesamiento de la predicción, de la explicabilidad y del informe lo orquesta el worker de SD-006, que invoca estas clases desde el ciclo asíncrono.
+El diagrama identifica la única herencia del subsistema: la clase `PDFReport` especializa la clase `FPDF` de la librería de generación de documentos, redefiniendo la cabecera y el pie de página del informe médico. La clase `FPDF` se representa como una clase externa de la librería, marcada con el estereotipo de librería y con las operaciones básicas de generación que el informe hereda y utiliza, como añadir páginas, configurar la fuente y el color, escribir celdas, insertar imágenes y producir el documento. El resto de las relaciones son asociaciones de dependencia. La dependencia de `XaiGenerator` hacia `MlEngine` refleja que la generación de los mapas de explicabilidad requiere el modelo cargado por el motor; las dependencias hacia `LangService` reflejan la localización de las etiquetas, los títulos y los mensajes; y la dependencia de `PdfGenerator` hacia `PDFReport` materializa la construcción del documento concreto. La clase `InferenceRouter` no presenta dependencias con el resto de las clases del subsistema porque su colaboración se limita al encolado del trabajo: el procesamiento de la predicción, de la explicabilidad y del informe lo orquesta el worker de SD-006, que invoca estas clases desde el ciclo asíncrono.
 
-Desde el punto de vista de la trazabilidad, las operaciones del modelo de clases materializan los mensajes de los diagramas de secuencia del capítulo 20. La operación `predict()` de `InferenceRouter` implementa el CU-008 y las validaciones del CU-006; las operaciones de `MlEngine`, `XaiGenerator` y `PdfGenerator` materializan los pasos del procesamiento asíncrono de la figura 58; y la operación `generate_medical_report()` de `PdfGenerator` materializa la generación del informe del CU-037.
+Desde el punto de vista de la trazabilidad, las operaciones del modelo de clases materializan los mensajes de los diagramas de secuencia del capítulo 20. La operación `predict()` de `InferenceRouter` implementa el CU-008 y las validaciones del CU-006; las operaciones de `MlEngine`, `XaiGenerator` y `PdfGenerator` materializan los pasos del procesamiento asíncrono descrito en el capítulo 20; y la operación `generate_medical_report()` de `PdfGenerator` materializa la generación del informe del CU-037.
 
 ### 21.2.2 Especificación de las clases
 
-La definición de clases especifica cada clase del subsistema mediante la ficha formal de clase de la guía de diseño de la memoria (punto 5), con los mismos campos de la plantilla utilizados en el apartado anterior. A continuación se definen las cinco clases propias de SD-002.
+La definición de clases especifica cada clase del subsistema mediante la misma ficha formal utilizada en el apartado anterior. A continuación se definen las cinco clases propias de SD-002.
 
 #### CL-0003 InferenceRouter
 
@@ -214,14 +214,14 @@ La definición de clases especifica cada clase del subsistema mediante la ficha 
 
 | Nombre | Tipo | Descripción |
 |---|---|---|
-| `_ALLOWED_MIME_TYPES` | `set` | Conjunto de tipos MIME permitidos para la radiografía: JPEG y PNG. |
+| `_ALLOWED_MIME_TYPES` | `set` | Conjunto de tipos MIME permitidos para la radiografía: `image/jpeg`, `image/jpg` e `image/png`. |
 | `_MAX_FILE_SIZE` | `int` | Tamaño máximo de la imagen en bytes: 10 MB. |
 
 **Operaciones**
 
 | Nombre | Descripción |
 |---|---|
-| `predict(request, file, model_name)` | Procesa la solicitud de diagnóstico: autentica al usuario (401 sin sesión), valida el tipo y el tamaño de la imagen (400 si no se permiten), guarda el fichero con un nombre basado en la fecha, encola el trabajo de tipo `diagnosis` y responde el estado `queued` con el identificador y la posición. |
+| `predict(request, file, model_name)` | Procesa la solicitud de diagnóstico: autentica al usuario (401 sin sesión), valida el tipo MIME y el tamaño de la imagen (400 si no se permiten), guarda el fichero con un nombre basado en la fecha y el nombre recibido, encola el trabajo de tipo `diagnosis` y responde con el estado `queued`, el identificador y la posición. |
 | `_enqueue_job(user_id, job_type, payload)` | Operación privada que inserta un trabajo en la tabla `job_queue` con el tipo y el payload indicados, devolviendo el identificador del trabajo creado. |
 | `_queue_position(job_id, job_type)` | Operación privada que calcula la posición del trabajo en la cola, respetando la prioridad de los diagnósticos frente al resto de tipos. |
 
@@ -235,7 +235,7 @@ La validación del fichero se realiza antes de encolar, de modo que una petició
 |---|---|
 | **Versión** | 1.0 |
 | **Autores** | Luis Carmona Berdugo |
-| **Descripción** | Clase de diseño correspondiente al módulo `services/ml_engine.py`. Concentra la inferencia del diagnóstico: carga y reutiliza los modelos de aprendizaje profundo en memoria, prepara la imagen recibida y produce la etiqueta de la predicción y su nivel de confianza. Combina arquitecturas convolucionales y arquitecturas Transformer, y localiza las etiquetas mediante el servicio de idioma. |
+| **Descripción** | Clase de diseño correspondiente al módulo `services/ml_engine.py`. Concentra la inferencia del diagnóstico: carga y reutiliza los modelos de aprendizaje profundo en memoria, prepara la imagen recibida y produce la etiqueta de la predicción y su nivel de confianza. Combina arquitecturas convolucionales con arquitecturas Transformer, una familia de modelos basada en mecanismos de atención (Vaswani & al., 2017; Dosovitskiy & al., 2021), y localiza las etiquetas mediante el servicio de idioma. |
 
 **Atributos**
 
@@ -260,7 +260,7 @@ La reutilización de los modelos en memoria implementa el requisito de tiempo de
 |---|---|
 | **Versión** | 1.0 |
 | **Autores** | Luis Carmona Berdugo |
-| **Descripción** | Clase de diseño correspondiente al módulo `services/xai_generator.py`. Genera el mapa de explicabilidad adecuado a la arquitectura utilizada: los métodos basados en gradientes para las arquitecturas convolucionales y los mapas de atención para las arquitecturas Transformer, y compone la figura con la radiografía original y los tres mapas superpuestos. |
+| **Descripción** | Clase de diseño correspondiente al módulo `services/xai_generator.py`. Genera la composición visual de explicabilidad adecuada a la arquitectura utilizada: aplica métodos basados en gradientes a las arquitecturas convolucionales y utiliza mapas de atención en las arquitecturas Transformer, y reúne la radiografía original con tres resultados superpuestos. La nomenclatura de estos métodos sigue la literatura de mapas de saliencia y atención (Simonyan, Vedaldi, & Zisserman, 2014; Smilkov & al., 2017; Selvaraju & al., 2017; Chefer, Gur, & Wolf, 2021). |
 
 **Atributos**
 
@@ -272,7 +272,7 @@ La reutilización de los modelos en memoria implementa el requisito de tiempo de
 
 | Nombre | Descripción |
 |---|---|
-| `generate_xai_heatmap(model_name, original_image_path, xai_save_path, lang)` | Genera la figura de explicabilidad (original, Saliency, SmoothGrad y superposición de Grad-CAM o atención), la guarda en la ruta indicada y devuelve dicha ruta. |
+| `generate_xai_heatmap(model_name, original_image_path, xai_save_path, lang)` | Genera la figura de explicabilidad, formada por la imagen original, Saliency, SmoothGrad y la superposición de Grad-CAM o atención, la guarda en la ruta indicada y devuelve dicha ruta. Estos nombres designan técnicas descritas en la bibliografía especializada (Simonyan, Vedaldi, & Zisserman, 2014; Smilkov & al., 2017; Selvaraju & al., 2017; Chefer, Gur, & Wolf, 2021). |
 | `get_img_size(model_name)` | Devuelve el tamaño de entrada de la imagen según la arquitectura (299×299, 384×384 o 224×224). |
 | `saliency(model, img, is_transformer)` | Operación privada que calcula el mapa de Saliency mediante los gradientes de la puntuación respecto a la imagen. |
 | `smoothgrad(model, img, is_transformer)` | Operación privada que promedia los mapas de Saliency con ruido gaussiano y normaliza el resultado. |
@@ -280,7 +280,7 @@ La reutilización de los modelos en memoria implementa el requisito de tiempo de
 
 **Comentarios**
 
-La generación de los mapas se realiza sobre el modelo cargado por `MlEngine`, de modo que la clase depende del motor de predicción. La figura resultante se sirve como recurso estático y su ruta se persiste en la consulta, sin repetir el cálculo en las visualizaciones posteriores.
+La generación de los mapas se realiza sobre el modelo cargado por `MlEngine`, de modo que la clase depende del motor de predicción. La figura resultante se sirve como recurso estático y su ruta se persiste en la consulta, sin repetir el cálculo en las visualizaciones posteriores. Las rutas estáticas no aplican una comprobación de propiedad equivalente a la del router, por lo que este acceso requiere protección adicional fuera del entorno de demostración.
 
 #### CL-0006 PdfGenerator
 
@@ -294,7 +294,7 @@ La generación de los mapas se realiza sobre el modelo cargado por `MlEngine`, d
 
 | Nombre | Tipo | Descripción |
 |---|---|---|
-| — | — | La clase no presenta atributos de estado propios: construye el informe a partir de los parámetros recibidos en la operación. |
+| N/A | N/A | La clase no presenta atributos de estado propios: construye el informe a partir de los parámetros recibidos en la operación. |
 
 **Operaciones**
 
@@ -304,7 +304,7 @@ La generación de los mapas se realiza sobre el modelo cargado por `MlEngine`, d
 
 **Comentarios**
 
-La generación del informe se produce durante el procesamiento del diagnóstico, de modo que el documento está disponible cuando la consulta se completa y la descarga posterior no depende de una nueva operación del sistema. El informe se trata como parte de la información protegida de la consulta.
+La generación del informe se produce durante el procesamiento del diagnóstico, de modo que el documento está disponible cuando la consulta se completa y la descarga posterior no depende de una nueva operación del sistema. El informe se trata como parte de la información protegida de la consulta, aunque su ubicación bajo `static/reports` requiere controles adicionales si se utiliza fuera de la demostración.
 
 #### CL-0007 PDFReport
 
@@ -312,7 +312,7 @@ La generación del informe se produce durante el procesamiento del diagnóstico,
 |---|---|
 | **Versión** | 1.0 |
 | **Autores** | Luis Carmona Berdugo |
-| **Descripción** | Clase concreta del informe PDF de diagnóstico, correspondiente a la clase `PDFReport` del módulo `services/pdf_generator.py`. Especializa la clase `FPDF` de la librería de generación de documentos y redefine la cabecera y el pie de página del informe, además de conservar el idioma de los textos. |
+| **Descripción** | Clase concreta del informe PDF de diagnóstico, correspondiente a la clase `PDFReport` del módulo `services/pdf_generator.py`. Especializa la clase `FPDF` de la librería `fpdf2` y redefine la cabecera y el pie de página del informe, además de conservar el idioma de los textos (FPDF2, 2024). |
 
 **Atributos**
 
@@ -368,7 +368,7 @@ Desde el punto de vista de la trazabilidad, las operaciones del modelo de clases
 
 ### 21.3.2 Especificación de las clases
 
-La definición de clases especifica la clase del subsistema mediante la ficha formal de clase de la guía de diseño de la memoria (punto 5), con los mismos campos de la plantilla utilizados en los apartados anteriores. A continuación se define la clase propia de SD-003.
+La definición de clases especifica la clase del subsistema mediante la misma ficha formal utilizada en los apartados anteriores. A continuación se define la clase propia de SD-003.
 
 #### CL-0008 HistoryRouter
 
@@ -382,7 +382,7 @@ La definición de clases especifica la clase del subsistema mediante la ficha fo
 
 | Nombre | Tipo | Descripción |
 |---|---|---|
-| — | — | La clase no presenta atributos de estado propios: cada operación resuelve la identidad y accede a la persistencia a partir de los parámetros recibidos. |
+| N/A | N/A | La clase no presenta atributos de estado propios: cada operación resuelve la identidad y accede a la persistencia a partir de los parámetros recibidos. |
 
 **Operaciones**
 
@@ -395,11 +395,11 @@ La definición de clases especifica la clase del subsistema mediante la ficha fo
 
 **Comentarios**
 
-La clase no vuelve a ejecutar el modelo para mostrar una consulta anterior: recupera los metadatos y las rutas de los artefactos ya persistidos. El nombre actualizado se aplica sobre la columna `patient_name`, que funciona como etiqueta de organización y no como identificación clínica del paciente. La eliminación es un borrado físico, sin auditoría automática, tal y como se declaró en el capítulo 17.
+La clase no vuelve a ejecutar el modelo para mostrar una consulta anterior: recupera los metadatos y las rutas de los artefactos ya persistidos. El nombre actualizado se aplica sobre la columna `patient_name`, que funciona como etiqueta de organización y no como identificación clínica del paciente. La eliminación es un borrado físico de la fila y no elimina explícitamente la imagen, el mapa XAI ni el informe; tampoco existe auditoría automática, tal y como se declaró en el capítulo 17.
 
 ## 21.4 Subsistema SD-004: Laboratorio de experimentación MLOps
 
-El subsistema SD-004 materializa el laboratorio de experimentación MLOps y agrupa cinco clases de diseño propias. La clase `TrainerRouter` se corresponde con el router `routers/trainer.py` y actúa como fachada ligera del laboratorio: expone los endpoints de configuración, lanzamiento, consulta y gestión de las sesiones, y delega la lógica en los servicios. La clase `ChatbotService` se corresponde con `services/chatbot_service.py` y resuelve la configuración conversacional del experimento mediante el asistente externo. La clase `MlopsEngine` se corresponde con `services/mlops_engine.py` y concentra la organización de las sesiones, la ejecución de los pipelines de entrenamiento y la lectura de los resultados. Las clases `PdfGeneratorMlops` y `MedicalReport`, correspondientes a `services/pdf_generator_mlops.py`, generan el informe consolidado de la sesión; `MedicalReport` es la clase concreta que hereda de la librería `FPDF`, segunda herencia real del diseño de clases de vitalXAI.
+El subsistema SD-004 materializa el laboratorio de experimentación MLOps y agrupa cinco clases de diseño propias. La clase `TrainerRouter` se corresponde con el router `routers/trainer.py` y actúa como fachada ligera del laboratorio: expone los endpoints de configuración, lanzamiento, consulta y gestión de las sesiones, y delega la lógica en los servicios. La clase `ChatbotService` se corresponde con `services/chatbot_service.py` y resuelve la configuración conversacional del experimento mediante el asistente externo. La clase `MlopsEngine` se corresponde con `services/mlops_engine.py` y concentra la organización de las sesiones, la ejecución de los pipelines de entrenamiento y la lectura de los resultados. Las clases `PdfGeneratorMlops` y `MedicalReport`, correspondientes a `services/pdf_generator_mlops.py`, generan el informe consolidado de la sesión; `MedicalReport` es la clase concreta que hereda de la librería `FPDF`, segunda herencia real del diseño de clases de vitalXAI. La limitación de entrenamientos de CU-039 se mantiene como capacidad prevista y no como operación implementada del router.
 
 ### 21.4.1 Diagrama de clases del subsistema
 
@@ -495,11 +495,11 @@ classDiagram
 
 El diagrama identifica la herencia de `MedicalReport` sobre la clase `FPDF` de la librería de generación de documentos, que se representa con las operaciones básicas que el informe hereda y utiliza. El proveedor externo de inteligencia artificial se modela como una clase externa con el estereotipo de proveedor, con la operación de generación de respuestas que el servicio conversacional invoca; la clave de la API no forma parte de la interfaz de la clase, sino del atributo de configuración de `ChatbotService`. Las dependencias hacia `AuthService` y `LangService` reflejan los servicios transversales de SD-001 y SD-006 que el router consume. La clase `MlopsEngine` constituye el núcleo del subsistema: orquesta los scripts de entrenamiento, el análisis XAI y la comparación estadística, y organiza la lectura y escritura de los resultados en el sistema de ficheros, sin depender del servicio de idioma porque sus mensajes de registro son textos fijos del pipeline.
 
-Desde el punto de vista de la trazabilidad, las operaciones del modelo de clases materializan los casos de uso reales del capítulo 20. Las operaciones de `TrainerRouter` exponen los endpoints de los CU-015 a CU-030 y CU-039; las operaciones de `MlopsEngine` implementan los flujos del procesamiento del entrenamiento y de la validación externa; la operación `generate_pdf_report()` de `PdfGeneratorMlops` materializa el CU-028; y las operaciones de `ChatbotService` materializan la configuración conversacional del CU-016.
+Desde el punto de vista de la trazabilidad, las operaciones del modelo de clases materializan los casos de uso reales del capítulo 20. Las operaciones de `TrainerRouter` exponen los endpoints de los CU-015 a CU-030; CU-039 se representa como capacidad prevista y pendiente de implementación. Las operaciones de `MlopsEngine` implementan los flujos del procesamiento del entrenamiento y de la validación externa; la operación `generate_pdf_report()` de `PdfGeneratorMlops` materializa el CU-028; y las operaciones de `ChatbotService` materializan la configuración conversacional del CU-016.
 
 ### 21.4.2 Especificación de las clases
 
-La definición de clases especifica cada clase del subsistema mediante la ficha formal de clase de la guía de diseño de la memoria (punto 5), con los mismos campos de la plantilla utilizados en los apartados anteriores. A continuación se definen las cinco clases propias de SD-004.
+La definición de clases especifica cada clase del subsistema mediante la misma ficha formal utilizada en los apartados anteriores. A continuación se definen las cinco clases propias de SD-004.
 
 #### CL-0009 TrainerRouter
 
@@ -513,7 +513,7 @@ La definición de clases especifica cada clase del subsistema mediante la ficha 
 
 | Nombre | Tipo | Descripción |
 |---|---|---|
-| — | — | La clase no presenta atributos de estado propios: reexporta constantes del motor para compatibilidad y delega el resto en los servicios. |
+| N/A | N/A | La clase no presenta atributos de estado propios: reexporta constantes del motor para compatibilidad y delega el resto en los servicios. |
 
 **Operaciones**
 
@@ -530,9 +530,9 @@ La definición de clases especifica cada clase del subsistema mediante la ficha 
 | `rename_session(request, old_name, new_name)` | Renombra una sesión mediante `MlopsEngine`, tras comprobar la propiedad. |
 | `compare_session_models(request, background_tasks, session_id)` | Programa el recálculo de la comparativa estadística como tarea en segundo plano. |
 | `get_recalc_status(request, session_id)` | Devuelve el estado del recálculo de la comparativa (`running` o `completed`). |
-| `get_session_ranking(request, session_id)` | Devuelve el ranking de modelos y el heatmap de Wilcoxon mediante `MlopsEngine`. |
+| `get_session_ranking(request, session_id)` | Devuelve el ranking de modelos y el heatmap de Wilcoxon mediante `MlopsEngine`; el contraste se basa en el procedimiento descrito por Wilcoxon (Wilcoxon, 1945). |
 | `run_external_validation(request, session_id, dataset_path)` | Encola la validación externa de la sesión con el tipo `external_validation`. |
-| `get_external_validation_results(request, session_id)` | Devuelve las métricas, la curva ROC y la matriz de DeLong de la validación externa. |
+| `get_external_validation_results(request, session_id)` | Devuelve las métricas, la curva ROC y la matriz de DeLong de la validación externa, cuyo contraste se fundamenta en DeLong, DeLong y Clarke-Pearson (1988). |
 | `pdf_report_route(request, session_id)` | Genera y sirve el informe PDF de la sesión mediante `PdfGeneratorMlops`. |
 | `_require_auth(request)` | Operación privada que resuelve la identidad del usuario mediante `AuthService`, devolviendo `None` sin sesión. |
 | `_require_ownership(session_id, user_id, request)` | Operación privada que comprueba la propiedad de la sesión mediante `MlopsEngine`, con la excepción del rol `admin` cuando la ruta lo permite. |
@@ -547,7 +547,7 @@ La clase concentra un gran número de operaciones porque el laboratorio expone n
 |---|---|
 | **Versión** | 1.0 |
 | **Autores** | Luis Carmona Berdugo |
-| **Descripción** | Clase de diseño correspondiente al módulo `services/chatbot_service.py`. Gestiona la configuración conversacional del experimento: recibe los mensajes del usuario en lenguaje natural, los envía al asistente externo y devuelve una configuración estructurada del entrenamiento, solicitando los parámetros que falten. Trata al proveedor de inteligencia artificial como una frontera externa. |
+| **Descripción** | Clase de diseño correspondiente al módulo `services/chatbot_service.py`. Gestiona la configuración conversacional del experimento: recibe los mensajes del usuario en lenguaje natural, los envía al asistente externo y devuelve una configuración estructurada del entrenamiento, solicitando los parámetros que falten. Trata al proveedor de inteligencia artificial como una frontera externa y utiliza el cliente de Groq documentado por el proveedor (Groq, 2024). |
 
 **Atributos**
 
@@ -574,7 +574,7 @@ La clase es el único componente del sistema que necesita la clave de la API del
 |---|---|
 | **Versión** | 1.0 |
 | **Autores** | Luis Carmona Berdugo |
-| **Descripción** | Clase de diseño correspondiente al módulo `services/mlops_engine.py`. Constituye el núcleo del laboratorio: organiza las sesiones de entrenamiento en el sistema de ficheros, orquesta la ejecución de los scripts del pipeline —entrenamiento K-fold, análisis XAI, comparación estadística y validación externa— y resuelve la lectura de los resultados y la comprobación de propiedad de las sesiones. |
+| **Descripción** | Clase de diseño correspondiente al módulo `services/mlops_engine.py`. Constituye el núcleo del laboratorio: organiza las sesiones de entrenamiento en el sistema de ficheros, orquesta la ejecución de los scripts del pipeline, incluidos el entrenamiento K-fold, el análisis XAI, la comparación estadística y la validación externa, y resuelve la lectura de los resultados y la comprobación de propiedad de las sesiones. La referencia a MLOps se utiliza aquí en el sentido de coordinación operativa del ciclo de entrenamiento y sus resultados (Kreuzberger, Kühl, & Hirschl, 2023). |
 
 **Atributos**
 
@@ -587,11 +587,11 @@ La clase es el único componente del sistema que necesita la clave de la API del
 
 | Nombre | Descripción |
 |---|---|
-| `run_training_queue(session_id, models, dataset_path, epochs, batch_size, learning_rate)` | Orquesta el entrenamiento completo de la sesión: por cada modelo lanza el script de entrenamiento CNN o Transformer y los scripts de explicabilidad, y al finalizar ejecuta la comparación estadística que genera el ranking y la matriz de Wilcoxon. |
+| `run_training_queue(session_id, models, dataset_path, epochs, batch_size, learning_rate)` | Orquesta el entrenamiento completo de la sesión: por cada modelo lanza el script de entrenamiento CNN o Transformer y los scripts de explicabilidad, y al finalizar ejecuta la comparación estadística que genera el ranking y la matriz de Wilcoxon (Wilcoxon, 1945). |
 | `run_xai_evaluation(session_id, model_name, dataset_path)` | Ejecuta el análisis XAI cualitativo y cuantitativo de un modelo en modo manual. |
 | `run_statistical_comparison(session_id)` | Regenera la comparativa estadística de la sesión, gestionando el marcador de estado del recálculo. |
 | `get_recalc_status(session_id)` | Devuelve `completed` o `running` según el marcador de estado del recálculo. |
-| `run_external_validation(session_id, dataset_path)` | Ejecuta la validación externa de la sesión y el test estadístico de DeLong sobre la cohorte independiente. |
+| `run_external_validation(session_id, dataset_path)` | Ejecuta la validación externa de la sesión y el test estadístico de DeLong sobre la cohorte independiente (DeLong, DeLong, & Clarke-Pearson, 1988). |
 | `browse_folder(for_external)` | Devuelve la ruta del dataset configurada por entorno o abre el selector de carpetas; distingue el dataset de entrenamiento del de validación externa. |
 | `create_training_session(model_names, dataset_path, epochs, batch_size, learning_rate, user_id)` | Crea el directorio de la sesión en `training_results` y escribe su configuración, con el identificador del usuario propietario; devuelve el identificador de la sesión. |
 | `get_model_results_data(session_id, model_name)` | Lee las métricas K-fold, la calibración y las métricas XAI de un modelo, junto con las rutas de sus artefactos; devuelve `None` si el modelo no dispone de resultados. |
@@ -619,7 +619,7 @@ La clase combina la persistencia híbrida de la plataforma: coordina la escritur
 
 | Nombre | Tipo | Descripción |
 |---|---|---|
-| — | — | La clase no presenta atributos de estado propios: compone el informe a partir de los artefactos persistidos en la sesión. |
+| N/A | N/A | La clase no presenta atributos de estado propios: compone el informe a partir de los artefactos persistidos en la sesión. |
 
 **Operaciones**
 
@@ -643,7 +643,7 @@ La generación del informe separa el conocimiento del formato del router: el gen
 
 | Nombre | Tipo | Descripción |
 |---|---|---|
-| — | — | La clase hereda la estructura del documento de la clase base y no declara atributos propios. |
+| N/A | N/A | La clase hereda la estructura del documento de la clase base y no declara atributos propios. |
 
 **Operaciones**
 
@@ -659,7 +659,7 @@ Esta clase constituye la segunda herencia real del diseño de clases de vitalXAI
 
 ## 21.5 Subsistema SD-005: Supervisión y administración
 
-El subsistema SD-005 materializa las operaciones de supervisión y administración reservadas al rol de administrador y agrupa una única clase de diseño propia. La clase `AdminRouter` se corresponde con el router `routers/admin.py` y concentra las tres operaciones de consulta administrativa: el listado de usuarios, las consultas de un usuario concreto y el detalle de una consulta, todas ellas precedidas de la comprobación de la autorización administrativa. El subsistema no dispone de clases de servicio propias, porque su responsabilidad es establecer la autorización y coordinar las consultas globales reutilizando los servicios existentes. `AdminRouter` depende de `AuthService`, perteneciente a SD-001, para resolver la identidad y consultar el rol, y de `MlopsEngine`, perteneciente a SD-004, para recuperar las sesiones del laboratorio de un usuario en la operación de consulta de su actividad.
+El subsistema SD-005 materializa las operaciones de supervisión y administración reservadas al rol de administrador y agrupa una única clase de diseño propia. La clase `AdminRouter` se corresponde con el router `routers/admin.py` y concentra las tres operaciones de consulta administrativa: el listado de usuarios, las consultas de un usuario concreto y el detalle de una consulta, todas ellas precedidas de la comprobación de la autorización administrativa. La gestión de cuentas de CU-038 está prevista, pero no está implementada en el router actual. El subsistema no dispone de clases de servicio propias, porque su responsabilidad es establecer la autorización y coordinar las consultas globales reutilizando los servicios existentes. `AdminRouter` depende de `AuthService`, perteneciente a SD-001, para resolver la identidad y consultar el rol, y de `MlopsEngine`, perteneciente a SD-004, para recuperar las sesiones del laboratorio de un usuario en la operación de consulta de su actividad.
 
 ### 21.5.1 Diagrama de clases del subsistema
 
@@ -693,7 +693,7 @@ Desde el punto de vista de la trazabilidad, las operaciones del modelo de clases
 
 ### 21.5.2 Especificación de las clases
 
-La definición de clases especifica la clase del subsistema mediante la ficha formal de clase de la guía de diseño de la memoria (punto 5), con los mismos campos de la plantilla utilizados en los apartados anteriores. A continuación se define la clase propia de SD-005.
+La definición de clases especifica la clase del subsistema mediante la misma ficha formal utilizada en los apartados anteriores. A continuación se define la clase propia de SD-005.
 
 #### CL-0014 AdminRouter
 
@@ -707,7 +707,7 @@ La definición de clases especifica la clase del subsistema mediante la ficha fo
 
 | Nombre | Tipo | Descripción |
 |---|---|---|
-| — | — | La clase no presenta atributos de estado propios: cada operación resuelve la identidad y el rol y accede a la persistencia a partir de los parámetros recibidos. |
+| N/A | N/A | La clase no presenta atributos de estado propios: cada operación resuelve la identidad y el rol y accede a la persistencia a partir de los parámetros recibidos. |
 
 **Operaciones**
 
@@ -790,7 +790,7 @@ Desde el punto de vista de la trazabilidad, las operaciones del modelo de clases
 
 ### 21.6.2 Especificación de las clases
 
-La definición de clases especifica cada clase del subsistema mediante la ficha formal de clase de la guía de diseño de la memoria (punto 5), con los mismos campos de la plantilla utilizados en los apartados anteriores. Para la clase más compleja del subsistema, `QueueJob`, se añade el diagrama de transición de estados que permite comprender la funcionalidad soportada por la máquina de estados de la cola, conforme a la plantilla. A continuación se definen las cuatro clases propias de SD-006.
+La definición de clases especifica cada clase del subsistema mediante la misma ficha formal utilizada en los apartados anteriores. Para la clase más compleja del subsistema, `QueueJob`, se añade el diagrama de transición de estados que permite comprender la funcionalidad soportada por la máquina de estados de la cola. A continuación se definen las cuatro clases propias de SD-006.
 
 #### CL-0015 QueueRouter
 
@@ -804,7 +804,7 @@ La definición de clases especifica cada clase del subsistema mediante la ficha 
 
 | Nombre | Tipo | Descripción |
 |---|---|---|
-| — | — | La clase no presenta atributos de estado propios: cada operación resuelve la identidad y accede a la persistencia a partir de los parámetros recibidos. |
+| N/A | N/A | La clase no presenta atributos de estado propios: cada operación resuelve la identidad y accede a la persistencia a partir de los parámetros recibidos. |
 
 **Operaciones**
 
@@ -830,7 +830,7 @@ La cancelación solo opera sobre trabajos pendientes: un trabajo reclamado por e
 
 | Nombre | Tipo | Descripción |
 |---|---|---|
-| — | — | La clase no presenta atributos de estado propios: el bucle del worker opera sobre la persistencia de la cola y delega la ejecución en las clases de los subsistemas funcionales. |
+| N/A | N/A | La clase no presenta atributos de estado propios: el bucle del worker opera sobre la persistencia de la cola y delega la ejecución en las clases de los subsistemas funcionales. |
 
 **Operaciones**
 
@@ -848,7 +848,7 @@ La cancelación solo opera sobre trabajos pendientes: un trabajo reclamado por e
 
 **Comentarios**
 
-La reclamación condicional evita que dos iteraciones del worker procesen el mismo registro, lo que introduce una garantía de consistencia útil si la ejecución evoluciona hacia más de un consumidor. Los flujos de procesamiento se ejecutan en el executor para no bloquear el bucle de eventos de la aplicación.
+La reclamación condicional evita que dos iteraciones del worker procesen el mismo registro, lo que introduce una garantía de consistencia útil si la ejecución evoluciona hacia más de un consumidor. Los flujos de procesamiento se ejecutan en el executor para no bloquear el bucle de eventos de la aplicación. Al arrancar, el worker devuelve a `queued` todos los trabajos que quedaron en `running`, pero no limpia automáticamente los artefactos parciales; la idempotencia completa exigida por RNF-029 queda, por tanto, pendiente de reforzar.
 
 #### CL-0017 LangService
 
@@ -862,7 +862,7 @@ La reclamación condicional evita que dos iteraciones del worker procesen el mis
 
 | Nombre | Tipo | Descripción |
 |---|---|---|
-| `_VALID_LANGS` | `set` | Conjunto de los idiomas válidos de la plataforma: español, inglés, chino e hindú. |
+| `_VALID_LANGS` | `set` | Conjunto de los idiomas válidos de la plataforma: español, inglés, chino e hindi. |
 | `_TRANSLATIONS` | `dict` | Diccionario de traducciones de los mensajes del backend, indexado por idioma y por clave de mensaje. |
 
 **Operaciones**
@@ -882,7 +882,7 @@ La clase constituye el mecanismo transversal de presentación del idioma: los ro
 |---|---|
 | **Versión** | 1.0 |
 | **Autores** | Luis Carmona Berdugo |
-| **Descripción** | Clase de diseño que modela la entidad persistente de la cola de trabajos, correspondiente a la fila de la tabla `job_queue`. Conserva el estado de cada tarea asíncrona —diagnóstico, entrenamiento o validación externa— junto con el usuario propietario, el tipo, el payload serializable y el resultado o el error. Constituye la clase más compleja del subsistema por su máquina de estados, que determina las transiciones permitidas entre los estados de un trabajo. |
+| **Descripción** | Clase de diseño que modela la entidad persistente de la cola de trabajos, correspondiente a la fila de la tabla `job_queue`. Conserva el estado de cada tarea asíncrona, ya sea un diagnóstico, un entrenamiento o una validación externa, junto con el usuario propietario, el tipo, el payload serializable y el resultado o el error. Constituye la clase más compleja del subsistema por su máquina de estados, que determina las transiciones permitidas entre los estados de un trabajo. |
 
 **Atributos**
 
@@ -900,7 +900,7 @@ La clase constituye el mecanismo transversal de presentación del idioma: los ro
 
 | Nombre | Descripción |
 |---|---|
-| — | La clase no expone operaciones propias: las transiciones de su estado las ejecutan el router (cancelación) y el worker (reclamación, finalización y fallo), de modo que el comportamiento de la máquina de estados se describe mediante el diagrama de transición de estados siguiente. |
+| N/A | La clase no expone operaciones propias: las transiciones de su estado las ejecutan el router (cancelación) y el worker (reclamación, finalización y fallo), de modo que el comportamiento de la máquina de estados se describe mediante el diagrama de transición de estados siguiente. |
 
 El diagrama de transición de estados de la clase `QueueJob`, representado en la figura 89, describe la funcionalidad soportada por la máquina de estados de la cola. Un trabajo se crea en `queued`; desde ese estado solo puede pasar a `running`, cuando el worker lo reclama, o a `cancelled`, cuando el usuario lo cancela antes del inicio. Desde `running`, el trabajo pasa a `completed` si el procesamiento termina correctamente, o a `failed` si se produce un error. No existen transiciones desde `completed`, `failed` o `cancelled`: una vez alcanzado un estado final, el trabajo no vuelve a la cola.
 

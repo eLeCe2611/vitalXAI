@@ -1,14 +1,14 @@
 # Capítulo 14: Modelo de dominio y entidades del sistema
 
-El modelado conceptual del dominio es la etapa del análisis del sistema en la que se detectan y representan las entidades del problema, sus atributos, sus responsabilidades y los vínculos que se establecen entre ellas. El propósito de esta sección no es definir la implementación específica del sistema, sino construir un modelo conceptual del dominio que sirva como base para las decisiones de diseño que se adoptarán en capítulos posteriores. El modelo de clases constituye, junto con los casos de uso del capítulo 12 y los subsistemas de análisis del capítulo 13, uno de los tres pilares sobre los que se asienta el diseño de vitalXAI: los casos de uso describen el comportamiento observable del sistema, los subsistemas agrupan sus responsabilidades y el modelo de clases identifica las entidades sobre las que ese comportamiento se apoya (Larman, 2004).
+En este capítulo se identifican las entidades que intervienen en vitalXAI, la información que representan y las relaciones que mantienen. El resultado es un modelo conceptual, no una descripción de las tablas o ficheros que se utilizan en la implementación. El modelo de clases complementa los casos de uso del capítulo 12 y los subsistemas del capítulo 13: aquellos describen las interacciones, estos agrupan responsabilidades y el modelo de dominio organiza las entidades sobre las que se apoyan (Larman, 2004).
 
-El modelado del dominio se organiza en dos secciones. La primera, la estructura estática de las entidades, presenta el modelo de negocio mediante un diagrama de clases que recoge las entidades del sistema, sus atributos y sus relaciones. La segunda sección, dedicada al comportamiento dinámico del sistema, contiene las secuencias de interacción que describen la colaboración entre el actor y la plataforma ante los estímulos del actor principal para cada caso de uso. Mientras que el diagrama de clases responde a la pregunta de qué entidades gestiona el sistema y cómo se relacionan entre sí, las secuencias de interacción responden a la pregunta de cómo colaboran esas entidades cuando el usuario lleva a cabo una acción concreta. Ambas visiones, la estática y la dinámica, son complementarias y necesarias para comprender por completo el comportamiento esperado de la plataforma antes de abordar su diseño.
+El modelado del dominio se organiza en dos secciones complementarias. La primera, dedicada a la estructura estática, presenta las entidades del negocio, sus atributos y sus relaciones. La segunda recoge el comportamiento dinámico mediante secuencias de interacción vinculadas a los casos de uso del capítulo 12. Estas secuencias no amplían el modelo de entidades: muestran cómo el actor utiliza el sistema y cómo este responde. La separación permite distinguir el modelo conceptual de los flujos de comportamiento sin perder la relación entre ambos.
 
 ## 14.1 Estructura estática de las entidades del sistema
 
-El diagrama de clases del sistema recoge las ocho clases de negocio que se han identificado durante el análisis del dominio de vitalXAI: Usuario, ConsultaDiagnostico, MapaXAI, SesionExperimentacion, ModeloEntrenado, ResultadoModelo, ValidacionExterna y TrabajoCola. Estas clases representan las entidades centrales que la plataforma debe persistir y gestionar a lo largo de su ciclo de vida, y sus relaciones reflejan la estructura conceptual del problema que la plataforma resuelve: la asistencia al diagnóstico de neumonía a partir de radiografías de tórax y la experimentación MLOps para entrenar y evaluar los modelos que sustentan ese diagnóstico. La elección de estas ocho clases responde a los módulos funcionales y a los casos de uso del capítulo 12, de modo que cada entidad tiene una correspondencia directa con las capacidades declaradas en la especificación de requisitos.
+El diagrama de clases del sistema recoge las once clases de negocio identificadas durante el análisis del dominio de vitalXAI: Usuario, ConsultaDiagnostico, MapaXAI, SesionExperimentacion, ModeloEntrenado, ResultadoModelo, ResultadoPliegue, ValidacionExterna, ResultadoValidacionExterna, ComparacionModelos y TrabajoCola. Estas clases representan las entidades centrales que la plataforma debe gestionar a lo largo de su ciclo de vida. Las nuevas clases de resultados hacen explícita la diferencia entre los valores agregados de un modelo, sus métricas por pliegue, los resultados individuales de una validación externa y las comparaciones estadísticas entre dos modelos.
 
-A nivel metodológico se han adoptado dos decisiones de modelado que conviene señalar. En primer lugar, los parámetros que definen un experimento se reparten entre dos entidades. Las arquitecturas a entrenar y los hiperparámetros —número de épocas, tamaño de lote y tasa de aprendizaje—, que el asistente conversacional del laboratorio interpreta a partir de la conversación con el usuario (CU-016), se consolidan como atributos de la clase ModeloEntrenado, descartando la necesidad de una clase separada para la configuración del experimento: la configuración producida por el asistente se materializa directamente en la entidad que representa al modelo entrenado. La ruta del dataset, en cambio, es un atributo de la clase SesionExperimentacion, porque cada sesión agrupa los modelos entrenados sobre un mismo dataset, y se selecciona de forma validada mediante el caso de uso CU-017, no mediante la conversación con el asistente. En segundo lugar, la clase Usuario constituye la entidad raíz del sistema: todas las demás entidades pertenecen a un usuario concreto y no son accesibles desde otras cuentas, de manera que se garantice el aislamiento de datos declarado en el requisito RF-005. Un usuario puede realizar múltiples consultas de diagnóstico y poseer múltiples sesiones de experimentación, y ninguna de estas entidades puede existir sin estar asociada a su propietario.
+A nivel de modelado se han adoptado dos simplificaciones. En primer lugar, las arquitecturas y los hiperparámetros del experimento, el número de épocas, el tamaño de lote y la tasa de aprendizaje, se asocian en el modelo conceptual a ModeloEntrenado, aunque la configuración se guarda realmente en los ficheros de la sesión. Esta decisión evita introducir una clase separada para una configuración que, en el flujo del proyecto, termina vinculada a cada modelo entrenado. La ruta del dataset se asocia a SesionExperimentacion, porque una sesión agrupa los modelos entrenados sobre un mismo conjunto de datos y la ruta se obtiene mediante CU-017. En segundo lugar, Usuario actúa como raíz conceptual: las entidades se relacionan con un propietario de forma directa o a través de la sesión o consulta correspondiente. En la implementación actual, las sesiones y los resultados del laboratorio se conservan como carpetas sin `user_id`, por lo que esa propiedad conceptual no tiene el mismo respaldo físico en todas las entidades.
 
 ```mermaid
 classDiagram
@@ -68,14 +68,34 @@ classDiagram
         +metricasXAI: Texto
         +fechaComputo: Fecha
     }
+    class ResultadoPliegue {
+        +id: Identificador
+        +numeroPliegue: Entero
+        +exactitud: Real
+        +precision: Real
+        +sensibilidad: Real
+        +f1: Real
+        +auc: Real
+    }
     class ValidacionExterna {
         +id: Identificador
         +estado: EstadoTrabajo
-        +auc: Real
-        +pValorDeLong: Real
-        +curvaROC: Cadena
         +fechaSolicitud: Fecha
         +fechaFin: Fecha
+    }
+    class ResultadoValidacionExterna {
+        +id: Identificador
+        +auc: Real
+        +metricas: Texto
+        +curvaROC: Cadena
+    }
+    class ComparacionModelos {
+        +id: Identificador
+        +tipo: TipoComparacion
+        +pValor: Real
+        +curvaROCA: Cadena
+        +curvaROCB: Cadena
+        +fechaComputo: Fecha
     }
     class TrabajoCola {
         +id: Identificador
@@ -91,37 +111,47 @@ classDiagram
     ConsultaDiagnostico "1" -- "0..*" MapaXAI : genera
     SesionExperimentacion "1" -- "0..*" ModeloEntrenado : contiene
     ModeloEntrenado "1" -- "0..1" ResultadoModelo : produce
+    ResultadoModelo "1" -- "1..*" ResultadoPliegue : desglosa
     SesionExperimentacion "1" -- "0..1" ValidacionExterna : solicita
-    TrabajoCola "1" -- "0..*" ConsultaDiagnostico : procesa
-    TrabajoCola "1" -- "0..*" ModeloEntrenado : procesa
-    TrabajoCola "1" -- "0..*" ValidacionExterna : procesa
+    ValidacionExterna "1" -- "1..*" ResultadoValidacionExterna : genera
+    ModeloEntrenado "1" -- "0..*" ResultadoValidacionExterna : obtiene
+    ValidacionExterna "1" -- "0..*" ComparacionModelos : incluye
+    ComparacionModelos "*" -- "1" ModeloEntrenado : modeloA
+    ComparacionModelos "*" -- "1" ModeloEntrenado : modeloB
+    TrabajoCola "0..*" -- "0..1" ConsultaDiagnostico : procesa
+    TrabajoCola "0..*" -- "0..1" SesionExperimentacion : procesa
+    TrabajoCola "0..*" -- "0..1" ValidacionExterna : procesa
 ```
 
 *Figura 8 - Diagrama de clases del sistema*
 
-La clase Usuario almacena la información de identidad de cada cuenta: el nombre de usuario, el correo electrónico, el hash de la contraseña (nunca la contraseña en claro, conforme al requisito RNF-001), el rol, la fecha de registro y el estado activo de la cuenta. Un usuario puede realizar múltiples consultas de diagnóstico, representadas por la clase ConsultaDiagnostico, que agrupa los datos de una consulta concreta: la referencia a la imagen radiológica, la referencia al informe PDF de la consulta, la arquitectura seleccionada para el diagnóstico, el resultado (PNEUMONIA o NORMAL), la confianza asociada, el estado del trabajo y las fechas de solicitud y finalización. Cada consulta genera, a su vez, los mapas de explicabilidad que la justifican, representados por la clase MapaXAI, que distingue el tipo de mapa —mapas de saliencia, SmoothGrad, Grad-CAM para arquitecturas convolucionales y mapas de atención para arquitecturas Transformer— mediante el atributo tipo.
+La clase Usuario representa la identidad de cada cuenta, incluido su nombre de usuario, correo electrónico, hash de contraseña, rol y, en el modelo conceptual, su estado y fechas relevantes. En la persistencia actual no todos esos atributos tienen una columna propia, como se detalla en el capítulo 19. Un usuario puede realizar múltiples consultas de diagnóstico, representadas por ConsultaDiagnostico, que reúne la referencia a la imagen, el informe PDF, la arquitectura seleccionada, el resultado, la confianza y el estado del trabajo. Cada consulta puede generar mapas de explicabilidad, representados por MapaXAI, cuyo atributo tipo distingue el método empleado.
 
-Por otra parte, un usuario puede poseer múltiples sesiones de experimentación, representadas por la clase SesionExperimentacion, que actúa como contenedor organizativo de los experimentos del laboratorio: cada sesión agrupa el conjunto de modelos entrenados sobre un mismo dataset. La clase ModeloEntrenado representa cada uno de los modelos entrenados dentro de una sesión, con la arquitectura y los hiperparámetros utilizados —épocas, tamaño de lote y tasa de aprendizaje—, su estado y sus fechas de ejecución. Cuando un modelo completa su entrenamiento, produce un resultado, representado por la clase ResultadoModelo, que almacena las métricas de la validación cruzada, la calibración y las métricas de explicabilidad. La clase ValidacionExterna representa la validación de los modelos de una sesión sobre una cohorte externa, con su AUC y el p-valor del test de DeLong. Finalmente, la clase TrabajoCola representa los trabajos asíncronos de la cola —diagnósticos, entrenamientos y validaciones externas—, que se procesan sin bloquear la interfaz conforme al requisito RF-036.
+Por otra parte, un usuario puede poseer múltiples sesiones de experimentación, representadas por SesionExperimentacion, que agrupa los modelos entrenados sobre un mismo dataset. ModeloEntrenado representa cada modelo de la sesión, con su arquitectura, sus hiperparámetros, su estado y sus fechas de ejecución. Cuando finaliza el entrenamiento, el modelo produce un ResultadoModelo con los valores agregados de rendimiento, calibración y explicabilidad. Los valores de validación cruzada de cada pliegue se representan mediante ResultadoPliegue, asociado al resultado del modelo y con las cinco métricas exigidas por RF-022. La validación cruzada y sus posibles sesgos de estimación se tratan como decisiones metodológicas del proyecto, no como una garantía de generalización (Varma & Simon, 2006).
 
-El modelo de relaciones garantiza el aislamiento de datos declarado en el requisito RF-005: todas las entidades de negocio parten de la clase Usuario, de modo que cada consulta de diagnóstico, cada sesión de experimentación y, a través de ellas, cada modelo y cada resultado, quedan asociados a un propietario concreto. Las relaciones de composición entre SesionExperimentacion y ModeloEntrenado, y entre ModeloEntrenado y ResultadoModelo, reflejan el ciclo de vida de los experimentos: un modelo no puede existir fuera de su sesión y un resultado no puede existir sin el modelo que lo produce. La relación entre TrabajoCola y las entidades procesadas —ConsultaDiagnostico, ModeloEntrenado y ValidacionExterna— representa la ejecución asíncrona de los tres tipos de trabajo, que comparten el mismo mecanismo de cola descrito en los casos de uso CU-034 y CU-035.
+ValidacionExterna representa una ejecución de evaluación sobre una cohorte independiente. Sus resultados se desglosan por modelo mediante ResultadoValidacionExterna, que reúne las métricas y la curva ROC de cada modelo. Las comparaciones entre dos modelos se representan mediante ComparacionModelos. Esta entidad recoge el tipo de contraste, las curvas comparadas y el p-valor correspondiente, incluido el del test de DeLong cuando se comparan curvas ROC (DeLong, DeLong, & Clarke-Pearson, 1988). De este modo, el p-valor se asocia a la comparación entre dos modelos dentro de una misma ejecución y no a la validación considerada de forma aislada.
 
-El diagrama de clases presentado en la figura 8 constituye el modelo estático de dominio de vitalXAI y servirá como base para el análisis dinámico del sistema: las secuencias de interacción de la sección 14.2 muestran cómo colaboran estas entidades cuando el usuario lleva a cabo cada uno de los casos de uso especificados en el capítulo 12. De este modo, el modelado del dominio cierra el ciclo de la etapa de análisis iniciada en el capítulo 10, proporcionando una visión completa y coherente de las entidades que la plataforma debe gestionar, de sus relaciones y de su comportamiento.
+Finalmente, TrabajoCola representa los trabajos asíncronos de diagnóstico, entrenamiento y validación externa, que se procesan sin bloquear la interfaz conforme al requisito RF-036.
+
+El modelo de relaciones expresa el aislamiento de datos previsto en RF-005: todas las entidades de negocio parten conceptualmente de Usuario, de modo que cada consulta, sesión, modelo y resultado quedan asociados a un propietario en el modelo. Las relaciones entre SesionExperimentacion, ModeloEntrenado y ResultadoModelo reflejan el ciclo de vida de los experimentos. ResultadoPliegue depende de ResultadoModelo, mientras que ResultadoValidacionExterna depende de una ejecución de ValidacionExterna y se asocia al modelo evaluado. ComparacionModelos se vincula con los dos modelos que intervienen en el contraste y con la ejecución de validación externa cuando el contraste corresponde al test de DeLong. En la persistencia real, sin embargo, las sesiones y sus resultados se almacenan en carpetas sin una relación física con `users`; esta diferencia entre propiedad conceptual y garantía implementada queda documentada en el capítulo 19.
+
+El diagrama de clases presentado en la figura 8 constituye el modelo estático de dominio de vitalXAI. Las secuencias de la sección 14.2 lo complementan desde la perspectiva del comportamiento, mostrando cómo el actor utiliza el sistema en los casos de uso del capítulo 12.
 
 ## 14.2 Comportamiento dinámico del sistema
 
-La visión estática del dominio descrita en la sección 14.1 es necesaria pero no suficiente para comprender el sistema: las entidades se relacionan entre sí, pero la forma en que colaboran cuando el usuario interactúa con la plataforma no queda recogida en el diagrama de clases. Las secuencias de interacción del sistema cubren precisamente esta carencia, representando de forma visual y ordenada cómo se comporta la plataforma ante cada una de las acciones que el actor principal lleva a cabo sobre ella. Cada secuencia muestra, paso a paso y en orden cronológico, qué hace el usuario, qué solicita al sistema y qué respuesta recibe, de modo que el comportamiento esperado de la plataforma ante cada caso de uso queda descrito de forma inequívoca y sin necesidad de anticipar decisiones técnicas de implementación (Larman, 2004).
+El modelo estático no basta para describir el desarrollo de las interacciones. Por ello, la sección 14.2 utiliza secuencias asociadas a los casos de uso del capítulo 12. Estas secuencias complementan el modelo de entidades y muestran el intercambio observable entre el actor y el sistema, sin convertir los mecanismos internos en participantes externos (Larman, 2004).
 
-En cada secuencia de interacción intervienen dos participantes: el actor que inicia la acción, representado en el margen izquierdo del diagrama, y el sistema en su conjunto, representado en el margen derecho. Los mensajes que el actor envía al sistema corresponden a las acciones que realiza sobre la interfaz gráfica, como rellenar un formulario o pulsar un botón, mientras que el sistema procesa la información recibida, realiza las operaciones necesarias y devuelve una respuesta al actor, que puede ser una confirmación, un listado de datos, un fichero descargable o un mensaje de error. Las operaciones que el sistema ejecuta de forma interna, como la validación de datos o el acceso a la información persistida, se representan igualmente en el diagrama mediante mensajes autorecursivos, lo que ofrece una imagen más completa de lo que ocurre en cada paso sin entrar en los detalles de implementación.
+En la mayoría de las secuencias intervienen dos participantes: el actor que inicia la acción y el sistema en su conjunto. Los mensajes del actor representan acciones sobre la interfaz, mientras que el sistema procesa la información y devuelve una respuesta. Cuando el flujo requiere una tarea asíncrona, el encolado, el procesamiento del trabajo y la actualización del resultado se representan como operaciones internas del sistema. El worker no aparece como participante porque forma parte de ese sistema y no es un actor externo. La secuencia de configuración del experimento incorpora además el modelo de lenguaje como participante externo de la integración conversacional.
 
 Las secuencias se presentan organizadas por subsistemas, siguiendo la estructura definida en el capítulo 13, de forma que resulte sencillo localizar el comportamiento de la plataforma para cada funcionalidad. Para mantener la claridad de la presentación, cada diagrama recoge únicamente el flujo habitual de la acción, es decir, el camino que sigue la interacción cuando todo funciona de forma correcta. Los comportamientos alternativos, como los mensajes de error o la cancelación de una operación, se describen en la especificación detallada de cada caso de uso del capítulo 12 (sección 12.2.3), donde se documentan los flujos normal y alternativo de cada caso.
 
-### 14.2.1 SS-001 – Subsistema de Acceso y Gestión de Cuentas
+### 14.2.1 SS-001: Subsistema de Acceso y Gestión de Cuentas
 
 Este subapartado recoge las secuencias de interacción correspondientes a los casos de uso del subsistema de acceso y gestión de cuentas, descrito en el capítulo 13. Todos ellos tienen como actor al visitante o al usuario autenticado según corresponda, e interactúan con el sistema para gestionar la identidad y el acceso a la plataforma: el registro de una nueva cuenta (CU-001), el inicio de sesión (CU-002), el cierre de sesión (CU-003) y el cambio del idioma de la interfaz (CU-004). Se presentan a continuación, precedidos cada uno de una breve descripción de la interacción que modelan.
 
 #### 14.2.1.1 Secuencia CU-001: Registrarse
 
-El registro es la puerta de entrada de la plataforma y la primera interacción que un visitante mantiene con ella. El visitante accede al formulario de registro desde la página de inicio de sesión, introduce sus datos —nombre de usuario, nombre, apellidos, correo electrónico y contraseña— y los envía al sistema. Este valida el formato de los datos recibidos y la fortaleza de la contraseña, comprueba que no exista ninguna cuenta previa con el mismo nombre de usuario o correo electrónico y, si todo es correcto, cifra la contraseña mediante un algoritmo de hash robusto e irreversible y crea el registro del nuevo usuario. Finalmente, el sistema confirma el alta y redirige al visitante a la página de inicio de sesión. La figura 9 muestra esta secuencia.
+El registro es la puerta de entrada de la plataforma y la primera interacción que un visitante mantiene con ella. El visitante accede al formulario de registro desde la página de inicio de sesión, introduce su nombre de usuario, nombre, apellidos, correo electrónico y contraseña, y los envía al sistema. Este valida el formato de los datos recibidos y la fortaleza de la contraseña, comprueba que no exista ninguna cuenta previa con el mismo nombre de usuario o correo electrónico y, si todo es correcto, aplica un hash a la contraseña y crea el registro del nuevo usuario. Finalmente, el sistema confirma el alta y redirige al visitante a la página de inicio de sesión. La figura 9 muestra esta secuencia.
 
 ```mermaid
 sequenceDiagram
@@ -132,7 +162,7 @@ sequenceDiagram
     V->>S: enviarDatosRegistro(nombreUsuario, nombre, apellidos, correo, contrasena)
     S->>S: validarFormatoDatos()
     S->>S: verificarDisponibilidad(nombreUsuario, correo)
-    S->>S: cifrarContrasena()
+    S->>S: generarHashContrasena()
     S->>S: registrarUsuario()
     S-->>V: confirmarRegistro()
     S-->>V: redirigirInicioSesion()
@@ -142,7 +172,7 @@ sequenceDiagram
 
 #### 14.2.1.2 Secuencia CU-002: Iniciar sesión
 
-El inicio de sesión es el punto de acceso a toda la funcionalidad privada de la plataforma. El visitante accede al formulario de inicio de sesión, introduce sus credenciales —nombre de usuario y contraseña— y las envía al sistema. Este verifica que la contraseña introducida coincida con el hash almacenado para ese nombre de usuario y, si la verificación es correcta, genera el token de acceso y el token de refresco, los establece en cookies seguras y redirige al usuario a su panel, concediéndole acceso a las áreas privadas. La figura 10 muestra esta secuencia.
+El inicio de sesión es el punto de acceso a toda la funcionalidad privada de la plataforma. El visitante accede al formulario de inicio de sesión, introduce su nombre de usuario y contraseña y las envía al sistema. Este verifica que la contraseña introducida coincida con el hash almacenado para ese nombre de usuario y, si la verificación es correcta, genera el token de acceso y el token de refresco, los establece en cookies seguras y redirige al usuario a su panel, concediéndole acceso a las áreas privadas. La figura 10 muestra esta secuencia.
 
 ```mermaid
 sequenceDiagram
@@ -190,7 +220,7 @@ sequenceDiagram
 
 *Figura 12 - Secuencia de interacción del cambio de idioma (CU-004)*
 
-### 14.2.2 SS-002 – Subsistema de Diagnóstico Asistido
+### 14.2.2 SS-002: Subsistema de Diagnóstico Asistido
 
 Este subapartado recoge las secuencias de interacción correspondientes a los casos de uso del subsistema de diagnóstico asistido, descrito en el capítulo 13. Este subsistema agrupa el flujo clínico de la plataforma: el acceso al panel de diagnóstico (CU-005), la subida de una radiografía de tórax (CU-006), la selección de la arquitectura del modelo (CU-007), la solicitud del diagnóstico (CU-008), la visualización del resultado (CU-009) y la visualización de los mapas de explicabilidad (CU-010). Todos ellos tienen como actor al usuario autenticado, que opera sobre su propia consulta en curso. Las tres primeras secuencias preparan la consulta sobre la que se ejecutará el diagnóstico, mientras que las tres últimas completan el flujo clínico desde la solicitud hasta la presentación de los resultados. Se presentan a continuación, precedidos cada uno de una breve descripción de la interacción que modelan.
 
@@ -279,7 +309,7 @@ sequenceDiagram
 
 #### 14.2.2.6 Secuencia CU-010: Visualizar los mapas de explicabilidad
 
-Un diagnóstico asistido no es útil si el profesional no puede comprobar los motivos de la decisión del modelo. Cuando la consulta está completada, el usuario la selecciona para inspeccionar sus explicaciones y el sistema comprueba que la consulta pertenece al usuario, garantizando el aislamiento de datos. El sistema muestra entonces el mosaico con la radiografía original y los mapas de explicabilidad generados: Saliency Maps, SmoothGrad y Grad-CAM para las arquitecturas convolucionales, o mapas de atención para las arquitecturas Transformer. La figura 18 muestra esta secuencia.
+Cuando la consulta está completada, el usuario la selecciona para inspeccionar sus explicaciones y el sistema comprueba que la consulta pertenece al usuario. El sistema muestra entonces el mosaico con la radiografía original y los mapas de explicabilidad generados: Saliency Maps, SmoothGrad y Grad-CAM para las arquitecturas convolucionales, o mapas de atención para las arquitecturas Transformer (Simonyan, Vedaldi, & Zisserman, 2014; Smilkov & al., 2017; Selvaraju & al., 2017; Chefer, Gur, & Wolf, 2021). Estas visualizaciones sirven para inspeccionar las regiones resaltadas, pero no prueban por sí solas la validez clínica de la predicción. La figura 18 muestra esta secuencia.
 
 ```mermaid
 sequenceDiagram
@@ -308,7 +338,7 @@ sequenceDiagram
 
 *Figura 19 - Secuencia de interacción de la generación del informe PDF del diagnóstico (CU-037)*
 
-### 14.2.3 SS-003 – Subsistema de Gestión del Historial
+### 14.2.3 SS-003: Subsistema de Gestión del Historial
 
 Este subapartado recoge las secuencias de interacción correspondientes a los casos de uso del subsistema de gestión del historial, descrito en el capítulo 13. Este subsistema agrupa la recuperación y la gestión de las consultas de diagnóstico ya realizadas: la consulta del listado del historial (CU-011), la visualización del detalle de una consulta (CU-012), el renombrado de una consulta (CU-013) y su eliminación (CU-014). Todos ellos tienen como actor al usuario autenticado y operan exclusivamente sobre las consultas del propio usuario, en cumplimiento del aislamiento de datos entre usuarios: antes de mostrar o modificar cualquier información, el sistema verifica que la consulta pertenece al usuario que la solicita. La secuencia de CU-011 constituye el punto de entrada del subsistema, desde el que se alcanzan opcionalmente el detalle (CU-012) y, desde este, el renombrado (CU-013) y la eliminación (CU-014). Se presentan a continuación, precedidos cada uno de una breve descripción de la interacción que modelan.
 
@@ -377,7 +407,7 @@ sequenceDiagram
 
 *Figura 23 - Secuencia de interacción de la eliminación de una consulta (CU-014)*
 
-### 14.2.4 SS-004 – Subsistema de Laboratorio MLOps
+### 14.2.4 SS-004: Subsistema de Laboratorio MLOps
 
 Este subapartado recoge las secuencias de interacción correspondientes a los casos de uso del subsistema de laboratorio MLOps, descrito en el capítulo 13. Este subsistema agrupa la actividad investigadora de la plataforma: el acceso al laboratorio (CU-015), la conversación con el asistente para configurar un experimento (CU-016), la selección de la carpeta del dataset (CU-017), el lanzamiento del experimento (CU-018), la consulta de las sesiones (CU-019), la consulta de los resultados de un modelo (CU-020), la visualización de sus mapas de explicabilidad (CU-021), la consulta del ranking (CU-022), la comparativa estadística (CU-023) y su recálculo (CU-024), el análisis de explicabilidad (CU-025), la validación externa (CU-026) y su consulta (CU-027), la generación del informe PDF (CU-028), el renombrado y la eliminación de sesiones (CU-029 y CU-030) y la comprobación de la limitación de entrenamientos simultáneos y encolados (CU-039). Todos ellos tienen como actor al usuario autenticado, que opera exclusivamente sobre sus propias sesiones en cumplimiento del aislamiento de datos entre usuarios. Las secuencias se presentan siguiendo el orden natural de la actividad del laboratorio, desde la configuración del experimento hasta la consulta y gestión de los resultados. Se presentan a continuación, precedidos cada uno de una breve descripción de la interacción que modelan.
 
@@ -398,7 +428,7 @@ sequenceDiagram
 
 #### 14.2.4.2 Secuencia CU-016: Conversar con el asistente para configurar un experimento
 
-El asistente conversacional es la interfaz principal de configuración del experimento y su interacción es un diálogo bidireccional: el usuario no entrega la configuración completa de una sola vez, sino que mantiene un intercambio con el asistente hasta que todos los parámetros quedan definidos. El usuario envía un mensaje en lenguaje natural indicando los parámetros que desea y el sistema prepara el prompt de sistema definido y envía la petición al modelo de lenguaje. El modelo extrae los parámetros mencionados en el mensaje y, si falta alguno de los parámetros que definen el experimento —arquitecturas, número de épocas, tamaño de lote y tasa de aprendizaje—, el asistente pregunta por el parámetro faltante y la conversación continúa hasta completarlo. La ruta del dataset no forma parte de la conversación: se selecciona de forma validada mediante el caso de uso CU-017 y se incorpora a la configuración. Cuando el asistente dispone de todos los parámetros, devuelve la configuración estructurada, el sistema rellena el panel de configuración con los valores obtenidos y el usuario la revisa y confirma. La figura 25 muestra esta secuencia.
+El asistente conversacional es la interfaz principal de configuración del experimento y su interacción es un diálogo bidireccional: el usuario no entrega la configuración completa de una sola vez, sino que mantiene un intercambio con el asistente hasta que todos los parámetros quedan definidos. El usuario envía un mensaje en lenguaje natural indicando los parámetros que desea y el sistema prepara el prompt de sistema definido y envía la petición al modelo de lenguaje. El modelo extrae los parámetros mencionados en el mensaje y, si falta alguno de los parámetros que definen el experimento, como las arquitecturas, el número de épocas, el tamaño de lote o la tasa de aprendizaje, el asistente pregunta por el parámetro faltante y la conversación continúa hasta completarlo. La ruta del dataset no forma parte de la conversación: se selecciona de forma validada mediante el caso de uso CU-017 y se incorpora a la configuración. Cuando el asistente dispone de todos los parámetros, devuelve la configuración estructurada, el sistema rellena el panel de configuración con los valores obtenidos y el usuario la revisa y confirma. La figura 25 muestra esta secuencia.
 
 ```mermaid
 sequenceDiagram
@@ -424,7 +454,7 @@ sequenceDiagram
 
 #### 14.2.4.3 Secuencia CU-017: Seleccionar la carpeta del dataset
 
-Antes de lanzar el experimento, el usuario debe indicar la carpeta del conjunto de datos sobre el que se entrenará el modelo. El usuario solicita explorar la carpeta y el sistema devuelve la ruta, preconfigurada en el entorno o seleccionada por el propio usuario. El usuario confirma la ruta y esta queda asociada a la configuración del experimento. La figura 26 muestra esta secuencia.
+Antes de lanzar el experimento, el usuario debe indicar la carpeta del conjunto de datos sobre el que se entrenará el modelo. El usuario solicita explorar la carpeta y el sistema devuelve la ruta, preconfigurada en el entorno o seleccionada por el propio usuario. El usuario confirma la ruta y esta queda asociada a la configuración del experimento. La restricción que debe impedir el acceso a rutas fuera del directorio permitido permanece pendiente de implementación, como se indica en el capítulo 12. La figura 26 muestra esta secuencia.
 
 ```mermaid
 sequenceDiagram
@@ -504,7 +534,7 @@ sequenceDiagram
 
 #### 14.2.4.8 Secuencia CU-022: Consultar el ranking de modelos de la sesión
 
-Para comparar rápidamente los modelos generados, el usuario puede consultar el ranking de la sesión. El usuario solicita el ranking y el sistema recupera y muestra los modelos ordenados por su AUC medio, de modo que el investigador identifica de un vistazo cuál de ellos presenta el mejor rendimiento discriminativo. La figura 31 muestra esta secuencia.
+Para comparar rápidamente los modelos generados, el usuario puede consultar el ranking de la sesión. El usuario solicita el ranking y el sistema recupera y muestra los modelos ordenados por su AUC medio, una medida habitual del rendimiento discriminativo basada en la curva ROC (Fawcett, 2006). La figura 31 muestra esta secuencia.
 
 ```mermaid
 sequenceDiagram
@@ -519,7 +549,7 @@ sequenceDiagram
 
 #### 14.2.4.9 Secuencia CU-023: Consultar la comparativa estadística de la sesión
 
-La comparativa estadística complementa el ranking con la significación de las diferencias entre modelos. El usuario accede a la vista de comparativa de la sesión y el sistema muestra la matriz de significación correspondiente, que indica si las diferencias de rendimiento entre cada par de modelos son estadísticamente significativas. La figura 32 muestra esta secuencia.
+La comparativa estadística complementa el ranking con el resultado de los contrastes entre modelos. El usuario accede a la vista de comparativa de la sesión y el sistema muestra la matriz de significación correspondiente, calculada mediante el test de Wilcoxon sobre los valores disponibles (Wilcoxon, 1945). La matriz informa sobre la compatibilidad de las diferencias observadas con la variabilidad de los datos, pero no establece por sí sola superioridad clínica. La figura 32 muestra esta secuencia.
 
 ```mermaid
 sequenceDiagram
@@ -550,7 +580,7 @@ sequenceDiagram
 
 #### 14.2.4.11 Secuencia CU-025: Ejecutar el análisis de explicabilidad de un modelo
 
-El análisis de explicabilidad puede ejecutarse de forma independiente sobre un modelo concreto de la sesión. El usuario solicita generar el análisis XAI del modelo y el sistema ejecuta los scripts de explicabilidad en segundo plano. Cuando el análisis finaliza, el sistema notifica al usuario, que puede consultar las imágenes XAI generadas. La figura 34 muestra esta secuencia.
+El análisis de explicabilidad puede ejecutarse de forma independiente sobre un modelo concreto de la sesión. El usuario solicita generar el análisis XAI del modelo y el sistema ejecuta los scripts de explicabilidad en segundo plano. Cuando el análisis finaliza, el sistema notifica al usuario, que puede consultar las imágenes XAI generadas. Las técnicas utilizadas se describen en la bibliografía específica de Saliency Maps, SmoothGrad, Grad-CAM y mapas de atención (Simonyan, Vedaldi, & Zisserman, 2014; Smilkov & al., 2017; Selvaraju & al., 2017; Chefer, Gur, & Wolf, 2021). La figura 34 muestra esta secuencia.
 
 ```mermaid
 sequenceDiagram
@@ -565,7 +595,7 @@ sequenceDiagram
 
 #### 14.2.4.12 Secuencia CU-026: Solicitar la validación externa de la sesión
 
-La validación externa aporta evidencia adicional sobre el rendimiento de los modelos con datos independientes. El usuario solicita la validación externa de la sesión y el sistema encola el trabajo de validación. El worker evalúa los modelos congelados sobre el conjunto externo y aplica el test de DeLong para comparar sus curvas ROC. Cuando la validación finaliza, el sistema notifica al usuario. La figura 35 muestra esta secuencia.
+La validación externa aporta información adicional sobre el rendimiento de los modelos en datos independientes. El usuario solicita la validación externa de la sesión y el sistema encola el trabajo de validación. El worker evalúa los modelos congelados sobre el conjunto externo y aplica el test de DeLong para comparar sus curvas ROC (DeLong, DeLong, & Clarke-Pearson, 1988). Cuando la validación finaliza, el sistema notifica al usuario. La figura 35 muestra esta secuencia.
 
 ```mermaid
 sequenceDiagram
@@ -647,7 +677,7 @@ sequenceDiagram
 
 #### 14.2.4.17 Secuencia CU-039: Comprobar la limitación de entrenamientos
 
-La limitación de entrenamientos es una capacidad del sistema que evita que la competición por la GPU degrade el servicio para el resto de los usuarios. Cuando el usuario lanza un experimento y se supera el límite de entrenamientos simultáneos o encolados, el sistema mantiene el trabajo en espera en la cola y el usuario puede comprobarlo desde el panel de la cola de trabajos. La figura 40 muestra esta secuencia.
+La limitación de entrenamientos es una capacidad prevista para evitar que la competición por la GPU degrade el servicio para el resto de los usuarios. Cuando el usuario lance un experimento y se supere el límite de entrenamientos simultáneos o encolados, el trabajo debería permanecer en espera o ser rechazado según la política definida. Esta capacidad permanece pendiente de implementación en el prototipo actual. La figura 40 muestra el escenario previsto.
 
 ```mermaid
 sequenceDiagram
@@ -656,7 +686,7 @@ sequenceDiagram
     U->>S: lanzarExperimento()
     S->>S: comprobarLimiteEntrenamientos()
     alt Limite superado
-        S->>S: encolarEnEspera()
+        S->>S: gestionarTrabajoExcedente()
     else Dentro del limite
         S->>S: ejecutarEntrenamiento()
     end
@@ -666,9 +696,9 @@ sequenceDiagram
 
 *Figura 40 - Secuencia de interacción de la limitación de entrenamientos (CU-039)*
 
-### 14.2.5 SS-005 – Subsistema de Supervisión y Administración
+### 14.2.5 SS-005: Subsistema de Supervisión y Administración
 
-Este subapartado recoge las secuencias de interacción correspondientes a los casos de uso del subsistema de supervisión y administración, descrito en el capítulo 13. Este subsistema agrupa las operaciones de supervisión de la plataforma: la consulta del listado de usuarios (CU-031), la consulta de las consultas de diagnóstico de un usuario concreto (CU-032) y la visualización del detalle de una de esas consultas (CU-033). Todos ellos tienen como actor al administrador y están restringidos a su rol: en cada operación el sistema verifica el rol del actor antes de mostrar cualquier información. Las secuencias siguen la navegación descendente de la supervisión, desde la visión global del listado hasta el detalle de una consulta concreta, permitiendo auditar un caso ante cualquier incidencia. Se presentan a continuación, precedidos cada uno de una breve descripción de la interacción que modelan.
+Este subapartado recoge las secuencias de interacción correspondientes a los casos de uso del subsistema de supervisión y administración, descrito en el capítulo 13. Este subsistema agrupa las operaciones de supervisión de la plataforma: la consulta del listado de usuarios (CU-031), la consulta de las consultas de diagnóstico de un usuario concreto (CU-032), la visualización del detalle de una de esas consultas (CU-033) y la gestión prevista de cuentas (CU-038). Todos ellos tienen como actor al administrador y están restringidos a su rol: en cada operación el sistema verifica el rol del actor antes de mostrar información o aplicar una operación. Las secuencias de supervisión siguen la navegación desde la visión global del listado hasta el detalle de una consulta concreta; la gestión de cuentas se describe como una operación independiente. Se presentan a continuación, precedidos cada uno de una breve descripción de la interacción que modelan.
 
 #### 14.2.5.1 Secuencia CU-031: Consultar el listado de usuarios
 
@@ -704,7 +734,7 @@ sequenceDiagram
 
 #### 14.2.5.3 Secuencia CU-033: Ver el detalle de una consulta de un usuario
 
-Para completar la supervisión, el administrador puede abrir el detalle completo de una consulta de un usuario, auditable ante cualquier incidencia. El administrador selecciona una consulta del listado de consultas del usuario y el sistema verifica el rol de administración del actor. Si la verificación es correcta, el sistema recupera y muestra el detalle completo de la consulta, incluidos la imagen, el resultado, la confianza y los metadatos asociados. La figura 43 muestra esta secuencia.
+Para completar la supervisión, el administrador puede abrir el detalle completo de una consulta de un usuario para auditarla ante una incidencia. El administrador selecciona una consulta del listado y el sistema verifica su rol. Si la verificación es correcta, el sistema recupera y muestra el detalle de la consulta, incluida la imagen, el resultado, la confianza y los metadatos asociados. La figura 43 muestra esta secuencia.
 
 ```mermaid
 sequenceDiagram
@@ -720,7 +750,7 @@ sequenceDiagram
 
 #### 14.2.5.4 Secuencia CU-038: Gestionar las cuentas de usuario
 
-La administración de la plataforma no se limita a la consulta: el objetivo OBJ-011 exige gestionar las cuentas de usuario. El administrador selecciona una cuenta y el sistema verifica el rol de administración del actor. A continuación, el administrador ejecuta la operación deseada —desactivar la cuenta, cambiar el rol o eliminar la cuenta—, el sistema la aplica y registra la operación de auditoría. La figura 44 muestra esta secuencia.
+La administración de la plataforma no se limita a la consulta: el objetivo OBJ-011 contempla también la gestión de las cuentas de usuario. En el escenario previsto, el administrador selecciona una cuenta, el sistema verifica su rol y el administrador solicita desactivarla, cambiar su rol o eliminarla. El sistema aplicaría la operación y registraría la auditoría. Esta capacidad permanece pendiente de implementación en el prototipo actual. La figura 44 muestra el escenario previsto.
 
 ```mermaid
 sequenceDiagram
@@ -736,13 +766,13 @@ sequenceDiagram
 
 *Figura 44 - Secuencia de interacción de la gestión de las cuentas de usuario (CU-038)*
 
-### 14.2.6 SS-006 – Subsistema de Capacidades Transversales
+### 14.2.6 SS-006: Subsistema de Capacidades Transversales
 
 Este subapartado recoge las secuencias de interacción correspondientes a los casos de uso del subsistema de capacidades transversales, descrito en el capítulo 13. Este subsistema agrupa las funcionalidades que no pertenecen a un ámbito funcional concreto, sino que afectan a toda la plataforma y están disponibles para todo usuario autenticado: la consulta del estado de la cola de trabajos (CU-034), la cancelación de un trabajo pendiente (CU-035) y el cambio del tema visual de la interfaz (CU-036). Las dos primeras están vinculadas a la ejecución asíncrona de los diagnósticos, los entrenamientos y las validaciones externas, mientras que la tercera responde a la personalización de la interfaz. A diferencia del resto de subsistemas, ninguna de estas secuencias verifica la propiedad de un recurso concreto del usuario ni un rol específico, puesto que sus operaciones son de carácter general sobre la propia sesión. Se presentan a continuación, precedidos cada uno de una breve descripción de la interacción que modelan.
 
 #### 14.2.6.1 Secuencia CU-034: Consultar el estado de la cola de trabajos
 
-El sistema ejecuta de forma asíncrona los diagnósticos, los entrenamientos y las validaciones externas, y el usuario necesita conocer en cada momento el estado de sus trabajos. El usuario accede al panel de la cola de trabajos y el sistema muestra el estado de los trabajos del usuario: pendientes, en ejecución, completados o fallidos. El sistema actualiza el estado de forma periódica, de modo que el usuario sabe cuándo estará disponible un resultado o cuándo debe repetir un trabajo que ha fallado. La figura 45 muestra esta secuencia.
+El sistema ejecuta de forma asíncrona los diagnósticos, los entrenamientos y las validaciones externas, y el usuario necesita conocer en cada momento el estado de sus trabajos. El usuario accede al panel de la cola de trabajos y el sistema muestra el estado de los trabajos del usuario: pendientes, en ejecución, completados o fallidos. La interfaz consulta periódicamente ese estado, de modo que el usuario sabe cuándo estará disponible un resultado o cuándo debe repetir un trabajo que ha fallado. La figura 45 muestra esta secuencia.
 
 ```mermaid
 sequenceDiagram
@@ -757,9 +787,9 @@ sequenceDiagram
 
 *Figura 45 - Secuencia de interacción de la consulta del estado de la cola (CU-034)*
 
-#### 14.2.6.2 Secuencia CU-035: Cancelar un trabajo de la cola
+#### 14.2.6.2 Secuencia CU-035: Cancelar un trabajo pendiente de la cola
 
-El usuario puede necesitar detener un trabajo que ha encolado por error o que ya no le interesa. El usuario solicita la cancelación de un trabajo de la cola y el sistema comprueba su estado. Si el trabajo está pendiente, el sistema lo cancela y evita su ejecución; si está en ejecución y resulta técnicamente posible, el sistema lo interrumpe y lo marca como cancelado. Si el trabajo está en ejecución y no puede interrumpirse de forma segura, o si ya ha finalizado, el sistema informa de esa limitación y no lo modifica. La figura 46 muestra esta secuencia.
+El usuario puede necesitar cancelar un trabajo pendiente que ha encolado por error o que ya no le interesa. El usuario solicita la cancelación y el sistema comprueba que el trabajo todavía no ha comenzado. Si sigue pendiente, el sistema lo marca como cancelado y evita su ejecución. La interrupción de un trabajo en ejecución no forma parte de la implementación actual. La figura 46 muestra esta secuencia.
 
 ```mermaid
 sequenceDiagram
@@ -769,12 +799,10 @@ sequenceDiagram
     S->>S: comprobarEstadoTrabajo()
     alt Trabajo pendiente
         S->>S: cancelarYEvitarEjecucion()
-    else Trabajo en ejecución e interrumpible
-        S->>S: interrumpirYMarcarCancelado()
-    else No interrumpible o finalizado
-        S-->>U: informarLimitacion()
+    else Trabajo en ejecución o finalizado
+        S-->>U: informarNoCancelable()
     end
-    S-->>U: confirmarCancelacion()
+    S-->>U: informarResultadoCancelacion()
 ```
 
 *Figura 46 - Secuencia de interacción de la cancelación de un trabajo de la cola (CU-035)*
@@ -793,9 +821,3 @@ sequenceDiagram
 ```
 
 *Figura 47 - Secuencia de interacción del cambio del tema visual (CU-036)*
-
----
-
-## Referencias del capítulo
-
-Larman, C. (2004). *Applying UML and Patterns: An Introduction to Object-Oriented Analysis and Design and Iterative Development* (3rd ed.). Prentice Hall.

@@ -1,6 +1,6 @@
 # Capítulo 35: Pruebas de seguridad
 
-Las pruebas de seguridad verifican que la plataforma aplica correctamente los mecanismos de protección especificados en los requisitos no funcionales de seguridad del análisis, en coherencia con los vectores de ataque más habituales sobre las aplicaciones web autenticadas (OWASP, 2024). Este capítulo describe las pruebas de seguridad automatizadas del proyecto y presenta los resultados reales de su ejecución: la protección CSRF, las cabeceras de seguridad, la limitación de peticiones y la gestión de los tokens de sesión. Estas pruebas se corresponden con la categoría de protección y control de acceso del plan de pruebas del capítulo 16 —los códigos PS-001 a PS-009— y se integran en la batería automatizada descrita en el capítulo 34.
+Este capítulo presenta la evidencia automatizada obtenida para los mecanismos de seguridad implementados en vitalXAI. El alcance cubre la protección CSRF, las cabeceras de seguridad, la limitación de peticiones y el ciclo de vida de los tokens de sesión, controles relacionados con riesgos habituales de las aplicaciones web autenticadas (OWASP, 2024). Las pruebas se corresponden con la categoría de protección y control de acceso del plan de pruebas del capítulo 16, concretamente con los códigos PS-001 a PS-009, y forman parte de la batería descrita en el capítulo 34.
 
 Las pruebas de seguridad se implementan en los ficheros `test_csrf_middleware.py`, `test_security_headers.py`, `test_rate_limiting.py` y `test_auth_service.py` del directorio `tests/unit/`, y se ejecutan de forma aislada, sin dependencia del entorno real, verificando los mecanismos de seguridad implementados en el backend descrito en el capítulo 28. La ejecución específica de estos ficheros produjo un resultado de 24 pruebas superadas sin fallos, como se detalla en cada apartado.
 
@@ -46,8 +46,8 @@ La gestión de los tokens de sesión se verifica con las diez pruebas del ficher
 | ID | Verificación | Resultado |
 |---|---|---|
 | PS-009 | El acceso con un token de refresco revocado es rechazado. | Superada. |
-| — | La rotación del token de refresco invalida el anterior. | Superada. |
-| — | La detección de robo de sesión revoca todos los tokens del usuario. | Superada. |
+| N/A | La rotación del token de refresco invalida el anterior. | Superada. |
+| N/A | La detección de robo de sesión revoca todos los tokens del usuario. | Superada. |
 
 Las verificaciones confirman que el servicio de autenticación implementado en `auth_service.py` gestiona correctamente el ciclo de vida de los tokens: la verificación distingue el token activo, el revocado dentro del periodo de gracia y el uso de una credencial revocada, y ante este último revoca todos los tokens del usuario, tal y como se describió en la codificación del backend y en el diseño del subsistema de acceso.
 
@@ -63,4 +63,4 @@ La ejecución específica de las pruebas de seguridad produjo un resultado de 24
 | `test_auth_service.py` | 10 | Superadas. |
 | **Total** | **24** | **Superadas.** |
 
-Las verificaciones de seguridad confirman que la plataforma aplica correctamente los mecanismos de protección frente a los vectores de ataque más habituales sobre las aplicaciones web: la falsificación de peticiones en sitios cruzados, la exposición de cabeceras de seguridad, los ataques de fuerza bruta sobre el acceso y la reutilización indebida de las credenciales de sesión. La verificación de la seguridad en el entorno real de despliegue, junto con las pruebas de rendimiento y de los flujos completos, se describe en los capítulos siguientes de la parte de verificación.
+Las verificaciones de seguridad confirman el funcionamiento de los mecanismos evaluados: la protección frente a la falsificación de peticiones en sitios cruzados, las cabeceras de seguridad, la limitación de los intentos de acceso y la gestión de las credenciales de sesión. Estos resultados no equivalen a una certificación de seguridad completa ni cubren los controles pendientes de auditoría, protección de datos y despliegue; tampoco sustituyen una evaluación de amenazas más amplia basada en el contexto de operación (OWASP, 2024). La verificación en el entorno real, junto con las pruebas de rendimiento y de los flujos completos, se describe en los capítulos siguientes de la parte de verificación.

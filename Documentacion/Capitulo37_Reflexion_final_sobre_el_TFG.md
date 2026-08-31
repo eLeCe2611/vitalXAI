@@ -1,0 +1,29 @@
+# Capítulo 37: Reflexión final sobre el Trabajo Fin de Grado
+
+Este capítulo cierra la memoria desde la perspectiva del Trabajo Fin de Grado como proceso académico. Su propósito es valorar el trabajo realizado, los aprendizajes adquiridos, las dificultades afrontadas y el grado en que la planificación permitió alcanzar los objetivos planteados. No se evalúa aquí de forma independiente la calidad diagnóstica de los modelos ni la utilidad clínica de vitalXAI; esas cuestiones corresponden al capítulo 38, dedicado a la valoración final del proyecto.
+
+## 37.1 Valoración global y consecución de los objetivos
+
+Este Trabajo Fin de Grado ha permitido abordar un problema tecnológico y científico multidisciplinar mediante la construcción de una plataforma web para experimentar con inteligencia artificial aplicada a radiografías de tórax, incorporando explicabilidad, gestión de modelos y verificación. Además de implementar una aplicación, se ha recorrido el ciclo completo de un proyecto de ingeniería informática: estudio del dominio, análisis, diseño, construcción, pruebas, implantación y documentación.
+
+El trabajo se ha realizado individualmente, con el apoyo puntual del tutor y de los asesores. Esto ha exigido asumir tareas de análisis, desarrollo, experimentación, gestión y redacción. La planificación se organizó en nueve sprints y contempló 474 horas, de las que 455,14 correspondieron al alumno. El seguimiento del cronograma permitió identificar riesgos, especialmente los relacionados con el tiempo de cómputo, y adaptar el alcance sin ocultar las partes que no llegaron a ejecutarse.
+
+El objetivo general se ha abordado integrando la base teórica, la arquitectura software, los pipelines de aprendizaje automático y la interfaz de operación. La memoria mantiene la trazabilidad entre objetivos, requisitos, decisiones, implementación y pruebas, y distingue entre capacidades implementadas, capacidades verificadas y resultados experimentales disponibles.
+
+Se han abordado dentro del alcance previsto el estado del arte, la arquitectura, la persistencia, la seguridad, la interfaz, el procesamiento asíncrono, la internacionalización y la documentación. También se han preparado los mecanismos de entrenamiento, explicabilidad, calibración, validación externa y análisis estadístico. Sin embargo, la evidencia experimental es parcial: se conservan resultados de ocho CNN con cinco folds, pero no resultados equivalentes de los Transformers ni del resto de arquitecturas previstas. Asimismo, se documentan 190 pruebas automatizadas superadas y seis comprobaciones funcionales, detalladas en los capítulos 34 a 36, mientras que permanecen pendientes pruebas de integración, rendimiento, determinados controles operativos y evaluación con usuarios.
+
+## 37.2 Aprendizajes y dificultades del desarrollo
+
+El TFG ha consolidado conocimientos de ingeniería del software aplicados a un contexto que combina desarrollo web, persistencia, seguridad y aprendizaje automático. Se ha aprendido que un sistema basado en modelos no se limita a entrenar una red neuronal: también debe gestionar usuarios, estados, artefactos, errores y procesos largos.
+
+Entre los principales aprendizajes destacan la separación de responsabilidades en una aplicación web, la protección de los flujos de autenticación, la preparación de experimentos reproducibles, la diferencia entre visualizar una explicación y demostrar su fidelidad, y la necesidad de combinar pruebas unitarias, de integración, de seguridad y de sistema. Desde el punto de vista metodológico, el trabajo ha mostrado la importancia de gestionar activamente los riesgos, adaptar el alcance a los recursos disponibles y documentar las decisiones durante todo el desarrollo.
+
+La principal dificultad fue coordinar el alcance del proyecto con el tiempo y la capacidad de cómputo. El banco de pruebas previsto incluía diecinueve arquitecturas, técnicas XAI, análisis estadístico, validación externa, una plataforma web y un laboratorio MLOps. La carga de los entrenamientos obligó a limitar la ejecución experimental documentada a ocho CNN. También fue necesario integrar tecnologías con necesidades diferentes, como el backend web, los procesos asíncronos, los modelos CNN y Transformer y el asistente conversacional. La solución consistió en separar responsabilidades y conservar como pendientes las verificaciones que no podían respaldarse con evidencia suficiente.
+
+## 37.3 Limitaciones y consideración final
+
+El trabajo no incluye una evaluación clínica ni una prueba de uso con facultativos o investigadores reales. Los resultados experimentales proceden de conjuntos de datos concretos y son parciales, por lo que no permiten afirmar rendimiento clínico ni equivalencia con profesionales sanitarios. La verificación tampoco cubre todos los aspectos previstos: permanecen pendientes pruebas de integración, rendimiento, recuperación de trabajos y evaluación con usuarios. La cobertura total es del 74,04 %, con menor cobertura en algunos módulos del laboratorio y de la ejecución asíncrona, como se detalla en el capítulo 34.
+
+Además, aunque los conjuntos del laboratorio son públicos y anonimizados, el sistema no puede comprobar que las imágenes subidas por los usuarios estén anonimizadas, tal como se especifica en el capítulo 11. Un uso real exigiría ampliar la validación, revisar los requisitos legales y establecer procedimientos de protección de datos y responsabilidades clínicas.
+
+Desde la perspectiva académica, el TFG ha cumplido su función formativa al aplicar conocimientos de ingeniería informática a un problema real y multidisciplinar. El aprendizaje principal ha sido comprender que construir un sistema complejo implica justificar sus decisiones, evaluar sus riesgos y comunicar con claridad qué se ha comprobado. La valoración específica de vitalXAI y de sus resultados se desarrolla en el capítulo 38; sus líneas de evolución futura se recogen en el capítulo 39.

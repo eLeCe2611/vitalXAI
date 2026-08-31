@@ -1,7 +1,5 @@
 # Bibliografía
 
-## Referencias citadas en el Capítulo 1
-
 Apostolopoulos, I. D., & Mpesiana, T. A. (2020). Covid-19: Automatic detection from X-ray images utilizing transfer learning with convolutional neural networks. *Physical and Engineering Sciences in Medicine*, 43(2), 635-640.
 
 Bishop, C. M. (2006). *Pattern Recognition and Machine Learning*. Springer.
@@ -18,7 +16,7 @@ DeGrave, A. J., Janizek, J. D., & Lee, S.-I. (2021). AI for radiographic COVID-1
 
 DeLong, E. R., DeLong, D. M., & Clarke-Pearson, D. L. (1988). Comparing the areas under two or more correlated receiver operating characteristic curves: A nonparametric approach. *Biometrics*, 44(3), 837-845.
 
-Nadeau, C., & Bengio, Y. (2003). Inference for the generalization error. *Machine Learning*, 52, 239-281. https://doi.org/10.1023/A:1024068626366. También se usa en el capítulo 2.
+Nadeau, C., & Bengio, Y. (2003). Inference for the generalization error. *Machine Learning*, 52, 239-281. https://doi.org/10.1023/A:1024068626366.
 
 Deng, J., & al., e. (2009). ImageNet: A large-scale hierarchical image database. *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition*, 248-255.
 
@@ -38,7 +36,7 @@ Guo, C., Pleiss, G., Sun, Y., & Weinberger, K. Q. (2017). On calibration of mode
 
 He, K., Zhang, X., Ren, S., & Sun, J. (2016). Deep residual learning for image recognition. *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition*, 770-778.
 
-Holzinger, A., & al., e. (2022). Explainable AI methods — A brief overview. *Lecture Notes in Computer Science*, 13200, 1-19.
+Holzinger, A., & al., e. (2022). Explainable AI methods: A brief overview. *Lecture Notes in Computer Science*, 13200, 1-19.
 
 Hopstaken, R. M., Witbraad, T., van Engelshoven, J. M., & Dinant, G. J. (2004). Inter-observer variation in the interpretation of chest radiographs for pneumonia in community-acquired lower respiratory tract infections. *Clinical Radiology*, 59(8), 743-752. https://doi.org/10.1016/j.crad.2004.01.011
 
@@ -48,11 +46,11 @@ Howard, A., & al., e. (2019). Searching for MobileNetV3. *Proceedings of the IEE
 
 Huang, G., Liu, Z., Van Der Maaten, L., & Weinberger, K. Q. (2017). Densely connected convolutional networks. *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition*, 4700-4708.
 
-He, H., & Garcia, E. A. (2009). Learning from imbalanced data. *IEEE Transactions on Knowledge and Data Engineering*, 21(9), 1263-1284. https://doi.org/10.1109/TKDE.2008.239
+He, H., & Garcia, E. A. (2009). Learning from imbalanced data. *IEEE Transactions on Knowledge and Data Engineering*, 21(9), 1263-1284. https://doi.org/10.1109/TKDE.2008.239.
 
 Jiang, A. Q., & al., e. (2023). Mistral 7B. *arXiv preprint arXiv:2310.06825*.
 
-Kermany, D. S., & al., e. (2018). Identifying medical diagnoses and treatable diseases by image-based deep learning. *Cell*, 172(5), 1122-1131.e9. https://doi.org/10.1016/j.cell.2018.02.010. También se usa en los capítulos 2 y 8.
+Kermany, D. S., & al., e. (2018). Identifying medical diagnoses and treatable diseases by image-based deep learning. *Cell*, 172(5), 1122-1131.e9. https://doi.org/10.1016/j.cell.2018.02.010.
 
 Kreuzberger, D., Kühl, N., & Hirschl, S. (2023). Machine learning operations (MLOps): Overview, definition, and architecture. *IEEE Access*, 11, 31866-31879. https://doi.org/10.1109/ACCESS.2023.3262138
 
@@ -76,7 +74,7 @@ Minaee, S., Kafieh, R., Sonka, M., Yazdani, S., & Jamalipour Soufi, G. (2020). D
 
 Murphy, Z. R., Venkatesh, K., Sulam, J., & Yi, P. H. (2022). Visual transformers and convolutional neural networks for disease classification on radiographs: A comparison of performance, sample efficiency, and hidden stratification. *Radiology: Artificial Intelligence*, 4(6), e220012. https://doi.org/10.1148/ryai.220012
 
-Nagendran, M., Chen, Y., Lovejoy, C. A., Gordon, A. C., Komorowski, M., Harvey, H., Topol, E. J., Ioannidis, J. P. A., Collins, G. S., & Maruthappu, M. (2020). Artificial intelligence versus clinicians: Systematic review of design, reporting standards, and claims of deep learning studies. *BMJ*, 368, m689. https://doi.org/10.1136/bmj.m689. También se usa en el capítulo 2.
+Nagendran, M., Chen, Y., Lovejoy, C. A., Gordon, A. C., Komorowski, M., Harvey, H., Topol, E. J., Ioannidis, J. P. A., Collins, G. S., & Maruthappu, M. (2020). Artificial intelligence versus clinicians: Systematic review of design, reporting standards, and claims of deep learning studies. *BMJ*, 368, m689. https://doi.org/10.1136/bmj.m689.
 
 Ouyang, L., & al., e. (2022). Training language models to follow instructions with human feedback. *Advances in Neural Information Processing Systems*, 35, 27730-27744.
 
@@ -122,7 +120,7 @@ Touvron, H., & al., e. (2023). Llama: Open and efficient foundation language mod
 
 Vaswani, A., & al., e. (2017). Attention is all you need. *Advances in Neural Information Processing Systems*, 30, 5998-6008.
 
-Varma, S., & Simon, R. (2006). Bias in error estimation when using cross-validation for model selection. *BMC Bioinformatics*, 7, 91. https://doi.org/10.1186/1471-2105-7-91
+Varma, S., & Simon, R. (2006). Bias in error estimation when using cross-validation for model selection. *BMC Bioinformatics*, 7, 91. https://doi.org/10.1186/1471-2105-7-91.
 
 Wang, Z., & al., e. (2004). Image quality assessment: From error visibility to structural similarity. *IEEE Transactions on Image Processing*, 13(4), 600-612.
 
@@ -133,8 +131,6 @@ World Health Organization. (2024). *Pneumonia fact sheet*. Obtenido de https://w
 Yosinski, J., & al., e. (2014). How transferable are features in deep neural networks? *Advances in Neural Information Processing Systems*, 27, 3320-3328.
 
 Zech, J. R., Badgeley, M. A., Liu, M., Costa, A. B., Titano, J. J., & Oermann, E. K. (2018). Variable generalization performance of a deep learning model to detect pneumonia in chest radiographs: A cross-sectional study. *PLOS Medicine*, 15(11), e1002683. https://doi.org/10.1371/journal.pmed.1002683
-
-## Referencias citadas en el Capítulo 2
 
 Aggarwal, R., & al., e. (2021). Diagnostic accuracy of deep learning in medical imaging: A systematic review and meta-analysis. *NPJ Digital Medicine*, 4, 65.
 
@@ -154,15 +150,13 @@ Liu, X., & al., e. (2019). A comparison of deep learning performance against hea
 
 McKinney, S. M., & al., e. (2020). International evaluation of an AI system for breast cancer screening. *Nature*, 577, 89-94.
 
-OWASP. (2021). *OWASP Top 10:2021 – The ten most critical web application security risks*. Obtenido de https://owasp.org/Top10/. También se usa en los capítulos 11 y 12.
+OWASP. (2021). *OWASP Top 10:2021 – The ten most critical web application security risks*. Obtenido de https://owasp.org/Top10/.
 
 Park, S. H., & Han, K. (2018). Methodologic guide for evaluating clinical performance and effect of artificial intelligence technology for medical diagnosis and prediction. *Radiology*, 286(3), 800-809.
 
 Sculley, D., & al., e. (2015). Hidden technical debt in machine learning systems. *Advances in Neural Information Processing Systems*, 28, 2503-2511.
 
 Varoquaux, G., & Cheplygina, V. (2019). Machine learning for medical imaging: Methodological failures and recommendations for the future. *NPJ Digital Medicine*, 2, 48.
-
-## Referencias citadas en el Capítulo 4
 
 Anderson, D. J. (2010). *Kanban: Successful Evolutionary Change for Your Technology Business*. Blue Hole Press.
 
@@ -180,118 +174,68 @@ Schwaber, K., & Sutherland, J. (2020). *The Scrum Guide: The Definitive Guide to
 
 Sutherland, J. (2014). *Scrum: The Art of Doing Twice the Work in Half the Time*. Crown Business.
 
-## Referencias citadas en el Capítulo 8
+España. (2018). Ley Orgánica 3/2018, de 5 de diciembre, de Protección de Datos Personales y garantía de los derechos digitales. *Boletín Oficial del Estado*, 294, 119788-119857.
 
-## Referencias citadas en el Capítulo 11
+IETF. (2018). *RFC 8446 – The Transport Layer Security (TLS) Protocol Version 1.3*. Obtenido de https://datatracker.ietf.org/doc/html/rfc8446.
 
-España. (2018). Ley Orgánica 3/2018, de 5 de diciembre, de Protección de Datos Personales y garantía de los derechos digitales. *Boletín Oficial del Estado*, 294, 119788-119857. También se usa en los capítulos 17 y 18.
-
-IETF. (2018). *RFC 8446 – The Transport Layer Security (TLS) Protocol Version 1.3*. Obtenido de https://datatracker.ietf.org/doc/html/rfc8446. También se usa en los capítulos 17 y 18.
-
-Parlamento Europeo y Consejo de la Unión Europea. (2016). Reglamento (UE) 2016/679 relativo a la protección de las personas físicas en lo que respecta al tratamiento de los datos personales y a la libre circulación de estos datos (RGPD). *Diario Oficial de la Unión Europea*, L119, 1-88. También se usa en los capítulos 17 y 18.
+Parlamento Europeo y Consejo de la Unión Europea. (2016). Reglamento (UE) 2016/679 relativo a la protección de las personas físicas en lo que respecta al tratamiento de los datos personales y a la libre circulación de estos datos (RGPD). *Diario Oficial de la Unión Europea*, L119, 1-88.
 
 Parlamento Europeo y Consejo de la Unión Europea. (2017). Reglamento (UE) 2017/745 sobre los productos sanitarios, por el que se modifican la Directiva 2001/83/CE, el Reglamento (CE) n.º 178/2002 y el Reglamento (CE) n.º 1223/2009 y por el que se derogan las Directivas 90/385/CEE y 93/42/CEE del Consejo. *Diario Oficial de la Unión Europea*, L117, 1-175.
 
 Parlamento Europeo y Consejo de la Unión Europea. (2024). Reglamento (UE) 2024/1689 por el que se establecen normas armonizadas en materia de inteligencia artificial y por el que se modifican los Reglamentos (CE) n.º 300/2008, (UE) n.º 167/2013, (UE) n.º 168/2013, (UE) 2018/858, (UE) 2018/1139 y (UE) 2019/2144 y las Directivas 2014/90/UE, (UE) 2016/797 y (UE) 2020/1828 (Reglamento de Inteligencia Artificial). *Diario Oficial de la Unión Europea*, serie L, 12.7.2024.
 
-Python Software Foundation. (2024). *PEP 8 – Style Guide for Python Code*. Obtenido de https://peps.python.org/pep-0008/. También se usa en los capítulos 29 y 31.
+Python Software Foundation. (2024). *PEP 8 – Style Guide for Python Code*. Obtenido de https://peps.python.org/pep-0008/.
 
-Universidad Pablo de Olavide. (2014). *Guía técnica para la realización del Trabajo Fin de Grado en Ingeniería Informática en Sistemas de Información*. Escuela Politécnica Superior. También se usa en el capítulo 17.
+Python Software Foundation. (2024b). *asyncio: Asynchronous I/O*. Python 3.11 documentation. Obtenido de https://docs.python.org/3.11/library/asyncio.html.
 
-van Rossum, G., Warsaw, B., & Coghlan, N. (2001). *PEP 8 – Style Guide for Python Code*. Obtenido de https://peps.python.org/pep-0008/. También se usa en los capítulos 17, 18 y 27.
+Universidad Pablo de Olavide. (2014). *Guía técnica para la realización del Trabajo Fin de Grado en Ingeniería Informática en Sistemas de Información*. Escuela Politécnica Superior.
 
-## Referencias citadas en el Capítulo 12
+van Rossum, G., Warsaw, B., & Coghlan, N. (2001). *PEP 8 – Style Guide for Python Code*. Obtenido de https://peps.python.org/pep-0008/.
 
-Cockburn, A. (2001). *Writing Effective Use Cases*. Addison-Wesley. También se usa en el capítulo 20.
+Cockburn, A. (2001). *Writing Effective Use Cases*. Addison-Wesley.
 
-Jacobson, I., Booch, G., & Rumbaugh, J. (1999). *The Unified Software Development Process*. Addison-Wesley. También se usa en los capítulos 13, 15, 18 y 20.
+Jacobson, I., Booch, G., & Rumbaugh, J. (1999). *The Unified Software Development Process*. Addison-Wesley.
 
-Larman, C. (2004). *Applying UML and Patterns: An Introduction to Object-Oriented Analysis and Design and Iterative Development* (3rd ed.). Prentice Hall. También se usa en los capítulos 13, 14, 15, 17, 18, 20 y 21.
+Larman, C. (2004). *Applying UML and Patterns: An Introduction to Object-Oriented Analysis and Design and Iterative Development* (3rd ed.). Prentice Hall.
 
-W3C. (2023). *Web Content Accessibility Guidelines (WCAG) 2.2*. World Wide Web Consortium. Obtenido de https://www.w3.org/TR/WCAG22/
+W3C. (2023). *Web Content Accessibility Guidelines (WCAG) 2.2*. World Wide Web Consortium. Obtenido de https://www.w3.org/TR/WCAG22/.
 
 Wiegers, K., & Beatty, J. (2013). *Software Requirements* (3rd ed.). Microsoft Press.
 
-## Referencias citadas en el Capítulo 13
-
-## Referencias citadas en el Capítulo 14
-
-## Referencias citadas en el Capítulo 15
-
-## Referencias citadas en el Capítulo 16
-
-Myers, G. J., Sandler, C., & Badgett, T. (2011). *The Art of Software Testing* (3rd ed.). Wiley. También se usa en los capítulos 25, 27, 33 y 36.
-
-## Referencias citadas en el Capítulo 17
-
-## Referencias citadas en el Capítulo 18
-
-## Referencias citadas en el Capítulo 19
+Myers, G. J., Sandler, C., & Badgett, T. (2011). *The Art of Software Testing* (3rd ed.). Wiley.
 
 Chen, P. P.-S. (1976). The entity-relationship model: Toward a unified view of data. *ACM Transactions on Database Systems*, 1(1), 9-36.
 
-Elmasri, R., & Navathe, S. B. (2016). *Fundamentals of Database Systems* (7th ed.). Pearson. También se usa en el capítulo 24.
+Elmasri, R., & Navathe, S. B. (2016). *Fundamentals of Database Systems* (7th ed.). Pearson.
 
-Oracle. (2024). *MySQL 8.0 Reference Manual*. Obtenido de https://dev.mysql.com/doc/refman/8.0/en/. También se usa en los capítulos 23, 24, 26 y 28.
-
-## Referencias citadas en el Capítulo 20
-
-## Referencias citadas en el Capítulo 21
+Oracle. (2024). *MySQL 8.0 Reference Manual*. Obtenido de https://dev.mysql.com/doc/refman/8.0/en/.
 
 Booch, G., Rumbaugh, J., & Jacobson, I. (2005). *The Unified Modeling Language User Guide* (2nd ed.). Addison-Wesley.
 
-## Referencias citadas en el Capítulo 22
-
 Nielsen, J. (1994). *Usability Engineering*. Morgan Kaufmann.
 
-Sharp, H., Rogers, Y., & Preece, J. (2019). *Interaction Design: Beyond Human-Computer Interaction* (5th ed.). Wiley. También se usa en los capítulos 23 y 26.
+Sharp, H., Rogers, Y., & Preece, J. (2019). *Interaction Design: Beyond Human-Computer Interaction* (5th ed.). Wiley.
 
-## Referencias citadas en el Capítulo 23
-
-FastAPI. (2024). *FastAPI Documentation*. Obtenido de https://fastapi.tiangolo.com/. También se usa en los capítulos 26 y 28.
+FastAPI. (2024). *FastAPI Documentation*. Obtenido de https://fastapi.tiangolo.com/
 
 FPDF2. (2024). *FPDF2 Documentation*. Obtenido de https://py-pdf.github.io/fpdf2/
 
-Hugging Face. (2024). *Transformers Documentation*. Obtenido de https://huggingface.co/docs/transformers/. También se usa en el capítulo 30.
+Hugging Face. (2024). *Transformers Documentation*. Obtenido de https://huggingface.co/docs/transformers/
 
-TensorFlow. (2024). *TensorFlow Documentation*. Obtenido de https://www.tensorflow.org/. También se usa en el capítulo 30.
+TensorFlow. (2024). *TensorFlow Documentation*. Obtenido de https://www.tensorflow.org/
 
-Uvicorn. (2024). *Uvicorn: An ASGI web server for Python*. Obtenido de https://www.uvicorn.org/. También se usa en los capítulos 26 y 28.
+Uvicorn. (2024). *Uvicorn: An ASGI web server for Python*. Obtenido de https://www.uvicorn.org/
 
-## Referencias citadas en el Capítulo 24
+Mypy. (2024). *Mypy Documentation*. Obtenido de https://mypy.readthedocs.io/
 
-## Referencias citadas en el Capítulo 25
+pytest. (2024). *pytest Documentation*. Obtenido de https://docs.pytest.org/
 
-Mypy. (2024). *Mypy Documentation*. Obtenido de https://mypy.readthedocs.io/. También se usa en los capítulos 27, 33 y 34.
+Ruff. (2024). *Ruff Documentation*. Obtenido de https://docs.astral.sh/ruff/
 
-pytest. (2024). *pytest Documentation*. Obtenido de https://docs.pytest.org/. También se usa en los capítulos 27, 33 y 34.
-
-Ruff. (2024). *Ruff Documentation*. Obtenido de https://docs.astral.sh/ruff/. También se usa en los capítulos 27, 33 y 34.
-
-## Referencias citadas en el Capítulo 26
-
-## Referencias citadas en el Capítulo 27
-
-## Referencias citadas en el Capítulo 28
-
-## Referencias citadas en el Capítulo 29
-
-## Referencias citadas en el Capítulo 30
-
-## Referencias citadas en el Capítulo 31
-
-## Referencias citadas en el Capítulo 32
+eLeCe2611. (2026). *vitalXAI* [Software]. GitHub. https://github.com/eLeCe2611/vitalXAI
 
 MDN Web Docs. (2024). *JavaScript and Fetch API*. Obtenido de https://developer.mozilla.org/
 
 Tailwind CSS. (2024). *Tailwind CSS Documentation*. Obtenido de https://tailwindcss.com/
 
-## Referencias citadas en el Capítulo 33
-
-## Referencias citadas en el Capítulo 34
-
-## Referencias citadas en el Capítulo 35
-
 OWASP. (2024). *OWASP Top 10: Application Security Risks*. Obtenido de https://owasp.org/www-project-top-ten/
-
-## Referencias citadas en el Capítulo 36

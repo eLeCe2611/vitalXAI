@@ -1,18 +1,18 @@
 # Capítulo 10: Planteamiento del análisis del sistema
 
-Para que un sistema se diseñe e implemente con garantías no basta con una idea general: es necesario formalizar el análisis, es decir, convertir la visión del proyecto en un conjunto de afirmaciones verificables sobre qué debe hacer el sistema, bajo qué restricciones y para qué usuarios. Esta parte de la memoria se ocupa precisamente de eso, y este capítulo abre el análisis presentando su propósito y sus dimensiones.
+Para diseñar e implementar un sistema es necesario concretar la idea inicial en afirmaciones verificables sobre sus capacidades, sus restricciones y sus usuarios. Esta parte de la memoria desarrolla esa concreción y este capítulo introduce el propósito y las dimensiones del análisis (Larman, 2004; Wiegers & Beatty, 2013).
 
 ## 10.1 Propósito del análisis
 
-El documento de análisis fija de manera explícita y sin ambigüedades las bases sobre las que se construirá el sistema. Su utilidad es doble. Por un lado, evita que durante el diseño y la implementación se asuman capacidades que no se planificaron o se omitan requisitos que sí se acordaron. Por otro lado, documenta las decisiones de alcance y las restricciones del entorno, de modo que cualquier lector —el tutor, el tribunal o un futuro mantenedor— pueda entender por qué el sistema tiene la forma que tiene y cuáles de sus límites son deliberados y cuáles responden a restricciones técnicas.
+El análisis fija las bases sobre las que se construirá el sistema. Por un lado, evita asumir durante el diseño y la implementación capacidades que no forman parte del alcance o dejar fuera requisitos acordados. Por otro, documenta las restricciones del entorno y las decisiones de alcance, de modo que el tutor, el tribunal o un futuro mantenedor puedan entender qué debe ofrecer el sistema y cuáles son sus límites.
 
-En este proyecto, la formalización del análisis es especialmente relevante porque el sistema aúna dos naturalezas: una aplicación web de uso clínico y un laboratorio de investigación de aprendizaje automático. La primera impone requisitos de claridad, seguridad y facilidad de uso; la segunda impone requisitos de flexibilidad, reproducibilidad y capacidad de ejecutar experimentos completos. Formalizar el análisis permite reconciliar ambas perspectivas desde el inicio y evitar que una de las dos naturalezas acabe imponiéndose sobre la otra sin que esa decisión quede documentada.
+En este proyecto, la formalización del análisis es especialmente relevante porque el sistema combina una aplicación web orientada al diagnóstico asistido y un laboratorio de investigación de aprendizaje automático. La primera requiere claridad, seguridad y facilidad de uso; el segundo requiere flexibilidad, reproducibilidad y capacidad para ejecutar experimentos. El análisis permite considerar ambas perspectivas desde el inicio y dejar documentadas las decisiones que afectan a cada una.
 
 ## 10.2 Dimensiones del análisis
 
-El análisis del sistema comprende, en primer lugar, la delimitación del contexto en el que se inscribe la plataforma. Esta delimitación se apoya en cuatro dimensiones: el alcance funcional del sistema, que fija qué capacidades se compromete a entregar y cuáles quedan deliberadamente fuera de su ámbito de responsabilidad; el entorno tecnológico, que describe el ecosistema sobre el que se construye la plataforma y las restricciones que impone al diseño; la normativa y los estándares que el sistema debe observar; y la caracterización de los perfiles de usuario que interactuarán con él, atendiendo a sus conocimientos, sus necesidades y su nivel de acceso. Estas cuatro dimensiones, junto con los objetivos del sistema que las enmarcan, se desarrollan íntegramente en el capítulo 11.
+El análisis del sistema comienza con la definición de sus objetivos y de su ámbito. El capítulo 11 delimita las capacidades de la plataforma, el entorno tecnológico, la normativa aplicable y los perfiles de usuario. Estos elementos establecen el contexto del producto, pero no agotan el análisis. A partir de ellos, los capítulos siguientes transforman las necesidades del proyecto en requisitos verificables, casos de uso, subsistemas, entidades del dominio y pruebas de consistencia y comportamiento.
 
-Sobre esa base, el análisis especifica qué debe hacer el sistema y cómo se organiza internamente para lograrlo, y es esta segunda parte la que constituye el grueso del análisis. Se estructura en los capítulos 12 a 16:
+Sobre esa base, el análisis especifica qué debe hacer el sistema y cómo se organiza para ofrecer esas capacidades. Esta parte se estructura en los capítulos 12 a 16:
 
 - **Especificación de requisitos y casos de uso (capítulo 12).** Se definen los requisitos funcionales y no funcionales del sistema y los casos de uso que describen la interacción de cada perfil de usuario con la plataforma.
 - **Identificación de subsistemas (capítulo 13).** Las capacidades del sistema se agrupan en subsistemas de análisis, lo que permite organizar el resto del análisis y, posteriormente, el diseño.
@@ -20,4 +20,4 @@ Sobre esa base, el análisis especifica qué debe hacer el sistema y cómo se or
 - **Verificación de la consistencia (capítulo 15).** Se comprueba la coherencia entre los objetivos, los requisitos, los casos de uso y los subsistemas.
 - **Plan de pruebas (capítulo 16).** Se define la estrategia de pruebas que verificará el cumplimiento de lo especificado.
 
-El conjunto de estas dimensiones constituye el contrato sobre el que se sustenta el diseño del sistema, desarrollado en la parte siguiente de la memoria.
+El conjunto de estas dimensiones constituye el marco de referencia del diseño del sistema, desarrollado en la parte siguiente de la memoria.

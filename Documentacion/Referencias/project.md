@@ -66,7 +66,7 @@ Datos del plan de proyecto (sprints, tareas, recursos, horas, costes y fechas) t
 | 2 | 7.6 Internacionalización de la plataforma | 1 día | mié 03/06/26 | mié 03/06/26 | Luis Carmona Berdugo | 8 h |
 | 2 | 7.7 Vistas de resultados, rankings y curvas ROC | 1 día | jue 04/06/26 | jue 04/06/26 | Luis Carmona Berdugo | 8 h |
 | 1 | 8. Documentación y cierre | 64 días | vie 05/06/26 | mié 02/09/26 | | 67 h |
-| 2 | 8.1 Benchmarking final con todas las arqitecturas | 10 días | vie 05/06/26 | jue 18/06/26 | Iván Segura Carmona[5%];Luis Carmona Berdugo[90%];Marc Ríos Cadena[5%] | 18 h |
-| 2 | 8.2 Redacción de la memoria y manuales | 50 días | vie 19/06/26 | jue 27/08/26 | Luis Carmona Berdugo | 30 h |
+| 2 | 8.1 Ejecución parcial y análisis del benchmarking | 10 días | vie 05/06/26 | jue 18/06/26 | Iván Segura Carmona[5%];Luis Carmona Berdugo[90%];Marc Ríos Cadena[5%] | 18 h |
+| 2 | 8.2 Redacción de la memoria y del manual de usuario | 50 días | vie 19/06/26 | jue 27/08/26 | Luis Carmona Berdugo | 30 h |
 | 2 | 8.3 Reunión final y correcciones | 3 días | vie 28/08/26 | mar 01/09/26 | Aurelio López Fernández[50%];Luis Carmona Berdugo[50%] | 16 h |
 | 2 | 8.4 Entrega final | 1 día | mié 02/09/26 | mié 02/09/26 | Luis Carmona Berdugo | 3 h |
