@@ -1,0 +1,67 @@
+services:
+  db:
+    image: mysql:8.4@sha256:b3b90af2a6552ae30c266fdb7d5dd55f3afb72404bb78d37fe8a23eb857fd3fb
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-tfg_pneumonia}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Define DB_ROOT_PASSWORD in .env.demo}
+      MYSQL_USER: ${DB_USER:-vitalxai}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD in .env.demo}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  app:
+    image: ${DEMO_IMAGE:-vitalxai-demo:1.0}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: "1"
+    platform: ${DOCKER_PLATFORM:-linux/amd64}
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env.demo
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      TFG_DEMO_DATASET: /app/demo-data
+      HOME: /app
+      KERAS_HOME: /app/.keras
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${APP_BIND_ADDRESS:-127.0.0.1}:8000:8000"
+    volumes:
+      - uploads_data:/app/static/uploads
+      - results_data:/app/static/results
+      - reports_data:/app/static/reports
+      - training_data:/app/training_results
+      - ./demo-models:/app/pneumoniacnn-main/results:ro
+      - ./demo-data:/app/demo-data:ro
+      - ./demo-cache/keras:/app/.keras:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "from database import get_db_connection; import urllib.request; c=get_db_connection(); c.close(); urllib.request.urlopen('http://127.0.0.1:8000/register', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    shm_size: "1gb"
+
+volumes:
+  mysql_data:
+  uploads_data:
+  results_data:
+  reports_data:
+  training_data:

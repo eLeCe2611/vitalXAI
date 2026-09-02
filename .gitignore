@@ -1,5 +1,6 @@
 # ─── Documentación prestada por compañeros ───
-Documentacion/Copia/
+Documentacion/
+README-DEFENSA.md
 
 # ─── Imágenes de rayos X (datasets) ───
 pneumoniacnn-main/ExternalDataset/
@@ -60,6 +61,13 @@ training_log.txt
 
 # ─── Artefactos de la demo en vivo ───
 demo_url.txt
+.env.demo
+demo-data/
+demo-models/
+demo-cache/
+vitalxai-demo-*.tar
+vitalXAI-demo-package/
+database-demo.sql
 
 # ─── Cobertura de código ───
 .coverage
