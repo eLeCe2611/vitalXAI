@@ -75,7 +75,10 @@
                     id="ui-user" data-i18n="loginUser">Usuario</label>
                 <div class="relative">
                     <i class="fa-solid fa-user absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" id="username" required
+                    <input type="email" id="username" required autocomplete="email"
+                        pattern="[^\s@]+@[^\s@]+\.[^\s@]+"
+                        title="Introduce un correo válido, por ejemplo usuario@ejemplo.com"
+                        placeholder="correo@ejemplo.com"
                         class="w-full bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-600 rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
@@ -85,7 +88,7 @@
                     id="ui-pass" data-i18n="loginPass">Contraseña</label>
                 <div class="relative">
                     <i class="fa-solid fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    <input type="password" id="password" required
+                    <input type="password" id="password" required minlength="8" autocomplete="new-password"
                         class="w-full bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-600 rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
@@ -146,7 +149,15 @@
             formData.append('password', document.getElementById('password').value);
 
             try {
-                const response = await fetch('/api/register', { method: 'POST', body: formData });
+                const csrfToken = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('csrf_token='))
+                    ?.split('=')[1];
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-Token': csrfToken },
+                    body: formData
+                });
                 let result;
                 try { result = await response.json(); } catch (e) { throw new Error(t_('registerErrServer')); }
 
